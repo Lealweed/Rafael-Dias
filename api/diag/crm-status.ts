@@ -18,10 +18,11 @@ export default async function handler(req: any, res: any) {
   out.tables = {};
 
   for (const t of checks) {
-    const { count, error } = await sb.from(t).select('*', { count: 'exact', head: true });
+    const { data, error } = await sb.from(t).select('id,created_at').order('created_at', { ascending: false }).limit(3);
     out.tables[t] = {
       exists: !error,
-      count: error ? null : count,
+      recent_count: Array.isArray(data) ? data.length : 0,
+      latest_created_at: Array.isArray(data) && data[0] ? data[0].created_at : null,
       error: error ? error.message : null,
       code: error ? (error as any).code || null : null,
     };

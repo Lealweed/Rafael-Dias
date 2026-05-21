@@ -17,6 +17,7 @@ import Conversations from "./pages/Conversations";
 import Followups from "./pages/Followups";
 import Pipeline from "./pages/Pipeline";
 import Reports from "./pages/Reports";
+import CalendarPage from "./pages/CalendarPage";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -63,6 +64,7 @@ export default function App() {
           <Route path="/" element={<Dashboard />} />
           <Route path="/leads" element={<Leads />} />
           <Route path="/conversations" element={<Conversations />} />
+          <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/follow-ups" element={<Followups />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/reports" element={<Reports />} />

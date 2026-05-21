@@ -1,19 +1,50 @@
+import { useState, useEffect } from "react";
 import { Search, Plus, Filter, MoreHorizontal } from "lucide-react";
+import { createClient } from "../lib/supabase/client";
 
 export default function Leads() {
-  const leadsMock = [
-    { id: 1, name: "Mariana Oliveira", phone: "+55 11 98888-7777", origin: "WhatsApp Business", interest: "Transplante Capilar", temp: "hot", lastInteraction: "3h 12m", owner: "Rafael" },
-    { id: 2, name: "Ricardo Albuquerque", phone: "+55 85 99999-1111", origin: "n8n Webhook", interest: "Consulta Diagnóstica", temp: "hot", lastInteraction: "4h 45m", owner: "Rafael" },
-    { id: 3, name: "Beatriz Santos", phone: "+55 21 97777-2222", origin: "Facebook Ads", interest: "Estética", temp: "warm", lastInteraction: "1d 2h", owner: "Atendimento" },
-    { id: 4, name: "Carlos Eduardo", phone: "+55 31 96666-3333", origin: "Site Institucional", interest: "Retorno", temp: "cold", lastInteraction: "5d", owner: "Atendimento" },
-  ];
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchLeads() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (data) setLeads(data);
+      setLoading(false);
+    }
+    fetchLeads();
+  }, []);
 
   const getTempBadge = (temp: string) => {
-    switch(temp) {
-      case "hot": return <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-orange-600 uppercase">Quente</span>;
-      case "warm": return <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-600 uppercase">Morno</span>;
-      case "cold": return <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-600 uppercase">Frio</span>;
+    switch(temp?.toLowerCase()) {
+      case "hot":
+      case "quente": 
+        return <span className="rounded-full border border-orange-200 bg-orange-50 px-2 py-0.5 text-[9px] font-bold text-orange-600 uppercase">Quente</span>;
+      case "warm":
+      case "morno":
+        return <span className="rounded-full border border-gray-200 bg-gray-50 px-2 py-0.5 text-[9px] font-bold text-gray-600 uppercase">Morno</span>;
+      default: 
+        return <span className="rounded-full border border-blue-200 bg-blue-50 px-2 py-0.5 text-[9px] font-bold text-blue-600 uppercase">Frio</span>;
     }
+  };
+
+  const formatTimeAgo = (dateStr: string) => {
+    if (!dateStr) return "-";
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHrs = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHrs / 24);
+    
+    if (diffDays > 0) return `${diffDays}d`;
+    if (diffHrs > 0) return `${diffHrs}h`;
+    return `${diffMins}m`;
   };
 
   return (
@@ -42,7 +73,7 @@ export default function Leads() {
             </button>
           </div>
           <div className="text-xs font-medium text-gray-500">
-            Mostrando <span className="font-bold text-gray-900">4</span> de <span className="font-bold text-gray-900">2,482</span> leads
+            Mostrando <span className="font-bold text-gray-900">{leads.length}</span> leads
           </div>
         </div>
 
@@ -60,18 +91,22 @@ export default function Leads() {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-sm">
-              {leadsMock.map((lead) => (
+              {loading ? (
+                <tr><td colSpan={6} className="text-center py-8 text-gray-500">Carregando leads...</td></tr>
+              ) : leads.map((lead) => (
                 <tr key={lead.id} className="hover:bg-gray-50 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">{lead.name}</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{lead.phone} • {lead.origin}</div>
+                    <div className="font-bold text-gray-900">{lead.full_name || lead.phone}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{lead.phone} • {lead.origin || 'Desconhecido'}</div>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-700">{lead.interest}</td>
+                  <td className="px-6 py-4 font-medium text-gray-700">{lead.interest || 'Pendente'}</td>
                   <td className="px-6 py-4">
-                    {getTempBadge(lead.temp)}
+                    {getTempBadge(lead.temperature)}
                   </td>
-                  <td className="px-6 py-4 text-gray-600 text-xs font-medium">{lead.lastInteraction}</td>
-                  <td className="px-6 py-4 text-gray-600 text-xs font-medium">{lead.owner}</td>
+                  <td className="px-6 py-4 text-gray-600 text-xs font-medium">
+                    {formatTimeAgo(lead.last_interaction_at || lead.created_at)}
+                  </td>
+                  <td className="px-6 py-4 text-gray-600 text-xs font-medium">{lead.owner || 'Não Atribuído'}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                        <button className="rounded border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-[#2563EB] shadow-sm hover:bg-gray-50">Abrir</button>
@@ -80,6 +115,9 @@ export default function Leads() {
                   </td>
                 </tr>
               ))}
+              {!loading && leads.length === 0 && (
+                <tr><td colSpan={6} className="text-center py-8 text-gray-500">Nenhum lead encontrado.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

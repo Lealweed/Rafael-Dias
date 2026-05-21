@@ -1,23 +1,82 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Send, User, Paperclip, MoreVertical, CheckCircle2 } from "lucide-react";
+import { createClient } from "../lib/supabase/client";
+import { getAccessToken, googleSignIn } from "../lib/firebase";
 
 export default function Conversations() {
-  const [activeChats, setActiveChats] = useState([
-    { id: 1, name: "Mariana Oliveira", msg: "Sim, pode marcar o horário da tarde.", time: "10:45", unread: 2, status: "Quente" },
-    { id: 2, name: "Ricardo Albuquerque", msg: "Qual o valor do tratamento?", time: "09:12", unread: 0, status: "Urgente" },
-    { id: 3, name: "Beatriz Santos", msg: "Vou olhar com meu marido e retorno.", time: "Ontem", unread: 0, status: "Morno" },
-  ]);
-
-  const [messages, setMessages] = useState([
-    { id: 1, type: "system", text: "Lead transferido de Bot (n8n) para Humano", time: "10:42" },
-    { id: 2, type: "inbound", text: "Bom dia. Gostaria de saber mais sobre o procedimento e os valores associados.", time: "10:42" },
-    { id: 3, type: "outbound", text: "Olá Mariana! Bom dia. Claro, temos várias opções de tratamentos com foco na sua necessidade. Podemos marcar uma avaliação inicial gratuita?", time: "10:44" },
-    { id: 4, type: "inbound", text: "Sim, pode marcar o horário da tarde.", time: "10:45" }
-  ]);
+  const [activeChats, setActiveChats] = useState<any[]>([]);
+  const [selectedChat, setSelectedChat] = useState<any>(null);
+  const [messages, setMessages] = useState<any[]>([]);
+  const [loadingChats, setLoadingChats] = useState(true);
+  const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
 
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const supabase = createClient();
+
+  // Load leads/chats
+  useEffect(() => {
+    async function fetchChats() {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .order('last_interaction_at', { ascending: false });
+      
+      if (data) {
+        setActiveChats(data);
+        // Set selectedChat only if none is selected, so we don't overwrite user selection
+        setSelectedChat(prev => {
+          if (!prev && data.length > 0) return data[0];
+          // If we have a selected chat, ensure we keep the updated object (for time displaying)
+          if (prev) {
+            const updated = data.find(c => c.id === prev.id);
+            if (updated) return updated;
+          }
+          return prev;
+        });
+      }
+      setLoadingChats(false);
+    }
+    fetchChats();
+    const intervalId = setInterval(fetchChats, 5000);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  // Load messages when selectedChat changes
+  useEffect(() => {
+    async function fetchMessages() {
+      if (!selectedChat) return;
+      
+      const { data: convs } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('lead_id', selectedChat.id)
+        .limit(1);
+
+      if (convs && convs.length > 0) {
+        const convId = convs[0].id;
+        const { data: msgs } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', convId)
+          .order('created_at', { ascending: true });
+          
+        if (msgs) {
+          setMessages(msgs.map(m => ({
+            id: m.id,
+            type: m.direction || 'system',
+            text: m.content || '',
+            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          })));
+        }
+      }
+    }
+    
+    fetchMessages();
+    const intervalId = setInterval(fetchMessages, 3000);
+    return () => clearInterval(intervalId);
+  }, [selectedChat]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -28,7 +87,7 @@ export default function Conversations() {
   }, [messages]);
 
   const handleSend = async () => {
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || !selectedChat) return;
     
     const newMsg = {
       id: Date.now(),
@@ -46,10 +105,10 @@ export default function Conversations() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          contactId: "1", 
+          contactId: selectedChat.id, 
           message: newMsg.text, 
           type: "whatsapp",
-          destination: "+5511999999999"
+          destination: selectedChat.phone
         })
       });
       
@@ -62,7 +121,7 @@ export default function Conversations() {
           setMessages(prev => [...prev, {
             id: Date.now(),
             type: "inbound",
-            text: "Mensagem recebida via n8n (Simulação Ativa). Tudo certo!",
+            text: "Mensagem enviada com sucesso (Simulação).",
             time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
           }]);
         }, 3000);
@@ -71,6 +130,69 @@ export default function Conversations() {
       console.error("Failed to send message via n8n:", err);
     } finally {
       setIsSending(false);
+    }
+  };
+
+  const handleGenerateProposal = async () => {
+    if (!selectedChat) return;
+
+    setIsGeneratingDoc(true);
+    try {
+      let token = await getAccessToken();
+      if (!token) {
+        const result = await googleSignIn();
+        if (result) {
+          token = result.accessToken;
+        } else {
+          throw new Error("Não foi possível autenticar no Google");
+        }
+      }
+
+      // Create a Google Doc
+      const res = await fetch("https://docs.googleapis.com/v1/documents", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          title: `Proposta Comercial - ${selectedChat.full_name || selectedChat.phone}`,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.documentId) {
+        // Insert text into the doc
+        const content = `Proposta Comercial\n\nData: ${new Date().toLocaleDateString()}\nCliente: ${selectedChat.full_name || selectedChat.phone}\nTelefone: ${selectedChat.phone}\nOrigem: ${selectedChat.origin || 'N/A'}\nServiço de Interesse: ${selectedChat.interest || 'N/A'}\n\n[Detalhes da Proposta Aqui]\n`;
+
+        await fetch(`https://docs.googleapis.com/v1/documents/${data.documentId}:batchUpdate`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            requests: [
+              {
+                insertText: {
+                  location: { index: 1 },
+                  text: content,
+                },
+              },
+            ],
+          }),
+        });
+
+        // Open the document in a new tab
+        window.open(`https://docs.google.com/document/d/${data.documentId}/edit`, "_blank");
+      } else {
+        throw new Error(data.error?.message || "Failed to create document");
+      }
+    } catch (err) {
+      console.error("Failed to generate proposal:", err);
+      // alert("Falha ao gerar proposta. Verifique o console.");
+    } finally {
+      setIsGeneratingDoc(false);
     }
   };
 
@@ -93,28 +215,37 @@ export default function Conversations() {
               <input type="text" placeholder="Buscar conversa..." className="bg-transparent outline-none w-full text-gray-900 placeholder:text-gray-400" />
             </div>
             <div className="flex items-center justify-between mt-4">
-              <span className="text-xs font-bold text-gray-900">Abertas (14)</span>
+              <span className="text-xs font-bold text-gray-900">Abertas ({activeChats.length})</span>
               <span className="text-xs font-medium text-[#2563EB] cursor-pointer">Filtrar</span>
             </div>
           </div>
           
           <div className="flex-1 overflow-y-auto">
-            {activeChats.map((chat, idx) => (
-              <div key={chat.id} className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${idx === 0 ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}>
-                <div className="flex justify-between items-start mb-1">
-                  <h4 className={`text-sm font-bold ${idx === 0 ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.name}</h4>
-                  <span className="text-[10px] text-gray-400 font-medium">{chat.time}</span>
+            {loadingChats ? (
+              <div className="p-4 text-center text-sm text-gray-500">Carregando conversas...</div>
+            ) : activeChats.length === 0 ? (
+              <div className="p-4 text-center text-sm text-gray-500">Nenhuma conversa encontrada.</div>
+            ) : activeChats.map((chat) => {
+              const isSelected = selectedChat?.id === chat.id;
+              const dateStr = chat.last_interaction_at || chat.created_at;
+              const time = dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+              
+              return (
+                <div 
+                  key={chat.id} 
+                  onClick={() => setSelectedChat(chat)}
+                  className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+                >
+                  <div className="flex justify-between items-start mb-1">
+                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.full_name || chat.phone}</h4>
+                    <span className="text-[10px] text-gray-400 font-medium shrink-0">{time}</span>
+                  </div>
+                  <div className="flex justify-between items-end">
+                    <p className="text-xs text-gray-500 truncate pr-4">{chat.phone} • {chat.origin || 'Desconhecido'}</p>
+                  </div>
                 </div>
-                <div className="flex justify-between items-end">
-                  <p className="text-xs text-gray-500 truncate pr-4">{chat.msg}</p>
-                  {chat.unread > 0 && (
-                    <div className="bg-[#25D366] text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full shrink-0">
-                      {chat.unread}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -122,16 +253,27 @@ export default function Conversations() {
         <div className="flex-1 flex flex-col bg-[#F9FAFB]">
           {/* Chat Header */}
           <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 shrink-0">
+            {selectedChat ? (
+              <div className="flex items-center gap-3">
+                 <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
+                   {selectedChat.full_name ? selectedChat.full_name.substring(0, 2) : 'LC'}
+                 </div>
+                 <div>
+                   <h2 className="text-sm font-bold text-gray-900">{selectedChat.full_name || selectedChat.phone}</h2>
+                   <p className="text-[10px] text-[#25D366] font-bold">Online / WhatsApp</p>
+                 </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 font-medium">Selecione uma conversa</div>
+            )}
             <div className="flex items-center gap-3">
-               <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
-                 MO
-               </div>
-               <div>
-                 <h2 className="text-sm font-bold text-gray-900">Mariana Oliveira</h2>
-                 <p className="text-[10px] text-[#25D366] font-bold">Online no WhatsApp</p>
-               </div>
-            </div>
-            <div className="flex items-center gap-3">
+              <button 
+                onClick={handleGenerateProposal}
+                disabled={isGeneratingDoc}
+                className="px-3 py-1.5 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 shadow-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                {isGeneratingDoc ? "Gerando..." : "Gerar Proposta (Docs)"}
+              </button>
               <button className="px-3 py-1.5 border border-gray-200 bg-white rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 shadow-sm flex items-center gap-2">
                 <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
                 Marcar Retorno

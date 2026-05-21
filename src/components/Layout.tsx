@@ -1,11 +1,46 @@
+import { useEffect, useState } from "react";
 import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, CheckSquare, Search, AlertCircle, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, CheckSquare, AlertCircle, BarChart3, Search, Calendar as CalendarIcon } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const supabase = createClient();
+
+  const [counters, setCounters] = useState({
+    conversations: 0,
+    followUps: 0
+  });
+
+  useEffect(() => {
+    async function fetchCounters() {
+      // Get conversations count
+      const { count: convCount } = await supabase
+        .from('conversations')
+        .select('*', { count: 'exact', head: true });
+
+      // Get follow-ups count (leads without interaction in the last 48 hours)
+      const now = new Date();
+      const fortyEightHoursAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
+      
+      const { count: followUpCount } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .lt('last_interaction_at', fortyEightHoursAgo.toISOString());
+
+      setCounters({
+        conversations: convCount || 0,
+        followUps: followUpCount || 0
+      });
+    }
+
+    fetchCounters();
+    
+    // Optional: set interval or subscribe to realtime events in the future
+    const interval = setInterval(fetchCounters, 15000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = async () => {
     localStorage.removeItem("mock_session");
@@ -88,7 +123,9 @@ export default function Layout() {
                 <MessageSquare className={navIconClass("/conversations")} />
                 Conversas
               </div>
-              <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">24</span>
+              {counters.conversations > 0 && (
+                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">{counters.conversations}</span>
+              )}
             </Link>
             <Link to="/pipeline" className={navLinkClass("/pipeline")}>
               <div className="flex items-center gap-3">
@@ -96,12 +133,20 @@ export default function Layout() {
                 Pipeline
               </div>
             </Link>
+            <Link to="/calendar" className={navLinkClass("/calendar")}>
+              <div className="flex items-center gap-3">
+                <CalendarIcon className={navIconClass("/calendar")} />
+                Agenda
+              </div>
+            </Link>
             <Link to="/follow-ups" className={navLinkClass("/follow-ups")}>
                <div className="flex items-center gap-3">
                  <AlertCircle className={navIconClass("/follow-ups")} />
                  Follow-ups
                </div>
-               <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600 font-mono">Critical (8)</span>
+               {counters.followUps > 0 && (
+                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600 font-mono">Critical ({counters.followUps})</span>
+               )}
             </Link>
             <Link to="/reports" className={navLinkClass("/reports")}>
               <div className="flex items-center gap-3">

@@ -22,26 +22,29 @@ async function startServer() {
   });
 
   // API Route: n8n Webhook Inbound
-  app.post("/api/n8n/webhook", async (req, res) => {
+  const handleInboundWebhook = async (req: express.Request, res: express.Response) => {
     const authHeader = req.headers['authorization'];
     const expectedSecret = process.env.N8N_WEBHOOK_INBOUND_SECRET;
 
     if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
+      console.warn("Unauthorized webhook attempt:", { authHeader });
       return res.status(401).json({ error: "Unauthorized" });
     }
 
     const payload = req.body;
+    console.log("Recebido payload do n8n webhook in:", JSON.stringify(payload, null, 2));
     
-    if (!payload || !payload.event_id) {
-       return res.status(400).json({ error: "Missing event_id in payload" });
+    if (!payload || Object.keys(payload).length === 0) {
+       return res.status(400).json({ error: "Missing payload" });
     }
+    
+    const eventId = payload.event_id || payload.id || payload.message_id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseKey) {
         console.warn("Supabase credentials not configured for webhook. Logging to console.");
-        console.log("Recebido payload do n8n webhook in:", payload);
         return res.json({ received: true, simulated: true, timestamp: new Date().toISOString() });
     }
 
@@ -50,8 +53,8 @@ async function startServer() {
     try {
       // 1. Save integration event
       const { error: eventError } = await supabase.from('integration_events').insert({
-         event_id: payload.event_id,
-         event_type: payload.type || 'inbound_message',
+         event_id: eventId,
+         event_type: payload.type || payload.event || 'inbound_message',
          direction: 'inbound',
          payload: payload,
          status: 'success'
@@ -61,20 +64,40 @@ async function startServer() {
          if (eventError.code === '23505') { // unique violation
             return res.json({ received: true, status: 'already_processed', timestamp: new Date().toISOString() });
          }
-         throw eventError;
+         console.error("Save event warning:", eventError);
       }
 
       // 2. Process message & Lead
-      const phone = payload.phone || payload.destination || payload.from;
+      // Extract phone from various possible formats (Evolution API, WZAPI, Wati, Gupshup, generic)
+      let phone = payload.phone || payload.destination || payload.from || payload.remoteJid || payload.wa_id || payload.sender;
+      
+      // If it's an object with data (like Evolution API)
+      if (payload.data && payload.data.key && payload.data.key.remoteJid) {
+          phone = payload.data.key.remoteJid;
+      } else if (payload.data && payload.data.message && payload.data.pushName) {
+          phone = payload.data.key?.remoteJid || phone;
+      }
+      
       if (phone) {
-          // Find lead by phone
+          // clean up phone format (remove @s.whatsapp.net etc)
+          phone = phone.toString().split('@')[0];
+          
+          let content = payload.message || payload.text || payload.content || JSON.stringify(payload);
+          let name = payload.name || payload.contact_name || payload.pushName || (payload.data && payload.data.pushName) || phone;
+
+          if (payload.data && payload.data.message) {
+              const msgNode = payload.data.message;
+              content = msgNode.conversation || msgNode.extendedTextMessage?.text || content;
+          }
+
+          // Find lead by phone using ilike to match suffixes if needed, or exact match
           let { data: leads, error: findError } = await supabase.from('leads').select('id').eq('phone', phone).limit(1);
           let lead_id = leads && leads.length > 0 ? leads[0].id : null;
 
           if (!lead_id) {
              // Create new lead
              const { data: newLead, error: insertLeadError } = await supabase.from('leads').insert({
-                full_name: payload.name || phone,
+                full_name: name,
                 phone: phone,
                 origin: 'n8n Webhook',
                 temperature: 'cold'
@@ -98,14 +121,16 @@ async function startServer() {
                    conversation_id: conv_id,
                    direction: 'inbound',
                    type: 'text',
-                   content: payload.message || payload.text || JSON.stringify(payload),
-                   n8n_message_id: payload.event_id
+                   content: typeof content === 'string' ? content : JSON.stringify(content),
+                   n8n_message_id: eventId
                 });
                 
                 // Update lead last_interaction_at
                 await supabase.from('leads').update({ last_interaction_at: new Date().toISOString() }).eq('id', lead_id);
              }
           }
+      } else {
+        console.warn("Could not extract phone number from payload", payload);
       }
 
       res.json({ received: true, simulated: false, timestamp: new Date().toISOString() });
@@ -113,7 +138,11 @@ async function startServer() {
       console.error("Webhook processing error:", err);
       res.status(500).json({ error: "Internal error processing webhook" });
     }
-  });
+  };
+
+  app.post("/api/n8n/webhook", handleInboundWebhook);
+  app.post("/api/webhook/n8n", handleInboundWebhook);
+  app.post("/api/webhook/inbound", handleInboundWebhook);
 
   // API Route: n8n Webhook Outbound
   app.post("/api/n8n/outbound", async (req, res) => {
@@ -123,12 +152,38 @@ async function startServer() {
     // URL exposta no .env para enviar payload ao n8n
     const n8nUrl = process.env.VITE_N8N_OUTBOUND_WEBHOOK_URL || process.env.N8N_OUTBOUND_WEBHOOK_URL;
     
-    if (!n8nUrl || !n8nUrl.startsWith('http')) {
-      console.warn("N8N_OUTBOUND_WEBHOOK_URL isValid URL is not set (received Token/JWT?). Simulating success.");
-      return res.json({ success: true, simulated: true, timestamp: new Date().toISOString() });
-    }
-
     try {
+      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+      
+      if (supabaseUrl && supabaseKey) {
+          const supabase = createClient(supabaseUrl, supabaseKey);
+          
+          let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', contactId).limit(1);
+          let conv_id = convs && convs.length > 0 ? convs[0].id : null;
+          if (!conv_id) {
+             const { data: newConv } = await supabase.from('conversations').insert({ lead_id: contactId }).select('id').single();
+             if (newConv) conv_id = newConv.id;
+          }
+
+          if (conv_id) {
+             await supabase.from('messages').insert({
+                 conversation_id: conv_id,
+                 direction: 'outbound',
+                 type: 'text',
+                 content: message,
+                 n8n_message_id: `out_${Date.now()}`
+             });
+             
+             await supabase.from('leads').update({ last_interaction_at: new Date().toISOString() }).eq('id', contactId);
+          }
+      }
+
+      if (!n8nUrl || !n8nUrl.startsWith('http')) {
+        console.warn("N8N_OUTBOUND_WEBHOOK_URL isValid URL is not set (received Token/JWT?). Simulating success.");
+        return res.json({ success: true, simulated: true, timestamp: new Date().toISOString() });
+      }
+
       // Simulação da chamada ao webhook n8n de saída
       const response = await fetch(n8nUrl, {
         method: "POST",

@@ -1,59 +1,67 @@
+import { useState, useEffect } from "react";
 import { MoreHorizontal, Plus, GripVertical } from "lucide-react";
+import { createClient } from "../lib/supabase/client";
 
 export default function Pipeline() {
-  const stages = [
-    {
-      id: "new",
-      title: "Novo Lead",
-      color: "bg-blue-500",
-      bgCol: "bg-gray-50",
-      items: [
-        { id: 1, name: "Fernanda Costa", interest: "Avaliação", time: "2h", origin: "WhatsApp" },
-        { id: 2, name: "Roberto Alves", interest: "Dúvida", time: "4h", origin: "Site" },
-      ]
-    },
-    {
-      id: "contact",
-      title: "Em Contato",
-      color: "bg-yellow-500",
-      bgCol: "bg-gray-50",
-      items: [
-        { id: 3, name: "Júlia Lima", interest: "Retorno", time: "1d", origin: "n8n" },
-      ]
-    },
-    {
-      id: "qualified",
-      title: "Qualificado",
-      color: "bg-orange-500",
-      bgCol: "bg-gray-50",
-      items: [
-        { id: 4, name: "Mariana Oliveira", interest: "Transplante Capilar", time: "3h", origin: "WhatsApp" },
-      ]
-    },
-    {
-      id: "proposal",
-      title: "Proposta / Negociação",
-      color: "bg-purple-500",
-      bgCol: "bg-gray-50",
-      items: []
-    },
-    {
-      id: "scheduled",
-      title: "Agendado / Ganho",
-      color: "bg-green-500",
-      bgCol: "bg-green-50/50",
-      items: [
-        { id: 5, name: "Carlos Magno", interest: "Implante", time: "5d", origin: "Indicação" },
-      ]
+  const [stages, setStages] = useState([
+    { id: "cold", title: "Novo Lead (Frios)", color: "bg-blue-500", bgCol: "bg-gray-50", items: [] as any[] },
+    { id: "warm", title: "Em Contato (Mornos)", color: "bg-yellow-500", bgCol: "bg-gray-50", items: [] as any[] },
+    { id: "hot", title: "Qualificados (Quentes)", color: "bg-orange-500", bgCol: "bg-gray-50", items: [] as any[] },
+    { id: "proposal", title: "Proposta", color: "bg-purple-500", bgCol: "bg-gray-50", items: [] as any[] },
+    { id: "won", title: "Ganhos", color: "bg-green-500", bgCol: "bg-green-50/50", items: [] as any[] }
+  ]);
+
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchPipeline() {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (data) {
+        setStages(prev => prev.map(stage => ({ ...stage, items: [] }))); // Reset items
+        
+        const newStages = [
+          { id: "cold", title: "Novo Lead (Frios)", color: "bg-blue-500", bgCol: "bg-gray-50", items: [] as any[] },
+          { id: "warm", title: "Em Contato (Mornos)", color: "bg-yellow-500", bgCol: "bg-gray-50", items: [] as any[] },
+          { id: "hot", title: "Qualificados (Quentes)", color: "bg-orange-500", bgCol: "bg-gray-50", items: [] as any[] },
+          { id: "proposal", title: "Proposta", color: "bg-purple-500", bgCol: "bg-gray-50", items: [] as any[] },
+          { id: "won", title: "Ganhos", color: "bg-green-500", bgCol: "bg-green-50/50", items: [] as any[] }
+        ];
+
+        data.forEach(lead => {
+          const temp = lead.temperature?.toLowerCase() || 'cold';
+          let stageIndex = 0; // Default down to cold
+          if (temp === 'hot' || temp === 'quente') stageIndex = 2;
+          else if (temp === 'warm' || temp === 'morno') stageIndex = 1;
+
+          // Format lead item
+          newStages[stageIndex].items.push({
+            id: lead.id,
+            name: lead.full_name || lead.phone,
+            interest: lead.interest || "Pendente",
+            time: new Date(lead.last_interaction_at || lead.created_at).toLocaleDateString(),
+            origin: lead.origin || "Sistema"
+          });
+        });
+
+        setStages(newStages);
+      }
+      setLoading(false);
     }
-  ];
+    
+    fetchPipeline();
+  }, []);
 
   return (
     <div className="flex flex-col h-full w-full">
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#111827]">Pipeline Comercial</h1>
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-1">Gestão de Estágios e Conversão (Fase 3)</p>
+          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-1">Sincronizado com Supabase</p>
         </div>
         <div className="flex gap-3">
           <button className="flex items-center gap-2 px-4 py-2 border border-gray-200 bg-white text-sm font-bold text-gray-700 rounded-lg hover:bg-gray-50 shadow-sm transition-colors">
@@ -67,7 +75,9 @@ export default function Pipeline() {
       </div>
 
       <div className="flex-1 flex gap-6 overflow-x-auto pb-4 snap-x min-h-[600px]">
-        {stages.map((stage) => (
+        {loading ? (
+          <div className="w-full h-32 flex items-center justify-center text-gray-500">Carregando pipeline...</div>
+        ) : stages.map((stage) => (
           <div key={stage.id} className={`flex flex-col w-80 shrink-0 rounded-2xl border border-gray-200 ${stage.bgCol} snap-start`}>
             {/* Header Column */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white rounded-t-2xl">

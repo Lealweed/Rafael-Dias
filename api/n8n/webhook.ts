@@ -2,7 +2,13 @@ import { createClient } from '@supabase/supabase-js';
 
 function normalizePhone(raw: any): string {
   if (!raw) return '';
-  return String(raw).split('@')[0].replace(/\s+/g, '');
+  const base = String(raw).split('@')[0].trim();
+  if (/^https?:\/\//i.test(base)) return '';
+  return base.replace(/\D/g, '');
+}
+
+function pickData(payload: any) {
+  return payload?.data || payload?.body?.data || payload?.raw?.data || {};
 }
 
 export default async function handler(req: any, res: any) {
@@ -39,6 +45,15 @@ export default async function handler(req: any, res: any) {
     return res.status(400).json({ error: 'Missing payload' });
   }
 
+  const data = pickData(payload);
+  const eventType = String(payload.event || payload.type || payload.body?.event || '').toLowerCase();
+  const fromMe = Boolean(data?.key?.fromMe ?? payload?.fromMe ?? payload?.body?.fromMe ?? false);
+
+  // Ignora eventos de status/eco e mensagens enviadas pelo próprio número.
+  if ((eventType && !eventType.includes('messages.')) || fromMe) {
+    return res.status(200).json({ received: true, ignored: true, reason: fromMe ? 'from_me' : 'non_message_event' });
+  }
+
   const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
@@ -70,25 +85,28 @@ export default async function handler(req: any, res: any) {
 
     let phone =
       payload.phone ||
-      payload.destination ||
       payload.from ||
       payload.remoteJid ||
       payload.wa_id ||
       payload.sender ||
-      payload.data?.key?.remoteJid ||
+      data?.key?.remoteJid ||
       '';
 
     phone = normalizePhone(phone);
 
     let content = payload.message || payload.text || payload.content || '';
-    if (!content && payload.data?.message) {
-      content = payload.data.message.conversation || payload.data.message.extendedTextMessage?.text || '';
+    if (!content && data?.message) {
+      content = data.message.conversation || data.message.extendedTextMessage?.text || '';
     }
 
-    const name = payload.name || payload.contact_name || payload.pushName || payload.data?.pushName || phone || 'Lead';
+    const name = payload.name || payload.contact_name || payload.pushName || data?.pushName || phone || 'Lead';
 
     if (!phone) {
-      return res.status(200).json({ received: true, status: 'no_phone', timestamp: new Date().toISOString() });
+      return res.status(200).json({ received: true, ignored: true, reason: 'no_phone', timestamp: new Date().toISOString() });
+    }
+
+    if (!String(content || '').trim()) {
+      return res.status(200).json({ received: true, ignored: true, reason: 'no_content', timestamp: new Date().toISOString() });
     }
 
     let { data: leads } = await supabase.from('leads').select('id').eq('phone', phone).limit(1);

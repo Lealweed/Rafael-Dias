@@ -23,12 +23,21 @@ async function startServer() {
 
   // API Route: n8n Webhook Inbound
   const handleInboundWebhook = async (req: express.Request, res: express.Response) => {
-    const authHeader = req.headers['authorization'];
+    const authHeader = String(req.headers['authorization'] || '').trim();
     const expectedSecret = process.env.N8N_WEBHOOK_INBOUND_SECRET;
 
-    if (expectedSecret && authHeader !== `Bearer ${expectedSecret}`) {
-      console.warn("Unauthorized webhook attempt:", { authHeader });
-      return res.status(401).json({ error: "Unauthorized" });
+    // Accept both formats to avoid integration drift:
+    // 1) Authorization: Bearer <secret>
+    // 2) Authorization: <secret>
+    if (expectedSecret) {
+      const bearer = `Bearer ${expectedSecret}`;
+      const secretOnly = expectedSecret;
+      const authorized = authHeader === bearer || authHeader === secretOnly;
+
+      if (!authorized) {
+        console.warn("Unauthorized webhook attempt:", { authHeader });
+        return res.status(401).json({ error: "Unauthorized" });
+      }
     }
 
     const payload = req.body;
@@ -41,14 +50,15 @@ async function startServer() {
     const eventId = payload.event_id || payload.id || payload.message_id || `evt_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
 
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-        console.warn("Supabase credentials not configured for webhook. Logging to console.");
-        return res.json({ received: true, simulated: true, timestamp: new Date().toISOString() });
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+    // Inbound webhook must run with service role to avoid RLS/write failures.
+    if (!supabaseUrl || !supabaseServiceKey) {
+        console.warn("Supabase URL/service role not configured for webhook. Logging to console.");
+        return res.json({ received: true, simulated: true, timestamp: new Date().toISOString(), reason: "missing_supabase_service_role" });
     }
 
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     try {
       // 1. Save integration event

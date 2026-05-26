@@ -7,11 +7,41 @@ function getAuthHeader(req: any): string {
   return String(req.headers?.authorization || '').trim();
 }
 
-function isAuthorized(req: any): boolean {
+function isAuthorizedBySecret(req: any): boolean {
   const header = getAuthHeader(req);
   const secret = process.env.N8N_CALENDAR_WEBHOOK_SECRET || process.env.N8N_WEBHOOK_INBOUND_SECRET || '';
   if (!secret) return true;
   return header === secret || header === `Bearer ${secret}`;
+}
+
+async function isAuthorizedBySupabaseUser(req: any): Promise<boolean> {
+  const header = getAuthHeader(req);
+  if (!header || !header.toLowerCase().startsWith('bearer ')) return false;
+
+  const supabaseUrl = process.env.SUPABASE_URL;
+  const supabaseAnon = process.env.SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnon) return false;
+
+  try {
+    const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        apikey: supabaseAnon,
+        Authorization: header,
+      },
+    });
+
+    if (!resp.ok) return false;
+    const user = await resp.json().catch(() => null);
+    return Boolean(user?.id);
+  } catch {
+    return false;
+  }
+}
+
+async function isAuthorizedForWrite(req: any): Promise<boolean> {
+  if (isAuthorizedBySecret(req)) return true;
+  return isAuthorizedBySupabaseUser(req);
 }
 
 function isReadOnlyAction(action: CalendarAction): boolean {
@@ -92,8 +122,11 @@ export default async function handler(req: any, res: any) {
 
   const action = getAction(req);
 
-  if (!isAuthorized(req) && !isReadOnlyAction(action)) {
-    return json(res, 401, { ok: false, action, error: 'Unauthorized' });
+  if (!isReadOnlyAction(action)) {
+    const allowed = await isAuthorizedForWrite(req);
+    if (!allowed) {
+      return json(res, 401, { ok: false, action, error: 'Unauthorized' });
+    }
   }
 
   const timezone = String(req.body?.timezone || req.query?.timezone || process.env.TZ || 'America/Fortaleza');

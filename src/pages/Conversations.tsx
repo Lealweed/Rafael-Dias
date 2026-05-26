@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Send, User, Paperclip, MoreVertical, CheckCircle2 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
-import { getAccessToken, googleSignIn } from "../lib/firebase";
 
 export default function Conversations() {
   const [activeChats, setActiveChats] = useState<any[]>([]);
@@ -9,6 +8,7 @@ export default function Conversations() {
   const [messages, setMessages] = useState<any[]>([]);
   const [loadingChats, setLoadingChats] = useState(true);
   const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
+  const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
 
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
@@ -19,18 +19,30 @@ export default function Conversations() {
   useEffect(() => {
     async function fetchChats() {
       const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('last_interaction_at', { ascending: false });
-      
+        .from('Usuarios')
+        .select('*');
+
+      if (error) {
+        console.error('Erro ao buscar conversas (Usuarios):', error);
+        setActiveChats([]);
+        setLoadingChats(false);
+        return;
+      }
+
       if (data) {
-        setActiveChats(data);
+        const sorted = [...data].sort((a: any, b: any) => {
+          const ta = new Date(a.updated_at || a.created_at || 0).getTime();
+          const tb = new Date(b.updated_at || b.created_at || 0).getTime();
+          return tb - ta;
+        });
+
+        setActiveChats(sorted);
         // Set selectedChat only if none is selected, so we don't overwrite user selection
         setSelectedChat(prev => {
-          if (!prev && data.length > 0) return data[0];
+          if (!prev && sorted.length > 0) return sorted[0];
           // If we have a selected chat, ensure we keep the updated object (for time displaying)
           if (prev) {
-            const updated = data.find(c => c.id === prev.id);
+            const updated = sorted.find(c => c.id === prev.id);
             if (updated) return updated;
           }
           return prev;
@@ -47,30 +59,21 @@ export default function Conversations() {
   useEffect(() => {
     async function fetchMessages() {
       if (!selectedChat) return;
-      
-      const { data: convs } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('lead_id', selectedChat.id)
-        .limit(1);
 
-      if (convs && convs.length > 0) {
-        const convId = convs[0].id;
-        const { data: msgs } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('conversation_id', convId)
-          .order('created_at', { ascending: true });
-          
-        if (msgs) {
-          setMessages(msgs.map(m => ({
-            id: m.id,
-            type: m.direction || 'system',
-            text: m.content || '',
-            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-          })));
-        }
-      }
+      // Ambiente atual não possui tabelas conversations/messages.
+      // Exibimos um histórico mínimo a partir dos dados do contato para não zerar a tela.
+      const contactName = selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone || 'Contato';
+      const lastAt = selectedChat.last_interaction_at || selectedChat.ultima_interacao_em || selectedChat.updated_at || selectedChat.created_at;
+      const lastTime = lastAt ? new Date(lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      setMessages([
+        {
+          id: `${selectedChat.id}_system`,
+          type: 'system',
+          text: `Conversa ativa com ${contactName}`,
+          time: lastTime,
+        },
+      ]);
     }
     
     fetchMessages();
@@ -108,7 +111,7 @@ export default function Conversations() {
           contactId: selectedChat.id, 
           message: newMsg.text, 
           type: "whatsapp",
-          destination: selectedChat.phone
+          destination: selectedChat.phone || selectedChat.telefone
         })
       });
       
@@ -136,61 +139,45 @@ export default function Conversations() {
   const handleGenerateProposal = async () => {
     if (!selectedChat) return;
 
+    setGoogleAuthError(null);
     setIsGeneratingDoc(true);
     try {
-      let token = await getAccessToken();
-      if (!token) {
-        const result = await googleSignIn();
-        if (result) {
-          token = result.accessToken;
-        } else {
-          throw new Error("Não foi possível autenticar no Google");
-        }
-      }
+      const payload = {
+        contactName: selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone,
+        phone: selectedChat.phone || selectedChat.telefone || '',
+        origin: selectedChat.origin || selectedChat.origem || '',
+        interest: selectedChat.interest || selectedChat.interesse || '',
+      };
 
-      // Create a Google Doc
-      const res = await fetch("https://docs.googleapis.com/v1/documents", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          title: `Proposta Comercial - ${selectedChat.full_name || selectedChat.phone}`,
-        }),
+      const res = await fetch('/api/n8n/proposal-doc', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      if (data.documentId) {
-        // Insert text into the doc
-        const content = `Proposta Comercial\n\nData: ${new Date().toLocaleDateString()}\nCliente: ${selectedChat.full_name || selectedChat.phone}\nTelefone: ${selectedChat.phone}\nOrigem: ${selectedChat.origin || 'N/A'}\nServiço de Interesse: ${selectedChat.interest || 'N/A'}\n\n[Detalhes da Proposta Aqui]\n`;
-
-        await fetch(`https://docs.googleapis.com/v1/documents/${data.documentId}:batchUpdate`, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            requests: [
-              {
-                insertText: {
-                  location: { index: 1 },
-                  text: content,
-                },
-              },
-            ],
-          }),
-        });
-
-        // Open the document in a new tab
-        window.open(`https://docs.google.com/document/d/${data.documentId}/edit`, "_blank");
-      } else {
-        throw new Error(data.error?.message || "Failed to create document");
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok || !data.ok || !data.docUrl) {
+        throw new Error(data?.error || `Falha ao gerar proposta (${res.status})`);
       }
-    } catch (err) {
-      console.error("Failed to generate proposal:", err);
-      // alert("Falha ao gerar proposta. Verifique o console.");
+
+      window.open(data.docUrl, '_blank');
+    } catch (err: any) {
+      console.error('Failed to generate proposal:', err);
+
+      const rawMessage = String(err?.message || '');
+      let message = 'Falha ao gerar proposta no Google Docs. Tente novamente.';
+
+      if (rawMessage.includes('insufficientPermissions') || rawMessage.includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT')) {
+        message = 'O refresh token não tem escopo do Google Docs. Reautorize no OAuth com o escopo https://www.googleapis.com/auth/documents.';
+      } else if (rawMessage.includes('invalid_grant')) {
+        message = 'Refresh token inválido/expirado. Gere um novo GOOGLE_REFRESH_TOKEN e atualize na Vercel.';
+      } else if (rawMessage.includes('Missing GOOGLE_CLIENT_ID')) {
+        message = 'Variáveis GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN ausentes na Vercel.';
+      } else if (rawMessage) {
+        message = rawMessage;
+      }
+
+      setGoogleAuthError(message);
     } finally {
       setIsGeneratingDoc(false);
     }
@@ -227,7 +214,7 @@ export default function Conversations() {
               <div className="p-4 text-center text-sm text-gray-500">Nenhuma conversa encontrada.</div>
             ) : activeChats.map((chat) => {
               const isSelected = selectedChat?.id === chat.id;
-              const dateStr = chat.last_interaction_at || chat.created_at;
+              const dateStr = chat.last_interaction_at || chat.ultima_interacao_em || chat.updated_at || chat.created_at;
               const time = dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
               
               return (
@@ -237,11 +224,11 @@ export default function Conversations() {
                   className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.full_name || chat.phone}</h4>
+                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.full_name || chat.nome || chat.phone || chat.telefone}</h4>
                     <span className="text-[10px] text-gray-400 font-medium shrink-0">{time}</span>
                   </div>
                   <div className="flex justify-between items-end">
-                    <p className="text-xs text-gray-500 truncate pr-4">{chat.phone} • {chat.origin || 'Desconhecido'}</p>
+                    <p className="text-xs text-gray-500 truncate pr-4">{chat.phone || chat.telefone} • {chat.origin || chat.origem || 'Desconhecido'}</p>
                   </div>
                 </div>
               );
@@ -256,10 +243,10 @@ export default function Conversations() {
             {selectedChat ? (
               <div className="flex items-center gap-3">
                  <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
-                   {selectedChat.full_name ? selectedChat.full_name.substring(0, 2) : 'LC'}
+                   {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'LC'}
                  </div>
                  <div>
-                   <h2 className="text-sm font-bold text-gray-900">{selectedChat.full_name || selectedChat.phone}</h2>
+                   <h2 className="text-sm font-bold text-gray-900">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
                    <p className="text-[10px] text-[#25D366] font-bold">Online / WhatsApp</p>
                  </div>
               </div>
@@ -281,6 +268,12 @@ export default function Conversations() {
               <button className="text-gray-400 hover:text-gray-600"><MoreVertical className="w-5 h-5"/></button>
             </div>
           </div>
+
+          {googleAuthError && (
+            <div className="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+              {googleAuthError}
+            </div>
+          )}
 
           {/* Messages Area */}
           <div className="flex-1 overflow-y-auto p-6 space-y-6">

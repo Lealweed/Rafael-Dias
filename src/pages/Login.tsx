@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { createClient } from "../lib/supabase/client";
 
 export default function Login() {
@@ -17,7 +18,7 @@ export default function Login() {
     // Bypass temporário para validação solicitada
     if (email === "leal@adm.com" && password === "1921") {
       localStorage.setItem("mock_session", "true");
-      window.location.href = "/";
+      window.location.href = "/dashboard";
       return;
     }
 
@@ -97,6 +98,16 @@ export default function Login() {
               </button>
             </div>
           </form>
+        </div>
+
+        <div className="mt-4 flex items-center justify-center gap-4 text-xs font-semibold text-gray-500">
+          <Link to="/privacy-policy" className="text-[#2563EB] hover:underline">
+            Política de Privacidade
+          </Link>
+          <span>•</span>
+          <Link to="/terms-of-service" className="text-[#2563EB] hover:underline">
+            Termos de Serviço
+          </Link>
         </div>
       </div>
     </div>

@@ -18,6 +18,9 @@ import Followups from "./pages/Followups";
 import Pipeline from "./pages/Pipeline";
 import Reports from "./pages/Reports";
 import CalendarPage from "./pages/CalendarPage";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
+import Home from "./pages/Home";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
@@ -57,11 +60,14 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={!session ? <Login /> : <Navigate to="/" />} />
-        
+        <Route path="/" element={<Home />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/login" element={!session ? <Login /> : <Navigate to="/dashboard" />} />
+
         {/* Rotas Autenticadas */}
         <Route element={session ? <Layout /> : <Navigate to="/login" />}>
-          <Route path="/" element={<Dashboard />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leads" element={<Leads />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/calendar" element={<CalendarPage />} />
@@ -69,8 +75,9 @@ export default function App() {
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/config" element={<ConfigPage />} />
-          <Route path="*" element={<Navigate to="/" />} />
         </Route>
+
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
   );

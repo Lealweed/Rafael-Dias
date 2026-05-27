@@ -15,23 +15,14 @@ export default function Layout() {
 
   useEffect(() => {
     async function fetchCounters() {
-      // Get conversations count
-      const { count: convCount } = await supabase
-        .from('conversations')
-        .select('*', { count: 'exact', head: true });
+      const res = await fetch('/api/crm/dashboard');
+      const data = await res.json();
 
-      // Get follow-ups count (leads without interaction in the last 48 hours)
-      const now = new Date();
-      const fortyEightHoursAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
-      
-      const { count: followUpCount } = await supabase
-        .from('leads')
-        .select('*', { count: 'exact', head: true })
-        .lt('last_interaction_at', fortyEightHoursAgo.toISOString());
+      if (!res.ok || !data.ok) return;
 
       setCounters({
-        conversations: convCount || 0,
-        followUps: followUpCount || 0
+        conversations: data.totalConversations || 0,
+        followUps: 0
       });
     }
 
@@ -106,9 +97,9 @@ export default function Layout() {
         {/* SIDEBAR NAV */}
         <aside className="w-64 border-r border-gray-200 bg-white p-4 flex flex-col shrink-0">
           <nav className="space-y-1">
-            <Link to="/" className={navLinkClass("/")}>
+            <Link to="/dashboard" className={navLinkClass("/dashboard")}>
               <div className="flex items-center gap-3">
-                <LayoutDashboard className={navIconClass("/")} />
+                <LayoutDashboard className={navIconClass("/dashboard")} />
                 Dashboard
               </div>
             </Link>

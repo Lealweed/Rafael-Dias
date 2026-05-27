@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, Send, User, Paperclip, MoreVertical, CheckCircle2 } from "lucide-react";
-import { createClient } from "../lib/supabase/client";
 
 export default function Conversations() {
   const [activeChats, setActiveChats] = useState<any[]>([]);
@@ -13,41 +12,31 @@ export default function Conversations() {
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient();
 
   // Load leads/chats
   useEffect(() => {
     async function fetchChats() {
-      const { data, error } = await supabase
-        .from('Usuarios')
-        .select('*');
+      const res = await fetch('/api/crm/conversations');
+      const data = await res.json();
 
-      if (error) {
-        console.error('Erro ao buscar conversas (Usuarios):', error);
+      if (!res.ok || !data.ok) {
+        console.error('Erro ao buscar conversas:', data?.error || res.statusText);
         setActiveChats([]);
         setLoadingChats(false);
         return;
       }
 
-      if (data) {
-        const sorted = [...data].sort((a: any, b: any) => {
-          const ta = new Date(a.updated_at || a.created_at || 0).getTime();
-          const tb = new Date(b.updated_at || b.created_at || 0).getTime();
-          return tb - ta;
-        });
+      const sorted = data.contacts || [];
 
-        setActiveChats(sorted);
-        // Set selectedChat only if none is selected, so we don't overwrite user selection
-        setSelectedChat(prev => {
-          if (!prev && sorted.length > 0) return sorted[0];
-          // If we have a selected chat, ensure we keep the updated object (for time displaying)
-          if (prev) {
-            const updated = sorted.find(c => c.id === prev.id);
-            if (updated) return updated;
-          }
-          return prev;
-        });
-      }
+      setActiveChats(sorted);
+      setSelectedChat(prev => {
+        if (!prev && sorted.length > 0) return sorted[0];
+        if (prev) {
+          const updated = sorted.find((chat: any) => chat.id === prev.id || chat.phone === prev.phone);
+          if (updated) return updated;
+        }
+        return prev;
+      });
       setLoadingChats(false);
     }
     fetchChats();
@@ -60,11 +49,20 @@ export default function Conversations() {
     async function fetchMessages() {
       if (!selectedChat) return;
 
-      // Ambiente atual não possui tabelas conversations/messages.
-      // Exibimos um histórico mínimo a partir dos dados do contato para não zerar a tela.
-      const contactName = selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone || 'Contato';
-      const lastAt = selectedChat.last_interaction_at || selectedChat.ultima_interacao_em || selectedChat.updated_at || selectedChat.created_at;
+      const contactName = selectedChat.name || selectedChat.phone || 'Contato';
+      const lastAt = selectedChat.lastInteractionAt;
       const lastTime = lastAt ? new Date(lastAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      const history = Array.isArray(selectedChat.messages) ? selectedChat.messages : [];
+
+      if (history.length > 0) {
+        setMessages(history.map((message: any) => ({
+          id: message.id,
+          type: message.type,
+          text: message.text,
+          time: new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        })));
+        return;
+      }
 
       setMessages([
         {
@@ -108,10 +106,10 @@ export default function Conversations() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
-          contactId: selectedChat.id, 
+          contactId: selectedChat.leadId || selectedChat.usuarioId || selectedChat.id, 
           message: newMsg.text, 
           type: "whatsapp",
-          destination: selectedChat.phone || selectedChat.telefone
+          destination: selectedChat.phone
         })
       });
       
@@ -142,11 +140,11 @@ export default function Conversations() {
     setGoogleAuthError(null);
     setIsGeneratingDoc(true);
     try {
-      const payload = {
-        contactName: selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone,
-        phone: selectedChat.phone || selectedChat.telefone || '',
-        origin: selectedChat.origin || selectedChat.origem || '',
-        interest: selectedChat.interest || selectedChat.interesse || '',
+        const payload = {
+        contactName: selectedChat.name || selectedChat.phone,
+        phone: selectedChat.phone || '',
+        origin: selectedChat.origin || '',
+        interest: selectedChat.interest || '',
       };
 
       const res = await fetch('/api/n8n/proposal-doc', {
@@ -214,7 +212,7 @@ export default function Conversations() {
               <div className="p-4 text-center text-sm text-gray-500">Nenhuma conversa encontrada.</div>
             ) : activeChats.map((chat) => {
               const isSelected = selectedChat?.id === chat.id;
-              const dateStr = chat.last_interaction_at || chat.ultima_interacao_em || chat.updated_at || chat.created_at;
+              const dateStr = chat.lastInteractionAt;
               const time = dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
               
               return (
@@ -224,11 +222,11 @@ export default function Conversations() {
                   className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.full_name || chat.nome || chat.phone || chat.telefone}</h4>
+                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.name || chat.phone}</h4>
                     <span className="text-[10px] text-gray-400 font-medium shrink-0">{time}</span>
                   </div>
                   <div className="flex justify-between items-end">
-                    <p className="text-xs text-gray-500 truncate pr-4">{chat.phone || chat.telefone} • {chat.origin || chat.origem || 'Desconhecido'}</p>
+                    <p className="text-xs text-gray-500 truncate pr-4">{chat.phone} • {chat.origin || 'Desconhecido'}</p>
                   </div>
                 </div>
               );
@@ -242,11 +240,11 @@ export default function Conversations() {
           <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 shrink-0">
             {selectedChat ? (
               <div className="flex items-center gap-3">
-                 <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
-                   {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'LC'}
+                   <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
+                   {selectedChat.name ? selectedChat.name.substring(0, 2) : 'LC'}
                  </div>
                  <div>
-                   <h2 className="text-sm font-bold text-gray-900">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
+                   <h2 className="text-sm font-bold text-gray-900">{selectedChat.name || selectedChat.phone}</h2>
                    <p className="text-[10px] text-[#25D366] font-bold">Online / WhatsApp</p>
                  </div>
               </div>

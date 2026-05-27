@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { MoreHorizontal, Plus, GripVertical } from "lucide-react";
-import { createClient } from "../lib/supabase/client";
 
 export default function Pipeline() {
   const [stages, setStages] = useState([
@@ -15,13 +14,10 @@ export default function Pipeline() {
 
   useEffect(() => {
     async function fetchPipeline() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
+      const res = await fetch('/api/crm/leads');
+      const data = await res.json();
 
-      if (data) {
+      if (res.ok && data.ok) {
         setStages(prev => prev.map(stage => ({ ...stage, items: [] }))); // Reset items
         
         const newStages = [
@@ -32,7 +28,7 @@ export default function Pipeline() {
           { id: "won", title: "Ganhos", color: "bg-green-500", bgCol: "bg-green-50/50", items: [] as any[] }
         ];
 
-        data.forEach(lead => {
+        (data.leads || []).forEach((lead: any) => {
           const temp = lead.temperature?.toLowerCase() || 'cold';
           let stageIndex = 0; // Default down to cold
           if (temp === 'hot' || temp === 'quente') stageIndex = 2;
@@ -41,14 +37,16 @@ export default function Pipeline() {
           // Format lead item
           newStages[stageIndex].items.push({
             id: lead.id,
-            name: lead.full_name || lead.phone,
-            interest: lead.interest || "Pendente",
-            time: new Date(lead.last_interaction_at || lead.created_at).toLocaleDateString(),
+            name: lead.name || lead.phone || 'Sem nome',
+            interest: lead.interest || lead.latestMessage || "Pendente",
+            time: new Date(lead.lastInteractionAt || lead.createdAt).toLocaleDateString(),
             origin: lead.origin || "Sistema"
           });
         });
 
         setStages(newStages);
+      } else {
+        console.error('Erro ao buscar pipeline:', data?.error || res.statusText);
       }
       setLoading(false);
     }

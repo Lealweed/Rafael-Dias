@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
+function normalizePhone(raw: any): string {
+  if (!raw) return '';
+  return String(raw).split('@')[0].replace(/\D/g, '');
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -7,18 +12,67 @@ export default async function handler(req: any, res: any) {
 
   const { contactId, message, type, destination } = req.body || {};
   const n8nUrl = process.env.VITE_N8N_OUTBOUND_WEBHOOK_URL || process.env.N8N_OUTBOUND_WEBHOOK_URL;
+  let phone = normalizePhone(destination);
+  let contactName = '';
 
   try {
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (supabaseUrl && supabaseServiceKey && contactId && message) {
+    if (supabaseUrl && supabaseServiceKey && contactId) {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', contactId).limit(1);
+
+      const { data: usuario } = await supabase
+        .from('Usuarios')
+        .select('nome, telefone')
+        .eq('id', contactId)
+        .maybeSingle();
+
+      phone = phone || normalizePhone(usuario?.telefone);
+      contactName = usuario?.nome || '';
+
+      let leadId = contactId;
+      const { data: leadById } = await supabase
+        .from('leads')
+        .select('id, full_name, phone')
+        .eq('id', contactId)
+        .maybeSingle();
+
+      if (leadById) {
+        leadId = leadById.id;
+        phone = phone || normalizePhone(leadById.phone);
+        contactName = contactName || leadById.full_name || '';
+      } else if (phone) {
+        const { data: leadByPhone } = await supabase
+          .from('leads')
+          .select('id, full_name')
+          .eq('phone', phone)
+          .maybeSingle();
+
+        if (leadByPhone) {
+          leadId = leadByPhone.id;
+          contactName = contactName || leadByPhone.full_name || '';
+        } else {
+          const { data: newLead } = await supabase
+            .from('leads')
+            .insert({
+              full_name: contactName || phone,
+              phone,
+              origin: 'CRM Manual',
+              temperature: 'cold',
+              last_interaction_at: new Date().toISOString(),
+            })
+            .select('id')
+            .single();
+          if (newLead?.id) leadId = newLead.id;
+        }
+      }
+
+      let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', leadId).limit(1);
       let convId = convs?.[0]?.id as string | undefined;
 
       if (!convId) {
-        const { data: newConv } = await supabase.from('conversations').insert({ lead_id: contactId }).select('id').single();
+        const { data: newConv } = await supabase.from('conversations').insert({ lead_id: leadId }).select('id').single();
         convId = newConv?.id;
       }
 
@@ -31,8 +85,12 @@ export default async function handler(req: any, res: any) {
           n8n_message_id: `out_${Date.now()}`,
         });
 
-        await supabase.from('leads').update({ last_interaction_at: new Date().toISOString() }).eq('id', contactId);
+        await supabase.from('leads').update({ last_interaction_at: new Date().toISOString() }).eq('id', leadId);
       }
+    }
+
+    if (!phone) {
+      return res.status(400).json({ error: 'Contato sem telefone válido para envio ao WhatsApp' });
     }
 
     if (!n8nUrl || !String(n8nUrl).startsWith('http')) {
@@ -45,7 +103,16 @@ export default async function handler(req: any, res: any) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.N8N_WEBHOOK_OUTBOUND_TOKEN || ''}`,
       },
-      body: JSON.stringify({ contactId, message, type, destination, timestamp: new Date().toISOString() }),
+      body: JSON.stringify({
+        source: 'crm_outbound',
+        contactId,
+        name: contactName,
+        phone,
+        message,
+        type,
+        destination: phone,
+        timestamp: new Date().toISOString(),
+      }),
     });
 
     if (!response.ok) {

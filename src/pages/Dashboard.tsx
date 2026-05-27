@@ -1,48 +1,26 @@
 import { useState, useEffect } from "react";
-import { createClient } from "../lib/supabase/client";
-
 export default function Dashboard() {
   const [stats, setStats] = useState({
     newLeadsToday: 0,
     totalLeads: 0,
     hotLeads: 0,
-    totalMessages: 0
+    totalMessages: 0,
+    totalConversations: 0
   });
 
   useEffect(() => {
     async function fetchStats() {
-      const supabase = createClient();
-      
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const res = await fetch('/api/crm/dashboard');
+      const data = await res.json();
 
-      // New Leads Today
-      const { count: newLeadsCount } = await supabase
-        .from('leads')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today.toISOString());
-
-      // Total Leads
-      const { count: totalLeadsCount } = await supabase
-        .from('leads')
-        .select('*', { count: 'exact', head: true });
-
-      // Hot Leads
-      const { count: hotLeadsCount } = await supabase
-        .from('leads')
-        .select('*', { count: 'exact', head: true })
-        .eq('temperature', 'hot');
-
-      // Total Messages
-      const { count: totalMessagesCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true });
+      if (!res.ok || !data.ok) return;
 
       setStats({
-        newLeadsToday: newLeadsCount || 0,
-        totalLeads: totalLeadsCount || 0,
-        hotLeads: hotLeadsCount || 0,
-        totalMessages: totalMessagesCount || 0
+        newLeadsToday: data.newLeadsToday || 0,
+        totalLeads: data.totalLeads || 0,
+        hotLeads: data.hotLeads || 0,
+        totalMessages: data.totalMessages || 0,
+        totalConversations: data.totalConversations || 0
       });
     }
 
@@ -83,10 +61,11 @@ export default function Dashboard() {
         </div>
         
         <div className="rounded-xl border border-gray-200 bg-white p-5 shadow-sm">
-          <p className="text-xs font-medium text-gray-500 uppercase">Mensagens Trocadas</p>
+          <p className="text-xs font-medium text-gray-500 uppercase">Conversas Ativas</p>
           <div className="flex items-baseline gap-2">
-            <h3 className="mt-1 text-3xl font-bold text-[#111827]">{stats.totalMessages}</h3>
+            <h3 className="mt-1 text-3xl font-bold text-[#111827]">{stats.totalConversations}</h3>
           </div>
+          <p className="mt-2 text-xs text-gray-500">{stats.totalMessages} mensagens registradas</p>
         </div>
       </div>
 

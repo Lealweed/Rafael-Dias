@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { Search, Plus, Filter, MoreHorizontal } from "lucide-react";
-import { createClient } from "../lib/supabase/client";
 
 export default function Leads() {
   const [leads, setLeads] = useState<any[]>([]);
@@ -8,13 +7,12 @@ export default function Leads() {
 
   useEffect(() => {
     async function fetchLeads() {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('leads')
-        .select('*')
-        .order('created_at', { ascending: false });
-        
-      if (data) setLeads(data);
+      const res = await fetch('/api/crm/leads');
+      const data = await res.json();
+
+      if (res.ok && data.ok) setLeads(data.leads || []);
+      else console.error('Erro ao buscar leads:', data?.error || res.statusText);
+
       setLoading(false);
     }
     fetchLeads();
@@ -96,17 +94,17 @@ export default function Leads() {
               ) : leads.map((lead) => (
                 <tr key={lead.id} className="hover:bg-gray-50 transition-colors group">
                   <td className="px-6 py-4">
-                    <div className="font-bold text-gray-900">{lead.full_name || lead.phone}</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{lead.phone} • {lead.origin || 'Desconhecido'}</div>
+                    <div className="font-bold text-gray-900">{lead.name || lead.phone || 'Sem nome'}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{lead.phone || 'Sem telefone'} • {lead.origin || 'Desconhecido'}</div>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-700">{lead.interest || 'Pendente'}</td>
+                  <td className="px-6 py-4 font-medium text-gray-700">{lead.interest || lead.latestMessage || 'Pendente'}</td>
                   <td className="px-6 py-4">
                     {getTempBadge(lead.temperature)}
                   </td>
                   <td className="px-6 py-4 text-gray-600 text-xs font-medium">
-                    {formatTimeAgo(lead.last_interaction_at || lead.created_at)}
+                    {formatTimeAgo(lead.lastInteractionAt || lead.createdAt)}
                   </td>
-                  <td className="px-6 py-4 text-gray-600 text-xs font-medium">{lead.owner || 'Não Atribuído'}</td>
+                  <td className="px-6 py-4 text-gray-600 text-xs font-medium">{lead.owner || 'Não atribuído'}</td>
                   <td className="px-6 py-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                        <button className="rounded border border-gray-200 bg-white px-3 py-1 text-xs font-bold text-[#2563EB] shadow-sm hover:bg-gray-50">Abrir</button>

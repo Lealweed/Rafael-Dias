@@ -1,6 +1,34 @@
 import { BarChart3, TrendingUp, Users, Clock } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Reports() {
+  const [stats, setStats] = useState({
+    totalLeads: 0,
+    totalConversations: 0,
+    totalMessages: 0,
+    hotLeads: 0,
+    totalEvents: 0,
+  });
+
+  useEffect(() => {
+    async function fetchStats() {
+      const res = await fetch('/api/crm/dashboard');
+      const data = await res.json();
+      if (!res.ok || !data.ok) return;
+      setStats({
+        totalLeads: data.totalLeads || 0,
+        totalConversations: data.totalConversations || 0,
+        totalMessages: data.totalMessages || 0,
+        hotLeads: data.hotLeads || 0,
+        totalEvents: data.totalEvents || 0,
+      });
+    }
+
+    fetchStats();
+  }, []);
+
+  const conversion = stats.totalLeads > 0 ? Math.round((stats.hotLeads / stats.totalLeads) * 1000) / 10 : 0;
+
   return (
     <div className="flex flex-col h-full w-full">
       <div className="mb-6 flex items-center justify-between">
@@ -22,8 +50,8 @@ export default function Reports() {
             <h3 className="text-xs font-bold uppercase">Total Leads</h3>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold text-gray-900">342</span>
-            <span className="text-xs font-bold text-green-500">+12%</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.totalLeads}</span>
+            <span className="text-xs font-bold text-gray-500">real</span>
           </div>
         </div>
         
@@ -33,8 +61,8 @@ export default function Reports() {
             <h3 className="text-xs font-bold uppercase">Conversão</h3>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold text-gray-900">14.8%</span>
-            <span className="text-xs font-bold text-green-500">+2.1%</span>
+            <span className="text-3xl font-bold text-gray-900">{conversion}%</span>
+            <span className="text-xs font-bold text-gray-500">quentes</span>
           </div>
         </div>
 
@@ -44,8 +72,8 @@ export default function Reports() {
             <h3 className="text-xs font-bold uppercase">SLA Resposta (Med)</h3>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold text-gray-900">12m</span>
-            <span className="text-xs font-bold text-red-500">+4m</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.totalMessages}</span>
+            <span className="text-xs font-bold text-gray-500">msgs</span>
           </div>
         </div>
 
@@ -55,8 +83,8 @@ export default function Reports() {
             <h3 className="text-xs font-bold uppercase">Follow-ups Feitos</h3>
           </div>
           <div className="flex items-baseline gap-2 mt-2">
-            <span className="text-3xl font-bold text-gray-900">128</span>
-            <span className="text-xs font-bold text-green-500">ótimo</span>
+            <span className="text-3xl font-bold text-gray-900">{stats.totalEvents}</span>
+            <span className="text-xs font-bold text-gray-500">eventos</span>
           </div>
         </div>
       </div>
@@ -67,58 +95,54 @@ export default function Reports() {
           <div className="flex-1 flex flex-col gap-4">
              <div className="relative">
                 <div className="flex justify-between text-xs font-bold text-gray-600 mb-1">
-                  <span>Novo Lead (342)</span> <span>100%</span>
+                  <span>Novo Lead ({stats.totalLeads})</span> <span>100%</span>
                 </div>
                 <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-blue-500 rounded-full w-full"></div></div>
              </div>
              <div className="relative">
                 <div className="flex justify-between text-xs font-bold text-gray-600 mb-1">
-                  <span>Qualificado (180)</span> <span>52%</span>
+                  <span>Qualificado ({stats.hotLeads})</span> <span>{conversion}%</span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-blue-500 rounded-full w-[52%]"></div></div>
+                <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-blue-500 rounded-full" style={{ width: `${conversion}%` }}></div></div>
              </div>
              <div className="relative">
                 <div className="flex justify-between text-xs font-bold text-gray-600 mb-1">
-                  <span>Proposta (90)</span> <span>26%</span>
+                  <span>Conversas ({stats.totalConversations})</span> <span>real</span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-blue-500 rounded-full w-[26%]"></div></div>
+                <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-blue-500 rounded-full w-full"></div></div>
              </div>
              <div className="relative">
                 <div className="flex justify-between text-xs font-bold text-green-600 mb-1">
-                  <span>Agendado / Ganho (50)</span> <span>14.8%</span>
+                  <span>Mensagens registradas ({stats.totalMessages})</span> <span>real</span>
                 </div>
-                <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-green-500 rounded-full w-[14.8%]"></div></div>
+                <div className="w-full h-3 bg-gray-100 rounded-full"><div className="h-3 bg-green-500 rounded-full" style={{ width: `${Math.min(100, stats.totalMessages * 10)}%` }}></div></div>
              </div>
           </div>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-6 min-h-[300px] flex flex-col">
-          <h3 className="font-bold text-gray-900 mb-6">Leads por Origem</h3>
-          <div className="flex-1 flex items-center justify-center">
-            <div className="flex items-end gap-6 h-48 w-full justify-center">
-              {/* Fake Bar Chart */}
-              <div className="flex flex-col items-center gap-2">
-                 <div className="w-12 bg-[#25D366] rounded-t-md relative h-40"></div>
-                 <span className="text-xs font-bold text-gray-600">WhatsApp</span>
-                 <span className="text-[10px] text-gray-400">45%</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                 <div className="w-12 bg-[#2563EB] rounded-t-md relative h-28"></div>
-                 <span className="text-xs font-bold text-gray-600">Facebook</span>
-                 <span className="text-[10px] text-gray-400">30%</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                 <div className="w-12 bg-gray-800 rounded-t-md relative h-16"></div>
-                 <span className="text-xs font-bold text-gray-600">Site SEO</span>
-                 <span className="text-[10px] text-gray-400">15%</span>
-              </div>
-              <div className="flex flex-col items-center gap-2">
-                 <div className="w-12 bg-orange-500 rounded-t-md relative h-10"></div>
-                 <span className="text-xs font-bold text-gray-600">n8n IA</span>
-                 <span className="text-[10px] text-gray-400">10%</span>
-              </div>
+          <h3 className="font-bold text-gray-900 mb-6">Cobertura dos Dados</h3>
+          <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-[10px] font-bold uppercase text-gray-400">Contatos</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalLeads}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-[10px] font-bold uppercase text-gray-400">Conversas</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalConversations}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-[10px] font-bold uppercase text-gray-400">Mensagens</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalMessages}</p>
+            </div>
+            <div className="rounded-xl border border-gray-100 bg-gray-50 p-4">
+              <p className="text-[10px] font-bold uppercase text-gray-400">Eventos n8n</p>
+              <p className="mt-1 text-2xl font-bold text-gray-900">{stats.totalEvents}</p>
             </div>
           </div>
+          <p className="mt-6 text-xs leading-5 text-gray-500">
+            Origem, interesse, responsável e temperatura dependem de campos estruturados enviados pelo n8n. Hoje a base real traz principalmente nome, telefone e eventos.
+          </p>
         </div>
       </div>
     </div>

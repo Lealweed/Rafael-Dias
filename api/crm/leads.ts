@@ -102,7 +102,6 @@ export default async function handler(req: any, res: any) {
       owner: lead.owner || existing.owner || '',
       lastInteractionAt: latestDate(
         lead.last_interaction_at,
-        lead.updated_at,
         conv?.updated_at,
         latestMessage?.created_at,
         existing.lastInteractionAt,

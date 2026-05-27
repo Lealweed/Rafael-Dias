@@ -8,6 +8,13 @@ function normalizePhone(raw: any): string {
   return String(raw || '').split('@')[0].replace(/\D/g, '');
 }
 
+function isToday(value: any, todayIso: string): boolean {
+  if (!value) return false;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return false;
+  return date.toISOString() >= todayIso;
+}
+
 async function countRows(sb: any, table: string, apply?: (query: any) => any) {
   let query = sb.from(table).select('*', { count: 'exact', head: true });
   if (apply) query = apply(query);
@@ -40,8 +47,8 @@ export default async function handler(req: any, res: any) {
     totalMessages,
     totalConversations,
     totalEvents,
-    usuariosPhones,
-    leadsPhones,
+    usuariosRows,
+    leadsRows,
   ] = await Promise.all([
     countRows(sb, 'Usuarios'),
     countRows(sb, 'leads'),
@@ -51,25 +58,28 @@ export default async function handler(req: any, res: any) {
     countRows(sb, 'messages'),
     countRows(sb, 'conversations'),
     countRows(sb, 'integration_events'),
-    sb.from('Usuarios').select('telefone'),
-    sb.from('leads').select('phone'),
+    sb.from('Usuarios').select('telefone, created_at'),
+    sb.from('leads').select('phone, created_at'),
   ]);
 
   const uniquePhones = new Set<string>();
-  for (const row of usuariosPhones.data || []) {
+  const todayPhones = new Set<string>();
+  for (const row of usuariosRows.data || []) {
     const phone = normalizePhone(row.telefone);
     if (phone) uniquePhones.add(phone);
+    if (phone && isToday(row.created_at, todayIso)) todayPhones.add(phone);
   }
-  for (const row of leadsPhones.data || []) {
+  for (const row of leadsRows.data || []) {
     const phone = normalizePhone(row.phone);
     if (phone) uniquePhones.add(phone);
+    if (phone && isToday(row.created_at, todayIso)) todayPhones.add(phone);
   }
 
   const totalContacts = usuariosCount || leadsCount;
 
   return json(res, 200, {
     ok: true,
-    newLeadsToday: newUsuariosToday + newLeadsToday,
+    newLeadsToday: todayPhones.size || Math.max(newUsuariosToday, newLeadsToday),
     totalLeads: Math.max(totalContacts, uniquePhones.size, leadsCount),
     hotLeads,
     totalMessages,

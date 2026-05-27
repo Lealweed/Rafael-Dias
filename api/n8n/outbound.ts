@@ -1,5 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
 
+function normalizePhone(raw: any): string {
+  if (!raw) return '';
+  return String(raw).split('@')[0].replace(/\D/g, '');
+}
+
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
@@ -7,13 +12,30 @@ export default async function handler(req: any, res: any) {
 
   const { contactId, message, type, destination } = req.body || {};
   const n8nUrl = process.env.VITE_N8N_OUTBOUND_WEBHOOK_URL || process.env.N8N_OUTBOUND_WEBHOOK_URL;
+  let phone = normalizePhone(destination);
+  let contactName = '';
 
   try {
     const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-    if (supabaseUrl && supabaseServiceKey && contactId && message) {
+    if (supabaseUrl && supabaseServiceKey && contactId) {
       const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+      const { data: usuario } = await supabase
+        .from('Usuarios')
+        .select('nome, telefone')
+        .eq('id', contactId)
+        .maybeSingle();
+
+      phone = phone || normalizePhone(usuario?.telefone);
+      contactName = usuario?.nome || '';
+
+      await supabase
+        .from('Usuarios')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', contactId);
+
       let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', contactId).limit(1);
       let convId = convs?.[0]?.id as string | undefined;
 
@@ -35,6 +57,10 @@ export default async function handler(req: any, res: any) {
       }
     }
 
+    if (!phone) {
+      return res.status(400).json({ error: 'Contato sem telefone válido para envio ao WhatsApp' });
+    }
+
     if (!n8nUrl || !String(n8nUrl).startsWith('http')) {
       return res.status(200).json({ success: true, simulated: true, timestamp: new Date().toISOString() });
     }
@@ -45,7 +71,16 @@ export default async function handler(req: any, res: any) {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${process.env.N8N_WEBHOOK_OUTBOUND_TOKEN || ''}`,
       },
-      body: JSON.stringify({ contactId, message, type, destination, timestamp: new Date().toISOString() }),
+      body: JSON.stringify({
+        source: 'crm_outbound',
+        contactId,
+        name: contactName,
+        phone,
+        message,
+        type,
+        destination: phone,
+        timestamp: new Date().toISOString(),
+      }),
     });
 
     if (!response.ok) {

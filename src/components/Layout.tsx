@@ -15,20 +15,26 @@ export default function Layout() {
 
   useEffect(() => {
     async function fetchCounters() {
-      const res = await fetch('/api/crm/dashboard');
-      const data = await res.json();
+      try {
+        const [conversationsRes, dashboardRes] = await Promise.all([
+          fetch('/api/crm/conversations'),
+          fetch('/api/crm/dashboard'),
+        ]);
 
-      if (!res.ok || !data.ok) return;
+        const conversationsData = await conversationsRes.json().catch(() => null);
+        const dashboardData = await dashboardRes.json().catch(() => null);
 
-      setCounters({
-        conversations: data.totalConversations || 0,
-        followUps: 0
-      });
+        setCounters({
+          conversations: conversationsData?.summary?.total || dashboardData?.totalConversations || 0,
+          followUps: conversationsData?.summary?.withPendingFollowup || 0,
+        });
+      } catch {
+        // keep previous counters on transient failures
+      }
     }
 
     fetchCounters();
-    
-    // Optional: set interval or subscribe to realtime events in the future
+
     const interval = setInterval(fetchCounters, 15000);
     return () => clearInterval(interval);
   }, []);

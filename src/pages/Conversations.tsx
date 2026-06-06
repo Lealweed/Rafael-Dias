@@ -588,24 +588,24 @@ export default function Conversations() {
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm min-h-[600px] h-[calc(100vh-180px)]">
+      <div className="flex min-h-[600px] flex-1 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm lg:h-[calc(100vh-180px)]">
         
         {/* Left pane: Chats List */}
-        <div className="w-80 flex flex-col border-r border-gray-200 shrink-0 bg-white">
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-              <Search className="w-4 h-4 text-gray-400" />
+        <div className="flex w-[22rem] shrink-0 flex-col border-r border-gray-200 bg-white">
+          <div className="border-b border-gray-100 p-4">
+            <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
+              <Search className="h-4 w-4 text-gray-400" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar conversa..."
-                className="bg-transparent outline-none w-full text-gray-900 placeholder:text-gray-400"
+                className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400"
               />
             </div>
-            <div className="flex items-center justify-between mt-4">
+            <div className="mt-4 flex items-center justify-between">
               <span className="text-xs font-bold text-gray-900">Abertas ({filteredChats.length})</span>
-              <span className="text-xs font-medium text-[#2563EB] cursor-pointer">Filtrar</span>
+              <span className="text-xs font-medium text-[#2563EB]">Atualização automática</span>
             </div>
           </div>
           
@@ -618,168 +618,190 @@ export default function Conversations() {
               const isSelected = selectedChat?.id === chat.id;
               const dateStr = chat.last_interaction_at || chat.ultima_interacao_em || chat.updated_at || chat.created_at;
               const time = dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+              const displayName = chat.full_name || chat.nome || chat.phone || chat.telefone;
+              const displayPhone = chat.phone || chat.telefone || 'Sem telefone';
+              const displayOrigin = chat.origin || chat.origem || 'Origem não informada';
+              const displayOwner = chat.owner_name || 'Sem responsável';
               
-               return (
-                 <div 
-                   key={chat.id} 
-                   onClick={() => handleSelectChat(chat)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+              return (
+                <div 
+                  key={chat.id}
+                  onClick={() => handleSelectChat(chat)}
+                  className={`cursor-pointer border-b border-gray-100 px-4 py-3 transition-colors ${isSelected ? 'bg-blue-50/60' : 'hover:bg-gray-50'}`}
                 >
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.full_name || chat.nome || chat.phone || chat.telefone}</h4>
-                    <span className="text-[10px] text-gray-400 font-medium shrink-0">{time}</span>
+                  <div className="mb-1 flex items-start justify-between gap-3">
+                    <h4 className={`min-w-0 text-sm font-bold leading-5 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{displayName}</h4>
+                    <span className="shrink-0 text-[10px] font-medium text-gray-400">{time}</span>
                   </div>
-                   <div className="flex justify-between items-end">
-                     <p className="text-xs text-gray-500 truncate pr-4">{chat.phone || chat.telefone} • {chat.origin || chat.origem || 'Desconhecido'}</p>
-                     {chat.automation_status === 'paused_human' ? (
-                       <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">Humano</span>
-                     ) : (
-                       <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">Auto</span>
-                     )}
-                   </div>
-                 </div>
-               );
+                  <p className="break-all text-xs leading-5 text-gray-500">{displayPhone}</p>
+                  <p className="text-xs leading-5 text-gray-500">{displayOrigin}</p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2">
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">{displayOwner}</span>
+                    {chat.automation_status === 'paused_human' ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">Humano</span>
+                    ) : (
+                      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">Automação</span>
+                    )}
+                  </div>
+                </div>
+              );
             })}
           </div>
         </div>
 
         {/* Right pane: Active Chat */}
-        <div className="flex-1 flex flex-col bg-[#F9FAFB]">
+        <div className="flex min-w-0 flex-1 flex-col bg-[#F9FAFB]">
           {/* Chat Header */}
-          <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 shrink-0">
-            {selectedChat ? (
-              <div className="flex items-center gap-3">
-                 <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
-                   {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'LC'}
-                 </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-gray-900">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
-                    <p className="text-[10px] text-[#25D366] font-bold">Online / WhatsApp</p>
-                    {automationState?.automation_status === 'paused_human' ? (
-                      <p className="text-[10px] text-amber-600 font-bold">Atendimento humano ativo</p>
-                    ) : (
-                      <p className="text-[10px] text-blue-600 font-bold">Automacao ativa</p>
-                    )}
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                        {selectedLeadStatus.replaceAll("_", " ")}
-                      </span>
-                      {(automationState?.owner_name || selectedChat?.owner_name) && (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                          {automationState?.owner_name || selectedChat?.owner_name}
+          <div className="shrink-0 border-b border-gray-200 bg-white px-4 py-4 sm:px-6">
+            <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+              {selectedChat ? (
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start gap-3">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-orange-100 font-bold uppercase text-orange-600">
+                      {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'LC'}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="truncate text-base font-bold text-gray-900">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
+                      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold">
+                        <span className="text-[#25D366]">Online / WhatsApp</span>
+                        {automationState?.automation_status === 'paused_human' ? (
+                          <span className="text-amber-600">Atendimento humano ativo</span>
+                        ) : (
+                          <span className="text-blue-600">Automação ativa</span>
+                        )}
+                      </div>
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                          {selectedLeadStatus.replaceAll("_", " ")}
                         </span>
-                      )}
-                      {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          Consulta vinculada
-                        </span>
-                      )}
-                      {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                          {formatAppointmentStatusLabel(automationState?.appointment_status || selectedChat?.appointment_status)}
-                        </span>
-                      )}
-                      {(automationState?.next_followup_at || selectedChat?.next_followup_at) && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          Retorno {formatDateTimeLabel(automationState?.next_followup_at || selectedChat?.next_followup_at)}
-                        </span>
-                      )}
+                        {(automationState?.owner_name || selectedChat?.owner_name) && (
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                            {automationState?.owner_name || selectedChat?.owner_name}
+                          </span>
+                        )}
+                        {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
+                          <>
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                              Consulta vinculada
+                            </span>
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                              {formatAppointmentStatusLabel(automationState?.appointment_status || selectedChat?.appointment_status)}
+                            </span>
+                          </>
+                        )}
+                        {(automationState?.next_followup_at || selectedChat?.next_followup_at) && (
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                            Retorno {formatDateTimeLabel(automationState?.next_followup_at || selectedChat?.next_followup_at)}
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2 xl:grid-cols-4">
+                        <div className="rounded-lg bg-gray-50 px-3 py-2">
+                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Telefone</span>
+                          <span className="break-all font-medium text-gray-700">{selectedChat.phone || selectedChat.telefone || 'Não informado'}</span>
+                        </div>
+                        <div className="rounded-lg bg-gray-50 px-3 py-2">
+                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Origem</span>
+                          <span className="font-medium text-gray-700">{selectedChat.origin || selectedChat.origem || 'Não informada'}</span>
+                        </div>
+                        <div className="rounded-lg bg-gray-50 px-3 py-2">
+                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Última interação</span>
+                          <span className="font-medium text-gray-700">{formatDateTimeLabel(selectedChat.last_interaction_at || selectedChat.ultima_interacao_em || selectedChat.updated_at || selectedChat.created_at) || 'Sem histórico'}</span>
+                        </div>
+                        <div className="rounded-lg bg-gray-50 px-3 py-2">
+                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Responsável</span>
+                          <span className="font-medium text-gray-700">{automationState?.owner_name || selectedChat.owner_name || 'Não atribuído'}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-               </div>
-            ) : (
-              <div className="text-sm text-gray-500 font-medium">Selecione uma conversa</div>
-            )}
-            <div className="flex items-center gap-3">
-               <select
-                 value={selectedLeadStatus}
-                 onChange={(e) => handleConversationStatusChange(e.target.value)}
-                 disabled={!selectedChat || isUpdatingLeadOps}
-                 className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm disabled:opacity-50"
-               >
-                 <option value="novo">Novo</option>
-                 <option value="em_atendimento">Em atendimento</option>
-                 <option value="aguardando_cliente">Aguardando cliente</option>
-                 <option value="agendado">Agendado</option>
-                 <option value="em_followup">Em follow-up</option>
-                 <option value="encerrado">Encerrado</option>
-               </select>
-               <button
-                 onClick={handleAssignToMe}
-                 disabled={!selectedChat || isUpdatingLeadOps}
-                 className="px-3 py-1.5 border border-slate-200 bg-slate-50 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-100 shadow-sm disabled:opacity-50"
-               >
-                 Assumir para mim
-               </button>
-               <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 shadow-sm">
-                 <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Retorno</span>
-                 <input
-                   type="datetime-local"
-                   value={nextFollowupInput}
-                   onChange={(e) => setNextFollowupInput(e.target.value)}
-                   disabled={!selectedChat || isUpdatingLeadOps}
-                   className="bg-transparent text-xs font-medium text-gray-700 outline-none disabled:opacity-50"
-                 />
-                 <button
-                   onClick={handleSaveFollowup}
-                   disabled={!selectedChat || isUpdatingLeadOps}
-                   className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                 >
-                   Salvar
-                 </button>
-               </div>
-               <button 
-                 onClick={handleAutomationToggle}
-                 disabled={!selectedChat || isUpdatingAutomation}
-                 className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
-                   automationState?.automation_status === 'paused_human'
-                     ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                     : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                 } disabled:opacity-50`}
-               >
-                 {isUpdatingAutomation
-                   ? 'Salvando...'
-                   : automationState?.automation_status === 'paused_human'
-                     ? 'Retomar Automacao'
-                     : 'Assumir Atendimento'}
-               </button>
-              <button 
-                 onClick={handleGenerateProposal}
-                 disabled={isGeneratingDoc}
-                 className="px-3 py-1.5 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 shadow-sm flex items-center gap-2 disabled:opacity-50"
-               >
-                {isGeneratingDoc ? "Gerando..." : "Gerar Proposta (Docs)"}
-              </button>
-              <button
-                onClick={handleScheduleConsultation}
-                disabled={!selectedChat}
-                className="px-3 py-1.5 border border-emerald-200 bg-emerald-50 rounded-lg text-xs font-bold text-emerald-700 hover:bg-emerald-100 shadow-sm disabled:opacity-50"
-              >
-                Agendar Consulta
-              </button>
-              <button
-                onClick={() => handleAppointmentStatusChange('confirmed')}
-                disabled={!selectedChat || !(automationState?.calendar_event_id || selectedChat?.calendar_event_id) || isUpdatingLeadOps}
-                className="px-3 py-1.5 border border-teal-200 bg-teal-50 rounded-lg text-xs font-bold text-teal-700 hover:bg-teal-100 shadow-sm disabled:opacity-50"
-              >
-                Confirmou
-              </button>
-              <button
-                onClick={() => handleAppointmentStatusChange('rescheduled')}
-                disabled={!selectedChat || !(automationState?.calendar_event_id || selectedChat?.calendar_event_id) || isUpdatingLeadOps}
-                className="px-3 py-1.5 border border-orange-200 bg-orange-50 rounded-lg text-xs font-bold text-orange-700 hover:bg-orange-100 shadow-sm disabled:opacity-50"
-              >
-                Remarcar
-              </button>
-              <button
-                onClick={handleSaveFollowup}
-                disabled={!selectedChat || isUpdatingLeadOps}
-                className="px-3 py-1.5 border border-gray-200 bg-white rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 shadow-sm flex items-center gap-2 disabled:opacity-50"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                Marcar Retorno
-              </button>
-              <button className="text-gray-400 hover:text-gray-600"><MoreVertical className="w-5 h-5"/></button>
+                </div>
+              ) : (
+                <div className="text-sm font-medium text-gray-500">Selecione uma conversa</div>
+              )}
+              <div className="flex flex-wrap items-center gap-2 xl:max-w-[56rem] xl:justify-end">
+                <select
+                  value={selectedLeadStatus}
+                  onChange={(e) => handleConversationStatusChange(e.target.value)}
+                  disabled={!selectedChat || isUpdatingLeadOps}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-bold text-gray-700 shadow-sm disabled:opacity-50"
+                >
+                  <option value="novo">Novo</option>
+                  <option value="em_atendimento">Em atendimento</option>
+                  <option value="aguardando_cliente">Aguardando cliente</option>
+                  <option value="agendado">Agendado</option>
+                  <option value="em_followup">Em follow-up</option>
+                  <option value="encerrado">Encerrado</option>
+                </select>
+                <button
+                  onClick={handleAssignToMe}
+                  disabled={!selectedChat || isUpdatingLeadOps}
+                  className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-100 disabled:opacity-50"
+                >
+                  Assumir para mim
+                </button>
+                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-2 shadow-sm">
+                  <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Retorno</span>
+                  <input
+                    type="datetime-local"
+                    value={nextFollowupInput}
+                    onChange={(e) => setNextFollowupInput(e.target.value)}
+                    disabled={!selectedChat || isUpdatingLeadOps}
+                    className="bg-transparent text-xs font-medium text-gray-700 outline-none disabled:opacity-50"
+                  />
+                  <button
+                    onClick={handleSaveFollowup}
+                    disabled={!selectedChat || isUpdatingLeadOps}
+                    className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+                  >
+                    Salvar
+                  </button>
+                </div>
+                <button 
+                  onClick={handleAutomationToggle}
+                  disabled={!selectedChat || isUpdatingAutomation}
+                  className={`rounded-lg px-3 py-2 text-xs font-bold shadow-sm ${
+                    automationState?.automation_status === 'paused_human'
+                      ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
+                      : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
+                  } disabled:opacity-50`}
+                >
+                  {isUpdatingAutomation
+                    ? 'Salvando...'
+                    : automationState?.automation_status === 'paused_human'
+                      ? 'Retomar Automação'
+                      : 'Assumir Atendimento'}
+                </button>
+                <button 
+                  onClick={handleGenerateProposal}
+                  disabled={isGeneratingDoc}
+                  className="flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-3 py-2 text-xs font-bold text-indigo-700 shadow-sm hover:bg-indigo-100 disabled:opacity-50"
+                >
+                  {isGeneratingDoc ? 'Gerando...' : 'Gerar Proposta (Docs)'}
+                </button>
+                <button
+                  onClick={handleScheduleConsultation}
+                  disabled={!selectedChat}
+                  className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700 shadow-sm hover:bg-emerald-100 disabled:opacity-50"
+                >
+                  Agendar Consulta
+                </button>
+                <button
+                  onClick={() => handleAppointmentStatusChange('confirmed')}
+                  disabled={!selectedChat || !(automationState?.calendar_event_id || selectedChat?.calendar_event_id) || isUpdatingLeadOps}
+                  className="rounded-lg border border-teal-200 bg-teal-50 px-3 py-2 text-xs font-bold text-teal-700 shadow-sm hover:bg-teal-100 disabled:opacity-50"
+                >
+                  Confirmou
+                </button>
+                <button
+                  onClick={() => handleAppointmentStatusChange('rescheduled')}
+                  disabled={!selectedChat || !(automationState?.calendar_event_id || selectedChat?.calendar_event_id) || isUpdatingLeadOps}
+                  className="rounded-lg border border-orange-200 bg-orange-50 px-3 py-2 text-xs font-bold text-orange-700 shadow-sm hover:bg-orange-100 disabled:opacity-50"
+                >
+                  Remarcar
+                </button>
+                <button className="text-gray-400 hover:text-gray-600"><MoreVertical className="h-5 w-5"/></button>
+              </div>
             </div>
           </div>
 

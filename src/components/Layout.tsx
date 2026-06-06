@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 
 export default function Layout() {
@@ -51,7 +51,6 @@ export default function Layout() {
 
     fetchCounters();
     
-    // Optional: set interval or subscribe to realtime events in the future
     const interval = setInterval(fetchCounters, 15000);
     return () => clearInterval(interval);
   }, []);
@@ -62,52 +61,61 @@ export default function Layout() {
   };
 
   const navLinkClass = (path: string) =>
-    `flex items-center justify-between rounded-lg px-3 py-2.5 text-sm font-medium ${
+    `flex items-center justify-between rounded-xl px-4 py-3 text-sm font-medium transition-all duration-350 ${
       location.pathname === path
-        ? "bg-gray-100 font-bold text-[#2563EB]"
-        : "text-gray-600 hover:bg-gray-50"
+        ? "bg-gradient-to-r from-[#D4AF37]/15 to-transparent border-l-2 border-[#D4AF37] text-[#E5C38C] font-semibold"
+        : "text-white/60 hover:text-white hover:bg-white/[0.02]"
     }`;
 
-  const navIconClass = (path: string) => `h-5 w-5 ${location.pathname === path ? "text-[#2563EB]" : "text-gray-400"}`;
+  const navIconClass = (path: string) => `h-4 w-4 shrink-0 transition-colors ${location.pathname === path ? "text-[#E5C38C]" : "text-white/40 group-hover:text-white"}`;
 
   return (
-    <div className="flex h-screen w-full flex-col overflow-hidden bg-[#F9FAFB] text-[#111827] font-sans">
+    <div className="flex h-screen w-full flex-col overflow-hidden bg-[#07090E] text-white font-sans relative">
+      {/* Luzes de fundo sutis para quebrar o preto absoluto */}
+      <div className="absolute top-0 right-1/4 w-[400px] h-[400px] rounded-full bg-[#E5C38C]/2 blur-[130px] pointer-events-none" />
+      <div className="absolute bottom-0 left-1/4 w-[300px] h-[300px] rounded-full bg-[#D4AF37]/2 blur-[100px] pointer-events-none" />
+
       {/* TOP NAVIGATION BAR */}
-      <header className="flex h-16 w-full shrink-0 items-center justify-between border-b border-gray-200 bg-white px-6">
+      <header className="relative z-10 flex h-20 w-full shrink-0 items-center justify-between border-b border-white/5 bg-[#0B0D12]/75 backdrop-blur-md px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#2563EB] text-white font-bold italic shadow-sm">
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] font-semibold italic text-lg shadow-[0_4px_15px_rgba(212,175,55,0.35)]">
             RD
           </div>
           <div className="flex flex-col">
-            <h1 className="text-lg font-bold tracking-tight text-[#111827]">Instituto Rafael Dias</h1>
-            <span className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold">
+            <h1 className="text-base font-bold tracking-tight text-white font-serif">Instituto Rafael Dias</h1>
+            <span className="text-[9px] uppercase tracking-widest text-[#E5C38C] font-semibold">
               Sistema Comercial Integrado
             </span>
           </div>
         </div>
-        <div className="flex h-10 w-full max-w-[400px] items-center gap-3 rounded-full border border-gray-200 bg-gray-50 px-4">
-          <Search className="h-4 w-4 text-gray-400" />
+
+        {/* Busca Global Customizada */}
+        <div className="hidden md:flex h-11 w-full max-w-[450px] items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 focus-within:border-[#D4AF37]/45 transition-colors">
+          <Search className="h-4 w-4 text-white/30" />
           <input
             type="text"
-            placeholder="Busca global por nome, telefone, tag ou status..."
-            className="w-full bg-transparent text-sm outline-none placeholder:text-gray-400"
+            placeholder="Busca global de leads por nome ou telefone..."
+            className="w-full bg-transparent text-xs outline-none placeholder:text-white/20 text-white"
           />
         </div>
+
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2">
-            <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-xs font-medium text-gray-500">n8n: Conectado</span>
+          <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+            <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
+            <span className="text-[10px] uppercase tracking-widest font-semibold text-white/60">n8n Conectado</span>
           </div>
-          <div className="h-8 w-px bg-gray-200"></div>
+          
+          <div className="h-8 w-px bg-white/5"></div>
+          
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="text-xs font-bold text-gray-900 uppercase">Rafael Dias</p>
-              <p className="text-[10px] text-gray-400">Administrador</p>
+              <p className="text-xs font-bold text-white uppercase font-serif tracking-wide">Rafael Dias</p>
+              <p className="text-[9px] text-[#E5C38C] font-semibold tracking-widest uppercase">Admin</p>
             </div>
             <div 
-              className="h-9 w-9 border-2 border-white flex items-center justify-center rounded-full bg-gray-200 font-bold text-gray-500 shadow-sm cursor-pointer hover:bg-gray-300" 
+              className="h-10 w-10 border border-white/10 flex items-center justify-center rounded-full bg-[#111622] font-semibold text-white shadow-sm cursor-pointer hover:bg-white/5 transition-colors"
               onClick={handleLogout} 
-              title="Sair"
+              title="Sair do Sistema"
             >
               RD
             </div>
@@ -115,94 +123,115 @@ export default function Layout() {
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative z-10">
+        
         {/* SIDEBAR NAV */}
-        <aside className="w-64 border-r border-gray-200 bg-white p-4 flex flex-col shrink-0">
-          <nav className="space-y-1">
+        <aside className="w-64 border-r border-white/5 bg-[#0B0D12]/60 backdrop-blur-md p-4 flex flex-col shrink-0 justify-between">
+          <nav className="space-y-1.5">
             <Link to="/dashboard" className={navLinkClass("/dashboard")}>
               <div className="flex items-center gap-3">
                 <LayoutDashboard className={navIconClass("/dashboard")} />
-                Dashboard
+                <span>Dashboard</span>
               </div>
             </Link>
+            
             <Link to="/leads" className={navLinkClass("/leads")}>
               <div className="flex items-center gap-3">
                 <Users className={navIconClass("/leads")} />
-                Leads CRM
+                <span>Leads CRM</span>
               </div>
             </Link>
+            
             <Link to="/conversations" className={navLinkClass("/conversations")}>
               <div className="flex items-center gap-3">
                 <MessageSquare className={navIconClass("/conversations")} />
-                Conversas
+                <span>Conversas</span>
               </div>
               {counters.conversations > 0 && (
-                <span className="rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-600">{counters.conversations}</span>
+                <span className="rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/30 px-2 py-0.5 text-[9px] font-mono font-bold text-[#E5C38C]">
+                  {counters.conversations}
+                </span>
               )}
             </Link>
+            
             <Link to="/pipeline" className={navLinkClass("/pipeline")}>
               <div className="flex items-center gap-3">
                 <LayoutDashboard className={navIconClass("/pipeline")} />
-                Funil
+                <span>Funil</span>
               </div>
             </Link>
+            
             <Link to="/calendar" className={navLinkClass("/calendar")}>
               <div className="flex items-center gap-3">
                 <CalendarIcon className={navIconClass("/calendar")} />
-                Agenda
+                <span>Agenda</span>
               </div>
             </Link>
+            
             <Link to="/follow-ups" className={navLinkClass("/follow-ups")}>
-               <div className="flex items-center gap-3">
-                 <AlertCircle className={navIconClass("/follow-ups")} />
-                 Follow-ups
-               </div>
-               {counters.followUps > 0 && (
-                <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-600 font-mono">Critical ({counters.followUps})</span>
-               )}
+              <div className="flex items-center gap-3">
+                <AlertCircle className={navIconClass("/follow-ups")} />
+                <span>Follow-ups</span>
+              </div>
+              {counters.followUps > 0 && (
+                <span className="rounded-full bg-red-500/10 border border-red-500/25 px-2.5 py-0.5 text-[9px] font-mono font-bold text-red-400">
+                  {counters.followUps}
+                </span>
+              )}
             </Link>
+            
             <Link to="/reports" className={navLinkClass("/reports")}>
               <div className="flex items-center gap-3">
                 <BarChart3 className={navIconClass("/reports")} />
-                Relatórios
+                <span>Relatórios</span>
               </div>
             </Link>
+            
             <Link to="/config" className={navLinkClass("/config")}>
               <div className="flex items-center gap-3">
                 <Settings className={navIconClass("/config")} />
-                Configurações
+                <span>Configurações</span>
               </div>
             </Link>
           </nav>
 
+          {/* Barra de Progresso / Metas no Sidebar */}
           <div className="mt-auto">
-            <div className="rounded-xl bg-blue-50 p-4">
-              <h4 className="text-xs font-bold text-blue-800 uppercase tracking-tighter">Meta Mensal</h4>
-              <div className="mt-2 h-2 w-full rounded-full bg-blue-100">
-                <div className="h-full w-3/4 rounded-full bg-blue-600"></div>
+            <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-4">
+              <h4 className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Meta de Agendados</h4>
+              <div className="mt-3.5 h-2 w-full rounded-full bg-white/5 overflow-hidden">
+                <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]"></div>
               </div>
-              <p className="mt-2 text-xs text-blue-700">75% - 450/600 Agendados</p>
+              <p className="mt-2 text-xs font-semibold text-[#E5C38C]">75% <span className="text-white/40 font-light font-mono ml-1">(450 de 600)</span></p>
             </div>
+            
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 mt-4 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider text-red-400 bg-red-500/5 hover:bg-red-500/10 border border-red-500/10 transition-colors"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              Sair
+            </button>
           </div>
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-auto p-6">
+        <main className="flex-1 overflow-auto p-8 bg-transparent">
           <Outlet />
         </main>
       </div>
 
       {/* FOOTER STATUS BAR */}
-      <footer className="flex h-8 shrink-0 w-full items-center justify-between border-t border-gray-200 bg-white px-6 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+      <footer className="relative z-10 flex h-10 shrink-0 w-full items-center justify-between border-t border-white/5 bg-[#0B0D12]/85 backdrop-blur-md px-6 text-[9px] font-semibold text-white/30 uppercase tracking-widest">
         <div className="flex gap-4">
           <span>DB: Supabase (Production)</span>
-          <span>v1.0.4-beta</span>
+          <span>v1.0.5-beta</span>
         </div>
         <div className="flex items-center gap-4">
-          <span className="text-blue-500">https://n8n.rd.com/webhook/incoming/7281...</span>
-          <Link to="/privacy-policy" className="text-[#2563EB] hover:underline">Política de Privacidade</Link>
-          <Link to="/terms-of-service" className="text-[#2563EB] hover:underline">Termos de Serviço</Link>
-          <span>© 2024 Instituto Rafael Dias</span>
+          <span className="text-[#D4AF37]/50 font-mono tracking-normal">https://n8n-n8n.oh2qeq.easypanel.host</span>
+          <Link to="/privacy-policy" className="hover:underline hover:text-white">Políticas</Link>
+          <Link to="/terms-of-service" className="hover:underline hover:text-white">Termos</Link>
+          <span>© Instituto Rafael Dias</span>
         </div>
       </footer>
     </div>

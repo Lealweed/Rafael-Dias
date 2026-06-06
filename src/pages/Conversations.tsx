@@ -83,6 +83,11 @@ function formatAppointmentStatusLabel(status?: string | null) {
   return "Consulta agendada";
 }
 
+function isLongMessage(text?: string | null) {
+  if (!text) return false;
+  return text.length > 420 || text.split(String.fromCharCode(10)).length > 8;
+}
+
 export default function Conversations() {
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [selectedChat, setSelectedChat] = useState<any>(null);
@@ -100,8 +105,11 @@ export default function Conversations() {
 
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [expandedMessageIds, setExpandedMessageIds] = useState<string[]>([]);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
+
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -115,6 +123,7 @@ export default function Conversations() {
     currentUser?.email ||
     "Equipe Clínica";
   const currentAgentId = currentUser?.id || null;
+
   const filteredChats = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return activeChats;
@@ -311,18 +320,31 @@ export default function Conversations() {
     setNextFollowupInput(nextValue);
   }, [automationState, selectedChat]);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  const scrollMessagesToTop = () => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: 0, behavior: "auto" });
+  };
+
+  const scrollMessagesToBottom = (behavior: ScrollBehavior = "smooth") => {
+    const container = messagesContainerRef.current;
+    if (!container) return;
+    container.scrollTo({ top: container.scrollHeight, behavior });
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    scrollMessagesToTop();
+  }, [selectedChat?.id]);
+
+  useEffect(() => {
+    setExpandedMessageIds([]);
+  }, [selectedChat?.id]);
 
   const handleSend = async () => {
     if (!inputText.trim() || !selectedChat) return;
+
     setSendError(null);
-    
+
     const newMsg = {
       id: Date.now(),
       type: "outbound",
@@ -330,10 +352,11 @@ export default function Conversations() {
       text: inputText.trim(),
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
-    
+
     setMessages(prev => [...prev, newMsg]);
     setInputText("");
     setIsSending(true);
+    setTimeout(() => scrollMessagesToBottom(), 0);
 
     try {
       const res = await fetch("/api/n8n/outbound", {
@@ -584,7 +607,7 @@ export default function Conversations() {
       <div className="mb-6 flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-[#111827]">Central de Conversas</h1>
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-1">Interações Omnichannel & n8n</p>
+          <p className="mt-1 text-xs font-semibold uppercase tracking-widest text-gray-500">Interações Omnichannel & n8n</p>
         </div>
       </div>
 
@@ -631,10 +654,10 @@ export default function Conversations() {
                 >
                   <div className="mb-1 flex items-start justify-between gap-3">
                     <h4 className={`min-w-0 text-sm font-bold leading-5 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{displayName}</h4>
-                    <span className="shrink-0 text-[10px] font-medium text-gray-400">{time}</span>
+                    <span className="shrink-0 text-[11px] font-medium text-gray-500">{time}</span>
                   </div>
-                  <p className="break-all text-xs leading-5 text-gray-500">{displayPhone}</p>
-                  <p className="text-xs leading-5 text-gray-500">{displayOrigin}</p>
+                  <p className="break-all text-xs leading-5 text-gray-700">{displayPhone}</p>
+                  <p className="text-xs leading-5 text-gray-600">{displayOrigin}</p>
                   <div className="mt-2 flex flex-wrap items-center gap-2">
                     <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">{displayOwner}</span>
                     {chat.automation_status === 'paused_human' ? (
@@ -671,46 +694,46 @@ export default function Conversations() {
                         )}
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
-                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
+                        <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-gray-700">
                           {selectedLeadStatus.replaceAll("_", " ")}
                         </span>
                         {(automationState?.owner_name || selectedChat?.owner_name) && (
-                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-700">
                             {automationState?.owner_name || selectedChat?.owner_name}
                           </span>
                         )}
                         {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
                           <>
-                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800">
                               Consulta vinculada
                             </span>
-                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                            <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-900">
                               {formatAppointmentStatusLabel(automationState?.appointment_status || selectedChat?.appointment_status)}
                             </span>
                           </>
                         )}
                         {(automationState?.next_followup_at || selectedChat?.next_followup_at) && (
-                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
+                          <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-bold text-amber-800">
                             Retorno {formatDateTimeLabel(automationState?.next_followup_at || selectedChat?.next_followup_at)}
                           </span>
                         )}
                       </div>
                       <div className="mt-3 grid gap-2 text-xs text-gray-500 sm:grid-cols-2 xl:grid-cols-4">
                         <div className="rounded-lg bg-gray-50 px-3 py-2">
-                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Telefone</span>
-                          <span className="break-all font-medium text-gray-700">{selectedChat.phone || selectedChat.telefone || 'Não informado'}</span>
+                          <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">Telefone</span>
+                          <span className="break-all font-semibold text-gray-800">{selectedChat.phone || selectedChat.telefone || 'Não informado'}</span>
                         </div>
                         <div className="rounded-lg bg-gray-50 px-3 py-2">
-                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Origem</span>
-                          <span className="font-medium text-gray-700">{selectedChat.origin || selectedChat.origem || 'Não informada'}</span>
+                          <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">Origem</span>
+                          <span className="font-semibold text-gray-800">{selectedChat.origin || selectedChat.origem || 'Não informada'}</span>
                         </div>
                         <div className="rounded-lg bg-gray-50 px-3 py-2">
-                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Última interação</span>
-                          <span className="font-medium text-gray-700">{formatDateTimeLabel(selectedChat.last_interaction_at || selectedChat.ultima_interacao_em || selectedChat.updated_at || selectedChat.created_at) || 'Sem histórico'}</span>
+                          <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">Última interação</span>
+                          <span className="font-semibold text-gray-800">{formatDateTimeLabel(selectedChat.last_interaction_at || selectedChat.ultima_interacao_em || selectedChat.updated_at || selectedChat.created_at) || 'Sem histórico'}</span>
                         </div>
                         <div className="rounded-lg bg-gray-50 px-3 py-2">
-                          <span className="block text-[10px] font-bold uppercase tracking-wide text-gray-400">Responsável</span>
-                          <span className="font-medium text-gray-700">{automationState?.owner_name || selectedChat.owner_name || 'Não atribuído'}</span>
+                          <span className="block text-[11px] font-bold uppercase tracking-wide text-gray-500">Responsável</span>
+                          <span className="font-semibold text-gray-800">{automationState?.owner_name || selectedChat.owner_name || 'Não atribuído'}</span>
                         </div>
                       </div>
                     </div>
@@ -741,7 +764,7 @@ export default function Conversations() {
                   Assumir para mim
                 </button>
                 <div className="flex flex-wrap items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-2 shadow-sm">
-                  <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Retorno</span>
+                  <span className="text-[11px] font-bold uppercase tracking-wide text-gray-500">Retorno</span>
                   <input
                     type="datetime-local"
                     value={nextFollowupInput}
@@ -818,18 +841,24 @@ export default function Conversations() {
           )}
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
+          <div ref={messagesContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6">
             <div className="flex justify-center">
-              <span className="bg-gray-100 text-gray-500 text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full">Hoje</span>
+              <span className="rounded-full bg-gray-100 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-gray-600">Hoje</span>
             </div>
             
             {messages.map((msg) => {
+              const longMessage = isLongMessage(msg.text);
+              const isExpanded = expandedMessageIds.includes(String(msg.id));
+              const messageTextClassName = longMessage && !isExpanded
+                ? "line-clamp-6 text-sm leading-7 text-gray-800 whitespace-pre-wrap break-words [overflow-wrap:anywhere]"
+                : "text-sm leading-7 text-gray-800 whitespace-pre-wrap break-words [overflow-wrap:anywhere]";
+
               if (msg.type === "system") {
                 return (
                   <div key={msg.id} className="flex justify-center">
-                    <div className="bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl flex items-center gap-2 max-w-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span className="text-xs font-medium text-blue-800">
+                    <div className="flex max-w-3xl items-center gap-2 rounded-xl border border-blue-100 bg-blue-50 px-4 py-2">
+                      <div className="h-1.5 w-1.5 rounded-full bg-blue-500" />
+                      <span className="text-xs font-medium leading-6 text-blue-800 break-words [overflow-wrap:anywhere]">
                         <span className="font-bold">{msg.senderLabel || "Sistema"}</span> • {msg.text} às {msg.time}
                       </span>
                     </div>
@@ -840,19 +869,28 @@ export default function Conversations() {
               if (msg.type === "inbound") {
                 return (
                   <div key={msg.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 shrink-0" />
-                    <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">
-                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-500">
+                    <div className="h-8 w-8 shrink-0 rounded-full bg-orange-100" />
+                    <div className="max-w-[92%] rounded-2xl rounded-tl-none border border-gray-200 bg-white p-4 shadow-sm lg:max-w-[78%] xl:max-w-[72%]">
+                      <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-orange-600">
                         {msg.senderLabel || "Cliente"}
                       </div>
                       {msg.messageType && msg.messageType !== "text" && (
-                        <div className="mb-1 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        <div className="mb-2 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-gray-600">
                           {msg.messageType}
                         </div>
                       )}
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.text}</p>
-                      <div className="text-right mt-1">
-                        <span className="text-[10px] text-gray-400 font-medium">{msg.time}</span>
+                      <p className={messageTextClassName}>{msg.text}</p>
+                      {longMessage && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedMessageIds((prev) => isExpanded ? prev.filter((id) => id !== String(msg.id)) : [...prev, String(msg.id)])}
+                          className="mt-2 text-xs font-bold text-[#2563EB] hover:text-blue-700"
+                        >
+                          {isExpanded ? "Ver menos" : "Ver mensagem completa"}
+                        </button>
+                      )}
+                      <div className="mt-2 text-right">
+                        <span className="text-[11px] font-medium text-gray-500">{msg.time}</span>
                       </div>
                     </div>
                   </div>
@@ -862,28 +900,37 @@ export default function Conversations() {
               if (msg.type === "outbound") {
                 return (
                   <div key={msg.id} className="flex items-start justify-end gap-3">
-                    <div className="bg-[#DCF8C6] border border-[#d6efc2] p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%]">
-                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                    <div className="max-w-[92%] rounded-2xl rounded-tr-none border border-[#d6efc2] bg-[#DCF8C6] p-4 shadow-sm lg:max-w-[78%] xl:max-w-[72%]">
+                      <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-emerald-800">
                         {msg.senderLabel || "Equipe"}
                       </div>
                       {msg.messageType && msg.messageType !== "text" && (
-                        <div className="mb-1 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
+                        <div className="mb-2 inline-flex rounded-full bg-white/80 px-2 py-0.5 text-[11px] font-bold uppercase tracking-wide text-gray-700">
                           {msg.messageType}
                         </div>
                       )}
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.text}</p>
-                      <div className="text-right mt-1">
-                        <span className="text-[10px] text-gray-500 font-medium">{msg.time}</span>
+                      <p className={messageTextClassName}>{msg.text}</p>
+                      {longMessage && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedMessageIds((prev) => isExpanded ? prev.filter((id) => id !== String(msg.id)) : [...prev, String(msg.id)])}
+                          className="mt-2 text-xs font-bold text-emerald-700 hover:text-emerald-800"
+                        >
+                          {isExpanded ? "Ver menos" : "Ver mensagem completa"}
+                        </button>
+                      )}
+                      <div className="mt-2 text-right">
+                        <span className="text-[11px] font-medium text-gray-700">{msg.time}</span>
                       </div>
                     </div>
-                    <div className="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0">RD</div>
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2563EB] text-xs font-bold text-white">RD</div>
                   </div>
                 );
               }
 
               return null;
             })}
-            
+
             <div ref={messagesEndRef} />
           </div>
 

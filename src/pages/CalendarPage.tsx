@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
+import { useSearchParams } from "react-router-dom";
 
 type CalendarEvent = {
   id: string;
@@ -45,11 +46,13 @@ function extractDateTime(event?: CalendarEvent) {
 
 export default function CalendarPage() {
   const supabase = useMemo(() => createClient(), []);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [linkedLead, setLinkedLead] = useState<any>(null);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
@@ -64,6 +67,39 @@ export default function CalendarPage() {
   useEffect(() => {
     fetchEvents(currentDate);
   }, []);
+
+  const linkedLeadId = String(searchParams.get("leadId") || "").trim();
+
+  useEffect(() => {
+    async function fetchLinkedLead() {
+      if (!linkedLeadId) {
+        setLinkedLead(null);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .eq('id', linkedLeadId)
+        .maybeSingle();
+
+      if (error || !data?.id) {
+        setLinkedLead(null);
+        return;
+      }
+
+      setLinkedLead(data);
+      if (data.last_appointment_at) {
+        const appointmentDate = new Date(data.last_appointment_at);
+        if (!Number.isNaN(appointmentDate.getTime())) {
+          setCurrentDate(appointmentDate);
+          fetchEvents(appointmentDate);
+        }
+      }
+    }
+
+    fetchLinkedLead();
+  }, [linkedLeadId, supabase]);
 
   const fetchEvents = async (date: Date) => {
     setLoading(true);
@@ -86,6 +122,14 @@ export default function CalendarPage() {
 
       const nextEvents = Array.isArray(data.events) ? data.events : [];
       setEvents(nextEvents);
+
+      if (linkedLead?.calendar_event_id) {
+        const linkedEvent = nextEvents.find((e: CalendarEvent) => e.id === linkedLead.calendar_event_id) || null;
+        if (linkedEvent) {
+          setSelectedEvent(linkedEvent);
+          return;
+        }
+      }
 
       if (selectedEvent) {
         const refreshed = nextEvents.find((e: CalendarEvent) => e.id === selectedEvent.id) || null;
@@ -116,7 +160,7 @@ export default function CalendarPage() {
 
     setFormMode("create");
     setForm({
-      summary: "",
+      summary: linkedLead?.full_name ? `Consulta - ${linkedLead.full_name}` : "",
       description: "",
       location: "",
       start: toLocalDateTimeInput(start.toISOString()),
@@ -156,6 +200,7 @@ export default function CalendarPage() {
       };
 
       if (formMode === "edit") payload.eventId = form.eventId;
+      if (linkedLeadId) payload.leadId = linkedLeadId;
 
       const res = await fetch("/api/n8n/calendar", {
         method: "POST",
@@ -188,7 +233,7 @@ export default function CalendarPage() {
       const res = await fetch("/api/n8n/calendar", {
         method: "POST",
         headers: await getWriteHeaders(),
-        body: JSON.stringify({ action: "delete", eventId: selectedEvent.id }),
+        body: JSON.stringify({ action: "delete", eventId: selectedEvent.id, leadId: linkedLeadId || undefined }),
       });
 
       const data = await res.json();
@@ -239,6 +284,31 @@ export default function CalendarPage() {
           Novo Evento
         </button>
       </div>
+
+      {linkedLead && (
+        <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 shadow-sm">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Agendamento vinculado</p>
+              <h2 className="mt-1 text-sm font-bold text-emerald-950">{linkedLead.full_name || linkedLead.phone}</h2>
+              <p className="mt-1 text-xs text-emerald-800">
+                {linkedLead.phone || "Sem telefone"}
+                {linkedLead.owner_name ? ` • Responsável: ${linkedLead.owner_name}` : ""}
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                const nextParams = new URLSearchParams(searchParams);
+                nextParams.delete("leadId");
+                setSearchParams(nextParams);
+              }}
+              className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
+            >
+              Limpar vínculo
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
         <div className="flex items-center gap-4">
@@ -312,6 +382,11 @@ export default function CalendarPage() {
             <div className="space-y-3">
               <h3 className="text-base font-bold text-gray-900">{selectedEvent.summary || "Sem título"}</h3>
               <p className="text-sm text-gray-600">{formatEventDate(selectedEvent)} • {formatEventTime(selectedEvent)}</p>
+              {linkedLead?.calendar_event_id === selectedEvent.id && (
+                <div className="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                  Evento vinculado ao lead
+                </div>
+              )}
               {selectedEvent.location && <p className="text-sm text-gray-700"><strong>Local:</strong> {selectedEvent.location}</p>}
               {selectedEvent.description && <p className="text-sm text-gray-700"><strong>Descrição:</strong> {selectedEvent.description}</p>}
 
@@ -340,6 +415,12 @@ export default function CalendarPage() {
               <h3 className="text-lg font-bold">{formMode === "create" ? "Novo evento" : "Editar evento"}</h3>
               <button onClick={() => setFormOpen(false)} className="text-gray-500 hover:text-gray-700"><X className="w-5 h-5" /></button>
             </div>
+
+            {linkedLead && (
+              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+                Este agendamento será salvo no Google Agenda e vinculado ao lead <strong>{linkedLead.full_name || linkedLead.phone}</strong>.
+              </div>
+            )}
 
             <input value={form.summary} onChange={(e) => setForm((s) => ({ ...s, summary: e.target.value }))} placeholder="Título" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

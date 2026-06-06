@@ -28,13 +28,6 @@ export default function App() {
   const supabase = createClient();
 
   useEffect(() => {
-    const isMock = localStorage.getItem("mock_session") === "true";
-    if (isMock) {
-      setSession({ user: { id: "5f85d5ef-eccf-475c-b6e8-d732509f6799", email: "leal@adm.com", role: "admin" } });
-      setLoading(false);
-      return;
-    }
-
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
@@ -64,6 +57,8 @@ export default function App() {
         <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/dashboard" />} />
+        <Route path="/painel" element={<Navigate to={session ? "/dashboard" : "/login"} />} />
+        <Route path="/paiel" element={<Navigate to={session ? "/dashboard" : "/login"} />} />
 
         {/* Rotas Autenticadas */}
         <Route element={session ? <Layout /> : <Navigate to="/login" />}>
@@ -77,7 +72,7 @@ export default function App() {
           <Route path="/config" element={<ConfigPage />} />
         </Route>
 
-        <Route path="*" element={<Navigate to="/" />} />
+        <Route path="*" element={<Navigate to={session ? "/dashboard" : "/login"} />} />
       </Routes>
     </BrowserRouter>
   );

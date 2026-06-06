@@ -1,100 +1,152 @@
-import { createClient } from '@supabase/supabase-js';
-
-function normalizePhone(raw: any): string {
-  if (!raw) return '';
-  return String(raw).split('@')[0].replace(/\D/g, '');
-}
+import { findLeadByIdOrPhone, getLeadAutomationState, setLeadAutomationState, type MessageSource } from '../_lib/automation.js';
+import { appendConversationMessage, logIntegrationEvent, updateLeadOps } from '../_lib/crm.js';
 
 export default async function handler(req: any, res: any) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { contactId, message, type, destination } = req.body || {};
+  const { contactId, message, type, destination, reaction, targetKey, ownerId, ownerName, nextFollowupAt } = req.body || {};
+  const source = String(req.body?.source || 'agent').trim().toLowerCase() as MessageSource;
   const n8nUrl = process.env.VITE_N8N_OUTBOUND_WEBHOOK_URL || process.env.N8N_OUTBOUND_WEBHOOK_URL;
-  let phone = normalizePhone(destination);
-  let contactName = '';
+  const outboundEventId = `out_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+  const rawOutboundType = String(type || 'text').trim().toLowerCase();
+  const outboundType = rawOutboundType === 'whatsapp' ? 'text' : rawOutboundType;
 
   try {
-    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!contactId && !destination) {
+      return res.status(400).json({ error: 'Missing required fields: contactId or destination' });
+    }
 
-    if (supabaseUrl && supabaseServiceKey && contactId) {
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    if (source !== 'agent' && source !== 'human') {
+      return res.status(400).json({ error: 'Invalid source. Use human or agent.' });
+    }
 
-      const { data: usuario } = await supabase
-        .from('Usuarios')
-        .select('nome, telefone')
-        .eq('id', contactId)
-        .maybeSingle();
-
-      phone = phone || normalizePhone(usuario?.telefone);
-      contactName = usuario?.nome || '';
-
-      let leadId = contactId;
-      const { data: leadById } = await supabase
-        .from('leads')
-        .select('id, full_name, phone')
-        .eq('id', contactId)
-        .maybeSingle();
-
-      if (leadById) {
-        leadId = leadById.id;
-        phone = phone || normalizePhone(leadById.phone);
-        contactName = contactName || leadById.full_name || '';
-      } else if (phone) {
-        const { data: leadByPhone } = await supabase
-          .from('leads')
-          .select('id, full_name')
-          .eq('phone', phone)
-          .maybeSingle();
-
-        if (leadByPhone) {
-          leadId = leadByPhone.id;
-          contactName = contactName || leadByPhone.full_name || '';
-        } else {
-          const { data: newLead } = await supabase
-            .from('leads')
-            .insert({
-              full_name: contactName || phone,
-              phone,
-              origin: 'CRM Manual',
-              temperature: 'cold',
-              last_interaction_at: new Date().toISOString(),
-            })
-            .select('id')
-            .single();
-          if (newLead?.id) leadId = newLead.id;
-        }
-      }
-
-      let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', leadId).limit(1);
-      let convId = convs?.[0]?.id as string | undefined;
-
-      if (!convId) {
-        const { data: newConv } = await supabase.from('conversations').insert({ lead_id: leadId }).select('id').single();
-        convId = newConv?.id;
-      }
-
-      if (convId) {
-        await supabase.from('messages').insert({
-          conversation_id: convId,
-          direction: 'outbound',
-          type: 'text',
-          content: message,
-          n8n_message_id: `out_${Date.now()}`,
+    if (outboundType === 'reaction') {
+      const reactionEmoji = String(reaction || message || '').trim();
+      if (!reactionEmoji || !targetKey?.id || !targetKey?.remoteJid) {
+        return res.status(400).json({
+          error: 'Missing required fields for reaction: reaction and targetKey{id, remoteJid}',
         });
+      }
+    } else if (!message) {
+      return res.status(400).json({ error: 'Missing required field: message' });
+    }
 
-        await supabase.from('leads').update({ last_interaction_at: new Date().toISOString() }).eq('id', leadId);
+    const automationState = contactId
+      ? await getLeadAutomationState(String(contactId))
+      : await findLeadByIdOrPhone({ phone: destination });
+    if (automationState.ok && automationState.lead.automation_status === 'paused_human' && source === 'agent') {
+      await logIntegrationEvent({
+        eventId: `blocked_${outboundEventId}`,
+        eventType: outboundType === 'reaction' ? 'agent_reaction_blocked_human_handoff' : 'agent_outbound_blocked_human_handoff',
+        direction: 'outbound',
+        payload: { contactId, destination, message, reaction, targetKey, type: outboundType, source, lead: automationState.lead },
+        status: 'failed',
+        errorMessage: 'automation_paused_human',
+      });
+
+      return res.status(409).json({
+        error: 'automation_paused_human',
+        details: 'Atendimento humano ativo. O agente nao pode enviar novas mensagens.',
+        lead: automationState.lead,
+      });
+    }
+
+    if (source === 'human') {
+      await setLeadAutomationState({
+        leadId: contactId ? String(contactId) : null,
+        phone: destination,
+        status: 'paused_human',
+      });
+    }
+
+    if (source === 'human' && automationState.ok) {
+      await updateLeadOps({
+        leadId: automationState.lead.id,
+        conversationStatus: 'em_atendimento',
+        ownerId: ownerId === undefined ? undefined : ownerId ? String(ownerId) : null,
+        ownerName: ownerName === undefined ? undefined : ownerName ? String(ownerName) : null,
+        nextFollowupAt: nextFollowupAt === undefined ? undefined : nextFollowupAt ? new Date(String(nextFollowupAt)).toISOString() : null,
+      });
+    }
+
+    let messageSyncStatus: 'success' | 'failed' | 'skipped' = automationState.ok ? 'success' : 'skipped';
+    let messageSyncError: string | null = null;
+
+    if (automationState.ok && outboundType !== 'reaction') {
+      const messageWrite = await appendConversationMessage({
+        leadId: automationState.lead.id,
+        direction: 'outbound',
+        content: String(message),
+        type: outboundType,
+        source,
+        n8nMessageId: outboundEventId,
+      });
+
+      if (!messageWrite.ok) {
+        messageSyncStatus = 'failed';
+        messageSyncError = messageWrite.reason;
+        await logIntegrationEvent({
+          eventId: `sync_failed_${outboundEventId}`,
+          eventType: source === 'human' ? 'human_message_sync_failed' : 'agent_message_sync_failed',
+          direction: 'outbound',
+          payload: { contactId, destination, type: outboundType, source, reason: messageWrite.reason },
+          status: 'failed',
+          errorMessage: messageWrite.reason,
+        });
       }
     }
 
-    if (!phone) {
-      return res.status(400).json({ error: 'Contato sem telefone válido para envio ao WhatsApp' });
+    if (automationState.ok && outboundType === 'reaction') {
+      const reactionText = String(reaction || message || '').trim();
+      const reactionWrite = await appendConversationMessage({
+        leadId: automationState.lead.id,
+        direction: 'outbound',
+        type: 'reaction',
+        source,
+        content: reactionText || '👍',
+        n8nMessageId: outboundEventId,
+      });
+
+      if (!reactionWrite.ok) {
+        messageSyncStatus = 'failed';
+        messageSyncError = reactionWrite.reason;
+        await logIntegrationEvent({
+          eventId: `sync_failed_${outboundEventId}`,
+          eventType: source === 'human' ? 'human_reaction_sync_failed' : 'agent_reaction_sync_failed',
+          direction: 'outbound',
+          payload: { contactId, destination, type: outboundType, source, reason: reactionWrite.reason },
+          status: 'failed',
+          errorMessage: reactionWrite.reason,
+        });
+      }
     }
 
     if (!n8nUrl || !String(n8nUrl).startsWith('http')) {
-      return res.status(200).json({ success: true, simulated: true, timestamp: new Date().toISOString() });
+      await logIntegrationEvent({
+        eventId: outboundEventId,
+        eventType:
+          outboundType === 'reaction'
+            ? source === 'human'
+              ? 'human_outbound_reaction'
+              : 'agent_outbound_reaction'
+            : source === 'human'
+              ? 'human_outbound_message'
+              : 'agent_outbound_message',
+        direction: 'outbound',
+        payload: { contactId, destination, message, reaction, targetKey, type: outboundType, source, simulated: true },
+        status: 'success',
+      });
+
+      return res.status(200).json({
+        success: true,
+        simulated: true,
+        source,
+        type: outboundType,
+        messageSync: { status: messageSyncStatus, error: messageSyncError },
+        timestamp: new Date().toISOString(),
+      });
     }
 
     const response = await fetch(String(n8nUrl), {
@@ -104,13 +156,13 @@ export default async function handler(req: any, res: any) {
         Authorization: `Bearer ${process.env.N8N_WEBHOOK_OUTBOUND_TOKEN || ''}`,
       },
       body: JSON.stringify({
-        source: 'crm_outbound',
         contactId,
-        name: contactName,
-        phone,
         message,
-        type,
-        destination: phone,
+        type: outboundType,
+        destination,
+        source,
+        reaction,
+        targetKey,
         timestamp: new Date().toISOString(),
       }),
     });
@@ -119,8 +171,44 @@ export default async function handler(req: any, res: any) {
       throw new Error(`n8n error: ${response.status} ${response.statusText}`);
     }
 
-    return res.status(200).json({ success: true, timestamp: new Date().toISOString() });
+    await logIntegrationEvent({
+      eventId: outboundEventId,
+      eventType:
+        outboundType === 'reaction'
+          ? source === 'human'
+            ? 'human_outbound_reaction'
+            : 'agent_outbound_reaction'
+          : source === 'human'
+            ? 'human_outbound_message'
+            : 'agent_outbound_message',
+      direction: 'outbound',
+      payload: { contactId, destination, message, reaction, targetKey, type: outboundType, source },
+      status: 'success',
+    });
+
+    return res.status(200).json({
+      success: true,
+      source,
+      type: outboundType,
+      messageSync: { status: messageSyncStatus, error: messageSyncError },
+      timestamp: new Date().toISOString(),
+    });
   } catch (err: any) {
+    await logIntegrationEvent({
+      eventId: outboundEventId,
+      eventType:
+        outboundType === 'reaction'
+          ? source === 'human'
+            ? 'human_outbound_reaction'
+            : 'agent_outbound_reaction'
+          : source === 'human'
+            ? 'human_outbound_message'
+            : 'agent_outbound_message',
+      direction: 'outbound',
+      payload: { contactId, destination, message, reaction, targetKey, type: outboundType, source },
+      status: 'failed',
+      errorMessage: err?.message || 'unknown_error',
+    });
     return res.status(500).json({ error: 'Falha ao comunicar com n8n', details: err?.message || 'unknown_error' });
   }
 }

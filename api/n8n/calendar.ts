@@ -1,3 +1,6 @@
+import { createClient } from '@supabase/supabase-js';
+import { updateLeadOps } from '../_lib/crm.js';
+
 type CalendarAction = 'list' | 'create' | 'update' | 'delete';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -58,6 +61,46 @@ function json(res: any, status: number, payload: any) {
   return res.status(status).json(payload);
 }
 
+function sanitizePayload(payload: any) {
+  if (!payload || typeof payload !== 'object') return payload;
+  const { authToken, ...rest } = payload;
+  return rest;
+}
+
+async function logCalendarEvent(params: {
+  action: CalendarAction;
+  status: 'success' | 'error';
+  requestPayload?: any;
+  responsePayload?: any;
+  errorMessage?: string;
+}) {
+  const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !serviceKey) return;
+
+  try {
+    const sb = createClient(supabaseUrl, serviceKey);
+    const eventId = `calendar_${params.action}_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+    await sb.from('integration_events').insert({
+      event_id: eventId,
+      event_type: `calendar_${params.action}`,
+      direction: 'inbound',
+      status: params.status,
+      payload: {
+        action: params.action,
+        request: sanitizePayload(params.requestPayload),
+        response: params.responsePayload,
+        error: params.errorMessage || null,
+        source: 'api/n8n/calendar',
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch {
+    // Telemetria não pode quebrar o fluxo da agenda.
+  }
+}
+
 async function getGoogleAccessToken() {
   const client_id = process.env.GOOGLE_CLIENT_ID;
   const client_secret = process.env.GOOGLE_CLIENT_SECRET;
@@ -107,12 +150,46 @@ async function gcal(path: string, method: string, accessToken: string, body?: an
   return data;
 }
 
+function rangesOverlap(startA: string, endA: string, startB?: string, endB?: string) {
+  if (!startB || !endB) return false;
+  return new Date(startA).getTime() < new Date(endB).getTime() && new Date(endA).getTime() > new Date(startB).getTime();
+}
+
+async function findCalendarConflicts(params: {
+  accessToken: string;
+  startIso: string;
+  endIso: string;
+  ignoreEventId?: string;
+}) {
+  const query = new URLSearchParams({
+    timeMin: params.startIso,
+    timeMax: params.endIso,
+    singleEvents: 'true',
+    orderBy: 'startTime',
+  }).toString();
+
+  const data = await gcal(`/events?${query}`, 'GET', params.accessToken);
+  const items = Array.isArray(data.items) ? data.items : [];
+
+  return items.filter((event: any) => {
+    if (!event?.id) return false;
+    if (params.ignoreEventId && event.id === params.ignoreEventId) return false;
+    const start = event?.start?.dateTime || event?.start?.date;
+    const end = event?.end?.dateTime || event?.end?.date;
+    return rangesOverlap(params.startIso, params.endIso, start, end);
+  });
+}
+
 function normalizeDateTime(value: any): string {
   const dt = new Date(value);
   if (Number.isNaN(dt.getTime())) {
     throw new Error('Invalid date. Use ISO format, e.g. 2026-06-01T14:00:00-03:00');
   }
   return dt.toISOString();
+}
+
+function readLeadId(req: any): string {
+  return String(req.body?.leadId || req.query?.leadId || '').trim();
 }
 
 export default async function handler(req: any, res: any) {
@@ -130,6 +207,7 @@ export default async function handler(req: any, res: any) {
   }
 
   const timezone = String(req.body?.timezone || req.query?.timezone || process.env.TZ || 'America/Fortaleza');
+  const leadId = readLeadId(req);
 
   try {
     const accessToken = await getGoogleAccessToken();
@@ -148,12 +226,14 @@ export default async function handler(req: any, res: any) {
       }).toString();
 
       const data = await gcal(`/events?${query}`, 'GET', accessToken);
-      return json(res, 200, {
+      const responsePayload = {
         ok: true,
         action,
         count: Array.isArray(data.items) ? data.items.length : 0,
         events: data.items || [],
-      });
+      };
+      await logCalendarEvent({ action, status: 'success', requestPayload: req.body || req.query, responsePayload });
+      return json(res, 200, responsePayload);
     }
 
     if (action === 'create') {
@@ -165,6 +245,28 @@ export default async function handler(req: any, res: any) {
         return json(res, 400, { ok: false, error: 'Missing required fields: summary, start, end' });
       }
 
+      const normalizedStart = normalizeDateTime(start);
+      const normalizedEnd = normalizeDateTime(end);
+      const conflicts = await findCalendarConflicts({
+        accessToken,
+        startIso: normalizedStart,
+        endIso: normalizedEnd,
+      });
+      if (conflicts.length > 0) {
+        return json(res, 409, {
+          ok: false,
+          action,
+          error: 'time_conflict',
+          details: 'Ja existe outro evento neste horario.',
+          conflicts: conflicts.map((event: any) => ({
+            id: event.id,
+            summary: event.summary || 'Sem titulo',
+            start: event?.start?.dateTime || event?.start?.date || null,
+            end: event?.end?.dateTime || event?.end?.date || null,
+          })),
+        });
+      }
+
       const payload = {
         summary,
         description: req.body?.description || '',
@@ -172,18 +274,33 @@ export default async function handler(req: any, res: any) {
         attendees: Array.isArray(req.body?.attendees)
           ? req.body.attendees.map((email: string) => ({ email }))
           : undefined,
-        start: { dateTime: normalizeDateTime(start), timeZone: timezone },
-        end: { dateTime: normalizeDateTime(end), timeZone: timezone },
+        start: { dateTime: normalizedStart, timeZone: timezone },
+        end: { dateTime: normalizedEnd, timeZone: timezone },
       };
 
       const event = await gcal('/events', 'POST', accessToken, payload);
-      return json(res, 200, {
+      if (leadId) {
+        await updateLeadOps({
+          leadId,
+          calendarEventId: event.id,
+          lastAppointmentAt: normalizedStart,
+          conversationStatus: 'agendado',
+          appointmentStatus: 'scheduled',
+          appointmentConfirmedAt: null,
+          lastConfirmationSentAt: null,
+          lastReminderSentAt: null,
+          lastNoShowCheckSentAt: null,
+        });
+      }
+      const responsePayload = {
         ok: true,
         action,
         eventId: event.id,
         htmlLink: event.htmlLink,
         event,
-      });
+      };
+      await logCalendarEvent({ action, status: 'success', requestPayload: req.body, responsePayload });
+      return json(res, 200, responsePayload);
     }
 
     if (action === 'update') {
@@ -193,6 +310,31 @@ export default async function handler(req: any, res: any) {
       }
 
       const current = await gcal(`/events/${encodeURIComponent(eventId)}`, 'GET', accessToken);
+      const nextStart = req.body?.start ? normalizeDateTime(req.body.start) : current?.start?.dateTime;
+      const nextEnd = req.body?.end ? normalizeDateTime(req.body.end) : current?.end?.dateTime;
+
+      if (nextStart && nextEnd) {
+        const conflicts = await findCalendarConflicts({
+          accessToken,
+          startIso: nextStart,
+          endIso: nextEnd,
+          ignoreEventId: eventId,
+        });
+        if (conflicts.length > 0) {
+          return json(res, 409, {
+            ok: false,
+            action,
+            error: 'time_conflict',
+            details: 'Ja existe outro evento neste horario.',
+            conflicts: conflicts.map((event: any) => ({
+              id: event.id,
+              summary: event.summary || 'Sem titulo',
+              start: event?.start?.dateTime || event?.start?.date || null,
+              end: event?.end?.dateTime || event?.end?.date || null,
+            })),
+          });
+        }
+      }
 
       const payload = {
         summary: req.body?.summary ?? current.summary,
@@ -202,21 +344,36 @@ export default async function handler(req: any, res: any) {
           ? req.body.attendees.map((email: string) => ({ email }))
           : current.attendees,
         start: req.body?.start
-          ? { dateTime: normalizeDateTime(req.body.start), timeZone: timezone }
+          ? { dateTime: nextStart, timeZone: timezone }
           : current.start,
         end: req.body?.end
-          ? { dateTime: normalizeDateTime(req.body.end), timeZone: timezone }
+          ? { dateTime: nextEnd, timeZone: timezone }
           : current.end,
       };
 
       const event = await gcal(`/events/${encodeURIComponent(eventId)}`, 'PUT', accessToken, payload);
-      return json(res, 200, {
+      if (leadId) {
+        await updateLeadOps({
+          leadId,
+          calendarEventId: event.id,
+          lastAppointmentAt: nextStart || null,
+          conversationStatus: 'agendado',
+          appointmentStatus: 'scheduled',
+          appointmentConfirmedAt: null,
+          lastConfirmationSentAt: null,
+          lastReminderSentAt: null,
+          lastNoShowCheckSentAt: null,
+        });
+      }
+      const responsePayload = {
         ok: true,
         action,
         eventId: event.id,
         htmlLink: event.htmlLink,
         event,
-      });
+      };
+      await logCalendarEvent({ action, status: 'success', requestPayload: req.body, responsePayload });
+      return json(res, 200, responsePayload);
     }
 
     if (action === 'delete') {
@@ -226,15 +383,31 @@ export default async function handler(req: any, res: any) {
       }
 
       await gcal(`/events/${encodeURIComponent(eventId)}`, 'DELETE', accessToken);
-      return json(res, 200, {
+      if (leadId) {
+        await updateLeadOps({
+          leadId,
+          calendarEventId: null,
+          appointmentStatus: 'canceled',
+        });
+      }
+      const responsePayload = {
         ok: true,
         action,
         eventId,
-      });
+      };
+      await logCalendarEvent({ action, status: 'success', requestPayload: req.body, responsePayload });
+      return json(res, 200, responsePayload);
     }
 
     return json(res, 400, { ok: false, error: 'Invalid action' });
   } catch (err: any) {
+    await logCalendarEvent({
+      action,
+      status: 'error',
+      requestPayload: req.body || req.query,
+      errorMessage: err?.message || 'unknown_error',
+    });
+
     return json(res, 500, {
       ok: false,
       action,

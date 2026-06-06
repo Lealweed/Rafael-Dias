@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
-import { Outlet, Link, useNavigate, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, MessageSquare, Settings, LogOut, CheckSquare, AlertCircle, BarChart3, Search, Calendar as CalendarIcon } from "lucide-react";
+import { Outlet, Link, useLocation } from "react-router-dom";
+import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 
 export default function Layout() {
-  const navigate = useNavigate();
   const location = useLocation();
   const supabase = createClient();
 
@@ -15,32 +14,49 @@ export default function Layout() {
 
   useEffect(() => {
     async function fetchCounters() {
-      try {
-        const [conversationsRes, dashboardRes] = await Promise.all([
-          fetch('/api/crm/conversations'),
-          fetch('/api/crm/dashboard'),
-        ]);
+      // Fonte principal no schema atual
+      let { count: convCount, error: convErr } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true });
 
-        const conversationsData = await conversationsRes.json().catch(() => null);
-        const dashboardData = await dashboardRes.json().catch(() => null);
+      // Get follow-ups count (leads without interaction in the last 48 hours)
+      const now = new Date();
+      const fortyEightHoursAgo = new Date(now.getTime() - (48 * 60 * 60 * 1000));
+      
+      let { count: followUpCount, error: fuErr } = await supabase
+        .from('leads')
+        .select('*', { count: 'exact', head: true })
+        .lt('updated_at', fortyEightHoursAgo.toISOString());
 
-        setCounters({
-          conversations: conversationsData?.summary?.total || dashboardData?.totalConversations || 0,
-          followUps: conversationsData?.summary?.withPendingFollowup || 0,
-        });
-      } catch {
-        // keep previous counters on transient failures
+      // Fallback para estrutura legada
+      if (convErr || fuErr) {
+        const legacyConv = await supabase
+          .from('Usuarios')
+          .select('*', { count: 'exact', head: true });
+
+        const legacyFu = await supabase
+          .from('Usuarios')
+          .select('*', { count: 'exact', head: true })
+          .lt('updated_at', fortyEightHoursAgo.toISOString());
+
+        convCount = legacyConv.count;
+        followUpCount = legacyFu.count;
       }
+
+      setCounters({
+        conversations: convCount || 0,
+        followUps: followUpCount || 0
+      });
     }
 
     fetchCounters();
-
+    
+    // Optional: set interval or subscribe to realtime events in the future
     const interval = setInterval(fetchCounters, 15000);
     return () => clearInterval(interval);
   }, []);
 
   const handleLogout = async () => {
-    localStorage.removeItem("mock_session");
     await supabase.auth.signOut();
     window.location.href = "/login";
   };
@@ -127,7 +143,7 @@ export default function Layout() {
             <Link to="/pipeline" className={navLinkClass("/pipeline")}>
               <div className="flex items-center gap-3">
                 <LayoutDashboard className={navIconClass("/pipeline")} />
-                Pipeline
+                Funil
               </div>
             </Link>
             <Link to="/calendar" className={navLinkClass("/calendar")}>
@@ -182,8 +198,10 @@ export default function Layout() {
           <span>DB: Supabase (Production)</span>
           <span>v1.0.4-beta</span>
         </div>
-        <div className="flex gap-4">
+        <div className="flex items-center gap-4">
           <span className="text-blue-500">https://n8n.rd.com/webhook/incoming/7281...</span>
+          <Link to="/privacy-policy" className="text-[#2563EB] hover:underline">Política de Privacidade</Link>
+          <Link to="/terms-of-service" className="text-[#2563EB] hover:underline">Termos de Serviço</Link>
           <span>© 2024 Instituto Rafael Dias</span>
         </div>
       </footer>

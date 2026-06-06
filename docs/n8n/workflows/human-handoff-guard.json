@@ -1,0 +1,311 @@
+{
+  "name": "Human Handoff Guard - CRM Rafael Dias",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "human-handoff-guard",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "WebhookTrigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [260, 300],
+      "webhookId": "human-handoff-guard"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "contactId",
+              "name": "contactId",
+              "type": "string",
+              "value": "={{ $json.body?.contactId || $json.contactId || '' }}"
+            },
+            {
+              "id": "destination",
+              "name": "destination",
+              "type": "string",
+              "value": "={{ (($json.body?.destination || $json.destination || $json.body?.phone || $json.phone || $json.body?.from || $json.from || '').toString()).split('@')[0].replace(/\\D/g, '') }}"
+            },
+            {
+              "id": "incomingMessage",
+              "name": "incomingMessage",
+              "type": "string",
+              "value": "={{ $json.body?.message || $json.message || $json.body?.text || $json.text || '' }}"
+            },
+            {
+              "id": "replyText",
+              "name": "replyText",
+              "type": "string",
+              "value": "={{ $json.body?.replyText || $json.replyText || 'Mensagem automatica de teste.' }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "NormalizeInput",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.institutorafaeldias.site/api/conversations/automation",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "leadId",
+              "value": "={{ $json.contactId }}"
+            },
+            {
+              "name": "phone",
+              "value": "={{ $json.destination }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "GetAutomationState",
+      "name": "Get Automation State",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [780, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.lead?.automation_status || '' }}",
+              "rightValue": "paused_human",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "IsPausedHuman",
+      "name": "Is Paused Human?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1040, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ok",
+              "name": "ok",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "stopped",
+              "name": "stopped",
+              "type": "boolean",
+              "value": true
+            },
+            {
+              "id": "reason",
+              "name": "reason",
+              "type": "string",
+              "value": "paused_human"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "Atendimento humano ativo. Fluxo do agente interrompido."
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "BuildPausedResponse",
+      "name": "Build Paused Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1280, 180]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "contactId",
+              "name": "contactId",
+              "type": "string",
+              "value": "={{ $json.lead?.id || $json.contactId || '' }}"
+            },
+            {
+              "id": "destination",
+              "name": "destination",
+              "type": "string",
+              "value": "={{ $json.lead?.phone || $json.destination || '' }}"
+            },
+            {
+              "id": "message",
+              "name": "message",
+              "type": "string",
+              "value": "={{ $json.replyText }}"
+            },
+            {
+              "id": "type",
+              "name": "type",
+              "type": "string",
+              "value": "whatsapp"
+            },
+            {
+              "id": "source",
+              "name": "source",
+              "type": "string",
+              "value": "agent"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "BuildAgentOutbound",
+      "name": "Build Agent Outbound",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1280, 420]
+    },
+    {
+      "parameters": {
+        "url": "https://www.institutorafaeldias.site/api/n8n/outbound",
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ { contactId: $json.contactId, destination: $json.destination, message: $json.message, type: $json.type, source: $json.source } }}",
+        "options": {}
+      },
+      "id": "SendAgentMessage",
+      "name": "Send Agent Message",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1540, 420]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [1780, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Get Automation State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Automation State": {
+      "main": [
+        [
+          {
+            "node": "Is Paused Human?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Paused Human?": {
+      "main": [
+        [
+          {
+            "node": "BuildPausedResponse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "BuildAgentOutbound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "BuildPausedResponse": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Agent Outbound": {
+      "main": [
+        [
+          {
+            "node": "Send Agent Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Agent Message": {
+      "main": [
+        [
+          {
+            "node": "Respond",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "active": false,
+  "pinData": {},
+  "meta": null,
+  "versionId": "1"
+}

@@ -1,0 +1,178 @@
+{
+  "name": "Agenda Dr Rafael Dias - CRUD Google Calendar",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "agenda-dr-rafael",
+        "httpMethod": "POST",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "WebhookTrigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [260, 300],
+      "webhookId": "agenda-dr-rafael"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            { "id": "action", "name": "action", "type": "string", "value": "={{ ($json.body?.action || $json.action || 'list').toLowerCase() }}" },
+            { "id": "eventId", "name": "eventId", "type": "string", "value": "={{ $json.body?.eventId || $json.eventId || '' }}" },
+            { "id": "summary", "name": "summary", "type": "string", "value": "={{ $json.body?.summary || $json.summary || '' }}" },
+            { "id": "start", "name": "start", "type": "string", "value": "={{ $json.body?.start || $json.start || '' }}" },
+            { "id": "end", "name": "end", "type": "string", "value": "={{ $json.body?.end || $json.end || '' }}" },
+            { "id": "description", "name": "description", "type": "string", "value": "={{ $json.body?.description || $json.description || '' }}" },
+            { "id": "location", "name": "location", "type": "string", "value": "={{ $json.body?.location || $json.location || '' }}" },
+            { "id": "attendees", "name": "attendees", "type": "array", "value": "={{ $json.body?.attendees || $json.attendees || [] }}" },
+            { "id": "authToken", "name": "authToken", "type": "string", "value": "={{ $json.body?.authToken || $json.authToken || '' }}" }
+          ]
+        },
+        "options": {}
+      },
+      "id": "NormalizeInput",
+      "name": "Normalize Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [520, 300]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            { "conditions": { "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [ { "leftValue": "={{ $json.action }}", "rightValue": "create", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "outputKey": "create" },
+            { "conditions": { "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [ { "leftValue": "={{ $json.action }}", "rightValue": "update", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "outputKey": "update" },
+            { "conditions": { "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [ { "leftValue": "={{ $json.action }}", "rightValue": "delete", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "outputKey": "delete" },
+            { "conditions": { "options": { "caseSensitive": false, "leftValue": "", "typeValidation": "strict", "version": 2 }, "conditions": [ { "leftValue": "={{ $json.action }}", "rightValue": "list", "operator": { "type": "string", "operation": "equals" } } ], "combinator": "and" }, "outputKey": "list" }
+          ]
+        },
+        "options": { "fallbackOutput": "extra" }
+      },
+      "id": "SwitchAction",
+      "name": "Switch Action",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [760, 300]
+    },
+    {
+      "parameters": {
+        "url": "https://www.institutorafaeldias.site/api/n8n/calendar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ $json.authToken ? ('Bearer ' + $json.authToken) : '' }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ { action: $json.action, eventId: $json.eventId, summary: $json.summary, start: $json.start, end: $json.end, description: $json.description, location: $json.location, attendees: $json.attendees, timezone: 'America/Fortaleza' } }}",
+        "options": {}
+      },
+      "id": "CallCalendarApiCreate",
+      "name": "Call Calendar API (Create)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 120]
+    },
+    {
+      "parameters": {
+        "url": "https://www.institutorafaeldias.site/api/n8n/calendar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ $json.authToken ? ('Bearer ' + $json.authToken) : '' }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ { action: $json.action, eventId: $json.eventId, summary: $json.summary, start: $json.start, end: $json.end, description: $json.description, location: $json.location, attendees: $json.attendees, timezone: 'America/Fortaleza' } }}",
+        "options": {}
+      },
+      "id": "CallCalendarApiUpdate",
+      "name": "Call Calendar API (Update)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 240]
+    },
+    {
+      "parameters": {
+        "url": "https://www.institutorafaeldias.site/api/n8n/calendar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ $json.authToken ? ('Bearer ' + $json.authToken) : '' }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ { action: $json.action, eventId: $json.eventId, timezone: 'America/Fortaleza' } }}",
+        "options": {}
+      },
+      "id": "CallCalendarApiDelete",
+      "name": "Call Calendar API (Delete)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 360]
+    },
+    {
+      "parameters": {
+        "url": "https://www.institutorafaeldias.site/api/n8n/calendar",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Authorization", "value": "={{ $json.authToken ? ('Bearer ' + $json.authToken) : '' }}" },
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "jsonBody": "={{ { action: 'list', timezone: 'America/Fortaleza' } }}",
+        "options": {}
+      },
+      "id": "CallCalendarApiList",
+      "name": "Call Calendar API (List)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [1040, 480]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "Respond",
+      "name": "Respond",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.2,
+      "position": [1280, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": { "main": [[{ "node": "Normalize Input", "type": "main", "index": 0 }]] },
+    "Normalize Input": { "main": [[{ "node": "Switch Action", "type": "main", "index": 0 }]] },
+    "Switch Action": {
+      "main": [
+        [{ "node": "Call Calendar API (Create)", "type": "main", "index": 0 }],
+        [{ "node": "Call Calendar API (Update)", "type": "main", "index": 0 }],
+        [{ "node": "Call Calendar API (Delete)", "type": "main", "index": 0 }],
+        [{ "node": "Call Calendar API (List)", "type": "main", "index": 0 }],
+        [{ "node": "Call Calendar API (List)", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call Calendar API (Create)": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Call Calendar API (Update)": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Call Calendar API (Delete)": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] },
+    "Call Calendar API (List)": { "main": [[{ "node": "Respond", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" },
+  "active": false,
+  "pinData": {},
+  "meta": null,
+  "versionId": "1"
+}

@@ -80,17 +80,6 @@ export default function ConfigPage() {
                    <span className="text-sm font-medium text-gray-500">{healthStatus?.n8n || "Missing"}</span>
                  </div>
                </div>
-
-               <div className="flex items-center justify-between py-3 border-b border-gray-100">
-                 <div>
-                   <p className="font-bold text-gray-900">Pix Configuration</p>
-                   <p className="text-xs text-gray-500 mt-0.5">Chave Pix usada pelo agente em cobrança/sinal</p>
-                 </div>
-                 <div className="flex items-center gap-2">
-                   {healthStatus?.pix === "configured" ? <CheckCircle2 className="w-5 h-5 text-green-500"/> : <XCircle className="w-5 h-5 text-red-500"/>}
-                   <span className="text-sm font-medium text-gray-500">{healthStatus?.pix || "Missing"}</span>
-                 </div>
-               </div>
                
                <div className="mt-8 bg-blue-50/50 rounded-xl p-5 border border-blue-100">
                  <p className="text-sm font-bold text-blue-900">Configuração Inicial</p>

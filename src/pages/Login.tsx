@@ -15,12 +15,6 @@ export default function Login() {
     setLoading(true);
     setError(null);
 
-    // Bypass temporário para validação solicitada
-    if (email === "leal@adm.com" && password === "1921") {
-      localStorage.setItem("mock_session", "true");
-      window.location.href = "/dashboard";
-      return;
-    }
 
     const { error } = await supabase.auth.signInWithPassword({
       email,

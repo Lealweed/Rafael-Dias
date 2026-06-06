@@ -3,6 +3,8 @@ import path from "path";
 import { createServer as createViteServer } from "vite";
 import fs from "fs";
 import { createClient } from "@supabase/supabase-js";
+import { findLeadByIdOrPhone, getLeadAutomationState, setLeadAutomationState } from "./api/_lib/automation";
+import outboundHandler from "./api/n8n/outbound";
 
 async function startServer() {
   const app = express();
@@ -19,6 +21,49 @@ async function startServer() {
       supabase: process.env.NEXT_PUBLIC_SUPABASE_URL ? "configured" : "missing",
       n8n: process.env.N8N_WEBHOOK_OUTBOUND_TOKEN ? "configured" : "missing"
     });
+  });
+
+  app.get("/api/conversations/automation", async (req, res) => {
+    const leadId = String(req.query.leadId || "").trim();
+    const phone = String(req.query.phone || "").trim();
+    if (!leadId && !phone) {
+      return res.status(400).json({ ok: false, error: "Missing required field: leadId or phone" });
+    }
+
+    const state = leadId ? await getLeadAutomationState(leadId) : await findLeadByIdOrPhone({ phone });
+    if (!state.ok) {
+      const status = state.reason === "lead_not_found" ? 404 : 500;
+      return res.status(status).json({ ok: false, error: state.reason });
+    }
+
+    return res.json({ ok: true, lead: state.lead });
+  });
+
+  app.post("/api/conversations/automation", async (req, res) => {
+    const leadId = String(req.body?.leadId || "").trim();
+    const phone = String(req.body?.phone || "").trim();
+    const action = String(req.body?.action || "").trim().toLowerCase();
+
+    if (!leadId && !phone) {
+      return res.status(400).json({ ok: false, error: "Missing required field: leadId or phone" });
+    }
+
+    if (action !== "pause" && action !== "resume") {
+      return res.status(400).json({ ok: false, error: "Invalid action. Use pause or resume." });
+    }
+
+    const state = await setLeadAutomationState({
+      leadId,
+      phone,
+      status: action === "pause" ? "paused_human" : "active",
+    });
+
+    if (!state.ok) {
+      const status = state.reason === "lead_not_found" ? 404 : 500;
+      return res.status(status).json({ ok: false, error: state.reason });
+    }
+
+    return res.json({ ok: true, lead: state.lead });
   });
 
   // API Route: n8n Webhook Inbound
@@ -154,66 +199,7 @@ async function startServer() {
   app.post("/api/webhook/n8n", handleInboundWebhook);
   app.post("/api/webhook/inbound", handleInboundWebhook);
 
-  // API Route: n8n Webhook Outbound
-  app.post("/api/n8n/outbound", async (req, res) => {
-    const { contactId, message, type, destination } = req.body;
-    console.log(`Sending message to ${destination} via n8n:`, req.body);
-    
-    // URL exposta no .env para enviar payload ao n8n
-    const n8nUrl = process.env.VITE_N8N_OUTBOUND_WEBHOOK_URL || process.env.N8N_OUTBOUND_WEBHOOK_URL;
-    
-    try {
-      const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-      
-      if (supabaseUrl && supabaseKey) {
-          const supabase = createClient(supabaseUrl, supabaseKey);
-          
-          let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', contactId).limit(1);
-          let conv_id = convs && convs.length > 0 ? convs[0].id : null;
-          if (!conv_id) {
-             const { data: newConv } = await supabase.from('conversations').insert({ lead_id: contactId }).select('id').single();
-             if (newConv) conv_id = newConv.id;
-          }
-
-          if (conv_id) {
-             await supabase.from('messages').insert({
-                 conversation_id: conv_id,
-                 direction: 'outbound',
-                 type: 'text',
-                 content: message,
-                 n8n_message_id: `out_${Date.now()}`
-             });
-             
-             await supabase.from('leads').update({ last_interaction_at: new Date().toISOString() }).eq('id', contactId);
-          }
-      }
-
-      if (!n8nUrl || !n8nUrl.startsWith('http')) {
-        console.warn("N8N_OUTBOUND_WEBHOOK_URL isValid URL is not set (received Token/JWT?). Simulating success.");
-        return res.json({ success: true, simulated: true, timestamp: new Date().toISOString() });
-      }
-
-      // Simulação da chamada ao webhook n8n de saída
-      const response = await fetch(n8nUrl, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${process.env.N8N_WEBHOOK_OUTBOUND_TOKEN || ""}`
-        },
-        body: JSON.stringify({ contactId, message, type, destination, timestamp: new Date().toISOString() })
-      });
-
-      if (!response.ok) {
-         throw new Error(`n8n error: ${response.statusText}`);
-      }
-
-      res.json({ success: true, timestamp: new Date().toISOString() });
-    } catch (err: any) {
-      console.error("Erro chamando webhook n8n:", err.message);
-      res.status(500).json({ error: "Falha ao comunicar com n8n", details: err.message });
-    }
-  });
+  app.post("/api/n8n/outbound", outboundHandler);
 
   // Vite middleware
   if (process.env.NODE_ENV !== "production") {

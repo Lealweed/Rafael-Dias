@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Send, Paperclip, MoreVertical, CheckCircle2 } from "lucide-react";
+import { Search, Send, Paperclip, MoreVertical, CheckCircle2, AlertCircle, Sparkles, MessageSquare, ShieldCheck, Zap } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 
 function normalizePhone(raw: any): string {
@@ -47,7 +47,7 @@ function formatMessageLabel(type: string, text: string) {
 function formatSenderLabel(source?: string | null, type?: string | null) {
   const normalized = String(source || "").toLowerCase();
   if (normalized === "human") return "Equipe";
-  if (normalized === "agent") return "Agente";
+  if (normalized === "agent") return "Agente IA";
   if (normalized === "system" || type === "system") return "Sistema";
   return "Cliente";
 }
@@ -115,6 +115,7 @@ export default function Conversations() {
     currentUser?.email ||
     "Equipe Clínica";
   const currentAgentId = currentUser?.id || null;
+  
   const filteredChats = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return activeChats;
@@ -139,12 +140,10 @@ export default function Conversations() {
   // Load leads/chats
   useEffect(() => {
     async function fetchChats() {
-      // Fonte principal no schema atual
       let { data, error } = await supabase
         .from('leads')
         .select('*');
 
-      // Fallback de compatibilidade
       if (error) {
         console.warn('Falha ao buscar conversas em public.leads, tentando Usuarios:', error.message);
         const legacy = await supabase
@@ -171,7 +170,7 @@ export default function Conversations() {
         const preferredChat = preferredLeadId ? sorted.find((item: any) => item.id === preferredLeadId) : null;
 
         setActiveChats(sorted);
-        setSelectedChat(prev => {
+        setSelectedChat((prev: any) => {
           if (preferredChat && !prev) return preferredChat;
           if (!prev && sorted.length > 0) return sorted[0];
           if (prev) {
@@ -199,7 +198,6 @@ export default function Conversations() {
         return;
       }
 
-      // 1) Tentar schema novo: conversations + messages
       const { data: convRows, error: convErr } = await supabase
         .from('conversations')
         .select('id')
@@ -230,7 +228,6 @@ export default function Conversations() {
         }
       }
 
-      // 2) Fallback: integration_events por telefone
       const { data, error } = await supabase
         .from('integration_events')
         .select('id, direction, payload, created_at')
@@ -352,7 +349,6 @@ export default function Conversations() {
       });
       
       const data = await res.json().catch(() => ({}));
-      console.log("n8n response:", data);
       if (res.ok && data?.success) {
         setAutomationState((prev: any) => ({
           ...(prev || {}),
@@ -432,21 +428,7 @@ export default function Conversations() {
       window.open(data.docUrl, '_blank');
     } catch (err: any) {
       console.error('Failed to generate proposal:', err);
-
-      const rawMessage = String(err?.message || '');
-      let message = 'Falha ao gerar proposta no Google Docs. Tente novamente.';
-
-      if (rawMessage.includes('insufficientPermissions') || rawMessage.includes('ACCESS_TOKEN_SCOPE_INSUFFICIENT')) {
-        message = 'O refresh token não tem escopo do Google Docs. Reautorize no OAuth com o escopo https://www.googleapis.com/auth/documents.';
-      } else if (rawMessage.includes('invalid_grant')) {
-        message = 'Refresh token inválido/expirado. Gere um novo GOOGLE_REFRESH_TOKEN e atualize na Vercel.';
-      } else if (rawMessage.includes('Missing GOOGLE_CLIENT_ID')) {
-        message = 'Variáveis GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN ausentes na Vercel.';
-      } else if (rawMessage) {
-        message = rawMessage;
-      }
-
-      setGoogleAuthError(message);
+      setGoogleAuthError(err?.message || 'Falha ao gerar proposta no Google Docs. Tente novamente.');
     } finally {
       setIsGeneratingDoc(false);
     }
@@ -580,319 +562,341 @@ export default function Conversations() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="flex flex-col h-full w-full space-y-6">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827]">Central de Conversas</h1>
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-1">Interações Omnichannel & n8n</p>
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+            <MessageSquare className="h-3 w-3" />
+            <span>Mensageria Atendimento</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Central de Conversas</h1>
+          <p className="text-xs text-white/40 font-light mt-1">Gestão híbrida de leads por canais integrados.</p>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm min-h-[600px] h-[calc(100vh-180px)]">
+      {/* Main Container */}
+      <div className="flex-1 flex overflow-hidden rounded-3xl border border-white/5 bg-[#0B0D12]/60 backdrop-blur-xl min-h-[500px] h-[calc(100vh-220px)] shadow-2xl">
         
-        {/* Left pane: Chats List */}
-        <div className="w-80 flex flex-col border-r border-gray-200 shrink-0 bg-white">
-          <div className="p-4 border-b border-gray-100">
-            <div className="flex items-center gap-2 px-3 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus-within:border-blue-500 focus-within:ring-1 focus-within:ring-blue-500">
-              <Search className="w-4 h-4 text-gray-400" />
+        {/* Left Pane: Chat List */}
+        <div className="w-80 flex flex-col border-r border-white/5 shrink-0 bg-[#0E1118]/80">
+          <div className="p-4 border-b border-white/5 space-y-3">
+            <div className="flex items-center gap-2 px-3 py-2.5 border border-white/5 rounded-2xl bg-[#07090E]/60 text-xs focus-within:border-[#D4AF37]/45 transition-colors">
+              <Search className="w-4 h-4 text-white/30" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar conversa..."
-                className="bg-transparent outline-none w-full text-gray-900 placeholder:text-gray-400"
+                className="bg-transparent outline-none w-full text-white placeholder:text-white/20"
               />
             </div>
-            <div className="flex items-center justify-between mt-4">
-              <span className="text-xs font-bold text-gray-900">Abertas ({filteredChats.length})</span>
-              <span className="text-xs font-medium text-[#2563EB] cursor-pointer">Filtrar</span>
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-widest font-bold text-white/50">Abertas ({filteredChats.length})</span>
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto divide-y divide-white/5">
             {loadingChats ? (
-              <div className="p-4 text-center text-sm text-gray-500">Carregando conversas...</div>
+              <div className="p-4 text-center text-xs text-white/40">Carregando conversas...</div>
             ) : filteredChats.length === 0 ? (
-              <div className="p-4 text-center text-sm text-gray-500">Nenhuma conversa encontrada.</div>
+              <div className="p-4 text-center text-xs text-white/40">Nenhuma conversa encontrada.</div>
             ) : filteredChats.map((chat) => {
               const isSelected = selectedChat?.id === chat.id;
               const dateStr = chat.last_interaction_at || chat.ultima_interacao_em || chat.updated_at || chat.created_at;
               const time = dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
               
-               return (
-                 <div 
-                   key={chat.id} 
-                   onClick={() => handleSelectChat(chat)}
-                  className={`p-4 border-b border-gray-100 cursor-pointer transition-colors ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+              return (
+                <div 
+                  key={chat.id} 
+                  onClick={() => handleSelectChat(chat)}
+                  className={`p-4 cursor-pointer transition-colors relative ${isSelected ? 'bg-gradient-to-r from-[#D4AF37]/10 to-transparent' : 'hover:bg-white/[0.01]'}`}
                 >
+                  {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#D4AF37]" />}
                   <div className="flex justify-between items-start mb-1">
-                    <h4 className={`text-sm font-bold truncate pr-2 ${isSelected ? 'text-[#2563EB]' : 'text-gray-900'}`}>{chat.full_name || chat.nome || chat.phone || chat.telefone}</h4>
-                    <span className="text-[10px] text-gray-400 font-medium shrink-0">{time}</span>
+                    <h4 className={`text-xs font-bold truncate pr-2 ${isSelected ? 'text-[#E5C38C]' : 'text-white'}`}>
+                      {chat.full_name || chat.nome || chat.phone || chat.telefone}
+                    </h4>
+                    <span className="text-[9px] text-white/30 shrink-0 font-mono">{time}</span>
                   </div>
-                   <div className="flex justify-between items-end">
-                     <p className="text-xs text-gray-500 truncate pr-4">{chat.phone || chat.telefone} • {chat.origin || chat.origem || 'Desconhecido'}</p>
-                     {chat.automation_status === 'paused_human' ? (
-                       <span className="shrink-0 rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">Humano</span>
-                     ) : (
-                       <span className="shrink-0 rounded-full bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">Auto</span>
-                     )}
-                   </div>
-                 </div>
-               );
+                  <div className="flex justify-between items-end">
+                    <p className="text-[10px] text-white/45 truncate pr-4">{chat.phone || chat.telefone} • {chat.origin || chat.origem || 'WhatsApp'}</p>
+                    {chat.automation_status === 'paused_human' ? (
+                      <span className="shrink-0 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">Humano</span>
+                    ) : (
+                      <span className="shrink-0 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-400">Agente IA</span>
+                    )}
+                  </div>
+                </div>
+              );
             })}
           </div>
         </div>
 
-        {/* Right pane: Active Chat */}
-        <div className="flex-1 flex flex-col bg-[#F9FAFB]">
-          {/* Chat Header */}
-          <div className="h-16 border-b border-gray-200 bg-white flex items-center justify-between px-6 shrink-0">
-            {selectedChat ? (
-              <div className="flex items-center gap-3">
-                 <div className="h-10 w-10 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold uppercase">
-                   {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'LC'}
-                 </div>
-                  <div>
-                    <h2 className="text-sm font-bold text-gray-900">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
-                    <p className="text-[10px] text-[#25D366] font-bold">Online / WhatsApp</p>
-                    {automationState?.automation_status === 'paused_human' ? (
-                      <p className="text-[10px] text-amber-600 font-bold">Atendimento humano ativo</p>
-                    ) : (
-                      <p className="text-[10px] text-blue-600 font-bold">Automacao ativa</p>
-                    )}
-                    <div className="mt-1 flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-600">
-                        {selectedLeadStatus.replaceAll("_", " ")}
-                      </span>
-                      {(automationState?.owner_name || selectedChat?.owner_name) && (
-                        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-600">
-                          {automationState?.owner_name || selectedChat?.owner_name}
+        {/* Right Pane: Active Chat */}
+        <div className="flex-1 flex flex-col bg-[#07090E]/40 relative">
+          
+          {selectedChat ? (
+            <>
+              {/* Chat Header */}
+              <div className="border-b border-white/5 bg-[#0E1118]/80 p-4 md:p-6 shrink-0 space-y-4">
+                <div className="flex flex-col xl:flex-row xl:justify-between gap-4">
+                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                    <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/20 text-[#E5C38C] font-semibold font-serif text-base uppercase">
+                      {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'RD'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h2 className="text-sm font-bold text-white truncate">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
+                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                        {automationState?.automation_status === 'paused_human' ? (
+                          <span className="inline-flex shrink-0 items-center gap-1 text-[9px] uppercase tracking-wider font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
+                            Atendimento Humano
+                          </span>
+                        ) : (
+                          <span className="inline-flex shrink-0 items-center gap-1 text-[9px] uppercase tracking-wider font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 animate-pulse">
+                            Automação IA Ativa
+                          </span>
+                        )}
+                        <span className="shrink-0 rounded-full bg-white/5 border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/50">
+                          {selectedLeadStatus.replaceAll("_", " ")}
                         </span>
-                      )}
-                      {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
-                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
-                          Consulta vinculada
-                        </span>
-                      )}
-                      {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
-                          {formatAppointmentStatusLabel(automationState?.appointment_status || selectedChat?.appointment_status)}
-                        </span>
-                      )}
-                      {(automationState?.next_followup_at || selectedChat?.next_followup_at) && (
-                        <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-bold text-amber-700">
-                          Retorno {formatDateTimeLabel(automationState?.next_followup_at || selectedChat?.next_followup_at)}
-                        </span>
-                      )}
+                        {(automationState?.owner_name || selectedChat?.owner_name) && (
+                          <span className="shrink-0 rounded-full bg-[#111622] border border-white/5 px-2 py-0.5 text-[9px] font-bold text-[#E5C38C] truncate max-w-[150px]">
+                            Resp: {automationState?.owner_name || selectedChat?.owner_name}
+                          </span>
+                        )}
+                        {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
+                          <span className="shrink-0 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-400">
+                            Consulta Agendada
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
-               </div>
-            ) : (
-              <div className="text-sm text-gray-500 font-medium">Selecione uma conversa</div>
-            )}
-            <div className="flex items-center gap-3">
-               <select
-                 value={selectedLeadStatus}
-                 onChange={(e) => handleConversationStatusChange(e.target.value)}
-                 disabled={!selectedChat || isUpdatingLeadOps}
-                 className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs font-bold text-gray-700 shadow-sm disabled:opacity-50"
-               >
-                 <option value="novo">Novo</option>
-                 <option value="em_atendimento">Em atendimento</option>
-                 <option value="aguardando_cliente">Aguardando cliente</option>
-                 <option value="agendado">Agendado</option>
-                 <option value="em_followup">Em follow-up</option>
-                 <option value="encerrado">Encerrado</option>
-               </select>
-               <button
-                 onClick={handleAssignToMe}
-                 disabled={!selectedChat || isUpdatingLeadOps}
-                 className="px-3 py-1.5 border border-slate-200 bg-slate-50 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-100 shadow-sm disabled:opacity-50"
-               >
-                 Assumir para mim
-               </button>
-               <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-2 py-1 shadow-sm">
-                 <span className="text-[10px] font-bold uppercase tracking-wide text-gray-400">Retorno</span>
-                 <input
-                   type="datetime-local"
-                   value={nextFollowupInput}
-                   onChange={(e) => setNextFollowupInput(e.target.value)}
-                   disabled={!selectedChat || isUpdatingLeadOps}
-                   className="bg-transparent text-xs font-medium text-gray-700 outline-none disabled:opacity-50"
-                 />
-                 <button
-                   onClick={handleSaveFollowup}
-                   disabled={!selectedChat || isUpdatingLeadOps}
-                   className="rounded-md bg-gray-100 px-2 py-1 text-[10px] font-bold text-gray-700 hover:bg-gray-200 disabled:opacity-50"
-                 >
-                   Salvar
-                 </button>
-               </div>
-               <button 
-                 onClick={handleAutomationToggle}
-                 disabled={!selectedChat || isUpdatingAutomation}
-                 className={`px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm ${
-                   automationState?.automation_status === 'paused_human'
-                     ? 'border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100'
-                     : 'border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100'
-                 } disabled:opacity-50`}
-               >
-                 {isUpdatingAutomation
-                   ? 'Salvando...'
-                   : automationState?.automation_status === 'paused_human'
-                     ? 'Retomar Automacao'
-                     : 'Assumir Atendimento'}
-               </button>
-              <button 
-                 onClick={handleGenerateProposal}
-                 disabled={isGeneratingDoc}
-                 className="px-3 py-1.5 border border-indigo-200 bg-indigo-50 text-indigo-700 rounded-lg text-xs font-bold hover:bg-indigo-100 shadow-sm flex items-center gap-2 disabled:opacity-50"
-               >
-                {isGeneratingDoc ? "Gerando..." : "Gerar Proposta (Docs)"}
-              </button>
-              <button
-                onClick={handleScheduleConsultation}
-                disabled={!selectedChat}
-                className="px-3 py-1.5 border border-emerald-200 bg-emerald-50 rounded-lg text-xs font-bold text-emerald-700 hover:bg-emerald-100 shadow-sm disabled:opacity-50"
-              >
-                Agendar Consulta
-              </button>
-              <button
-                onClick={() => handleAppointmentStatusChange('confirmed')}
-                disabled={!selectedChat || !(automationState?.calendar_event_id || selectedChat?.calendar_event_id) || isUpdatingLeadOps}
-                className="px-3 py-1.5 border border-teal-200 bg-teal-50 rounded-lg text-xs font-bold text-teal-700 hover:bg-teal-100 shadow-sm disabled:opacity-50"
-              >
-                Confirmou
-              </button>
-              <button
-                onClick={() => handleAppointmentStatusChange('rescheduled')}
-                disabled={!selectedChat || !(automationState?.calendar_event_id || selectedChat?.calendar_event_id) || isUpdatingLeadOps}
-                className="px-3 py-1.5 border border-orange-200 bg-orange-50 rounded-lg text-xs font-bold text-orange-700 hover:bg-orange-100 shadow-sm disabled:opacity-50"
-              >
-                Remarcar
-              </button>
-              <button
-                onClick={handleSaveFollowup}
-                disabled={!selectedChat || isUpdatingLeadOps}
-                className="px-3 py-1.5 border border-gray-200 bg-white rounded-lg text-xs font-bold text-gray-600 hover:bg-gray-50 shadow-sm flex items-center gap-2 disabled:opacity-50"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-blue-500" />
-                Marcar Retorno
-              </button>
-              <button className="text-gray-400 hover:text-gray-600"><MoreVertical className="w-5 h-5"/></button>
-            </div>
-          </div>
 
-          {googleAuthError && (
-            <div className="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-              {googleAuthError}
+                  {/* Ações Rápidas no Header */}
+                  <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                    <select
+                      value={selectedLeadStatus}
+                      onChange={(e) => handleConversationStatusChange(e.target.value)}
+                      disabled={isUpdatingLeadOps}
+                      className="rounded-xl border border-white/10 bg-[#07090E] px-3 py-1.5 text-[10px] font-bold text-white/80 outline-none focus:border-[#D4AF37]/40 disabled:opacity-50"
+                    >
+                      <option value="novo">Novo</option>
+                      <option value="em_atendimento">Em atendimento</option>
+                      <option value="aguardando_cliente">Aguardando cliente</option>
+                      <option value="agendado">Agendado</option>
+                      <option value="em_followup">Em follow-up</option>
+                      <option value="encerrado">Encerrado</option>
+                    </select>
+
+                    <button
+                      onClick={handleAssignToMe}
+                      disabled={isUpdatingLeadOps}
+                      className="px-3 py-1.5 shrink-0 border border-white/10 bg-white/5 text-white rounded-xl text-[10px] font-bold hover:bg-white/10 transition-colors disabled:opacity-50"
+                    >
+                      Assumir Lead
+                    </button>
+                    
+                    <button 
+                      onClick={handleAutomationToggle}
+                      disabled={isUpdatingAutomation}
+                      className={`px-3 py-1.5 shrink-0 rounded-xl text-[10px] font-bold border transition-colors ${
+                        automationState?.automation_status === 'paused_human'
+                          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
+                          : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
+                      } disabled:opacity-50`}
+                    >
+                      {isUpdatingAutomation ? 'Salvando...' : automationState?.automation_status === 'paused_human' ? 'Ligar IA' : 'Pausar IA'}
+                    </button>
+
+                    <button 
+                      onClick={handleGenerateProposal}
+                      disabled={isGeneratingDoc}
+                      className="px-3 py-1.5 shrink-0 border border-purple-500/20 bg-purple-500/10 text-purple-400 rounded-xl text-[10px] font-bold hover:bg-purple-500/20 transition-colors disabled:opacity-50"
+                    >
+                      {isGeneratingDoc ? "Gerando..." : "Gerar Contrato"}
+                    </button>
+
+                    <button
+                      onClick={handleScheduleConsultation}
+                      className="px-3 py-1.5 shrink-0 border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 rounded-xl text-[10px] font-bold hover:bg-emerald-500/20 transition-colors"
+                    >
+                      Agendar
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sub-Header: Agendamento & Follow-ups */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/5">
+                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/5 bg-[#07090E]/60 px-3 py-1.5">
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Definir Retorno</span>
+                    <input
+                      type="datetime-local"
+                      value={nextFollowupInput}
+                      onChange={(e) => setNextFollowupInput(e.target.value)}
+                      disabled={isUpdatingLeadOps}
+                      className="bg-transparent text-[10px] font-semibold text-white outline-none disabled:opacity-50 [color-scheme:dark]"
+                    />
+                    <button
+                      onClick={handleSaveFollowup}
+                      disabled={isUpdatingLeadOps}
+                      className="rounded-lg bg-white/10 px-2 py-0.5 text-[9px] font-bold text-[#E5C38C] hover:bg-white/20 disabled:opacity-50"
+                    >
+                      Salvar
+                    </button>
+                  </div>
+
+                  {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="text-[10px] text-white/50">Status da Agenda:</span>
+                      <button
+                        onClick={() => handleAppointmentStatusChange('confirmed')}
+                        className="px-2.5 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-lg text-[9px] font-bold hover:bg-teal-500/20 shrink-0"
+                      >
+                        Confirmar
+                      </button>
+                      <button
+                        onClick={() => handleAppointmentStatusChange('rescheduled')}
+                        className="px-2.5 py-1 bg-orange-500/10 border border-orange-500/20 text-orange-400 rounded-lg text-[9px] font-bold hover:bg-orange-500/20 shrink-0"
+                      >
+                        Remarcar
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {googleAuthError && (
+                <div className="mx-6 mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
+                  {googleAuthError}
+                </div>
+              )}
+
+              {sendError && (
+                <div className="mx-6 mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
+                  {sendError}
+                </div>
+              )}
+
+              {/* Messages Area */}
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div className="flex justify-center">
+                  <span className="bg-white/5 border border-white/10 text-white/40 text-[9px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full">
+                    Histórico Recente
+                  </span>
+                </div>
+                
+                {messages.map((msg) => {
+                  if (msg.type === "system") {
+                    return (
+                      <div key={msg.id} className="flex justify-center">
+                        <div className="bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-2xl flex items-center gap-2 max-w-sm">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
+                          <span className="text-[10px] font-medium text-blue-300">
+                            <span className="font-bold">{msg.senderLabel || "Sistema"}</span> • {msg.text} às {msg.time}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  if (msg.type === "inbound") {
+                    return (
+                      <div key={msg.id} className="flex items-start gap-3">
+                        <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#E5C38C] font-semibold text-xs flex items-center justify-center shrink-0 uppercase">
+                          CL
+                        </div>
+                        <div className="bg-[#0E1118] border border-white/5 p-4 rounded-2xl rounded-tl-none shadow-md max-w-[80%]">
+                          <div className="mb-1 text-[9px] font-bold uppercase tracking-wider text-[#E5C38C]">
+                            {msg.senderLabel || "Cliente"}
+                          </div>
+                          {msg.messageType && msg.messageType !== "text" && (
+                            <div className="mb-1.5 inline-flex rounded-full bg-white/5 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white/50">
+                              {msg.messageType}
+                            </div>
+                          )}
+                          <p className="text-xs leading-relaxed text-white/80 whitespace-pre-wrap">{msg.text}</p>
+                          <div className="text-right mt-2">
+                            <span className="text-[9px] text-white/30 font-mono">{msg.time}</span>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+                  
+                  if (msg.type === "outbound") {
+                    const isAgent = msg.senderLabel === "Agente IA";
+                    return (
+                      <div key={msg.id} className="flex items-start justify-end gap-3">
+                        <div className={`p-4 rounded-2xl rounded-tr-none shadow-md max-w-[80%] border ${
+                          isAgent 
+                            ? 'bg-blue-950/20 border-blue-500/10' 
+                            : 'bg-[#0E1118] border-white/5'
+                        }`}>
+                          <div className={`mb-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+                            isAgent ? 'text-blue-400' : 'text-emerald-400'
+                          }`}>
+                            {isAgent && <Zap className="h-3 w-3 animate-pulse" />}
+                            {msg.senderLabel || "Equipe"}
+                          </div>
+                          {msg.messageType && msg.messageType !== "text" && (
+                            <div className="mb-1.5 inline-flex rounded-full bg-white/5 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white/50">
+                              {msg.messageType}
+                            </div>
+                          )}
+                          <p className="text-xs leading-relaxed text-white/80 whitespace-pre-wrap">{msg.text}</p>
+                          <div className="text-right mt-2">
+                            <span className="text-[9px] text-white/30 font-mono">{msg.time}</span>
+                          </div>
+                        </div>
+                        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] flex items-center justify-center text-xs font-bold shrink-0 italic">RD</div>
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })}
+                
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Area */}
+              <div className="p-4 bg-[#0E1118]/80 border-t border-white/5 shrink-0">
+                <div className="flex items-end gap-2 bg-[#07090E]/60 border border-white/5 rounded-2xl p-2 focus-within:border-[#D4AF37]/45 transition-colors">
+                  <button className="p-2.5 text-white/30 hover:text-white transition-colors">
+                    <Paperclip className="w-4 h-4" />
+                  </button>
+                  <textarea 
+                    rows={1}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSend();
+                      }
+                    }}
+                    placeholder="Digite sua resposta comercial..." 
+                    className="w-full bg-transparent outline-none resize-none text-xs py-2 max-h-32 text-white placeholder:text-white/20"
+                  />
+                  <button 
+                    onClick={handleSend}
+                    disabled={isSending || !inputText.trim()}
+                    className="p-2.5 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0B0D12] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0"
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+              <MessageSquare className="h-12 w-12 text-white/10 mb-3" />
+              <p className="text-sm text-white/40 font-light">Selecione uma conversa ao lado para visualizar a linha do tempo.</p>
             </div>
           )}
-
-          {sendError && (
-            <div className="mx-6 mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
-              {sendError}
-            </div>
-          )}
-
-          {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-6">
-            <div className="flex justify-center">
-              <span className="bg-gray-100 text-gray-500 text-[10px] uppercase tracking-wider font-bold px-3 py-1 rounded-full">Hoje</span>
-            </div>
-            
-            {messages.map((msg) => {
-              if (msg.type === "system") {
-                return (
-                  <div key={msg.id} className="flex justify-center">
-                    <div className="bg-blue-50 border border-blue-100 px-4 py-2 rounded-xl flex items-center gap-2 max-w-sm">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      <span className="text-xs font-medium text-blue-800">
-                        <span className="font-bold">{msg.senderLabel || "Sistema"}</span> • {msg.text} às {msg.time}
-                      </span>
-                    </div>
-                  </div>
-                );
-              }
-              
-              if (msg.type === "inbound") {
-                return (
-                  <div key={msg.id} className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 shrink-0" />
-                    <div className="bg-white border border-gray-200 p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[80%]">
-                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-orange-500">
-                        {msg.senderLabel || "Cliente"}
-                      </div>
-                      {msg.messageType && msg.messageType !== "text" && (
-                        <div className="mb-1 inline-flex rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                          {msg.messageType}
-                        </div>
-                      )}
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.text}</p>
-                      <div className="text-right mt-1">
-                        <span className="text-[10px] text-gray-400 font-medium">{msg.time}</span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-              
-              if (msg.type === "outbound") {
-                return (
-                  <div key={msg.id} className="flex items-start justify-end gap-3">
-                    <div className="bg-[#DCF8C6] border border-[#d6efc2] p-3 rounded-2xl rounded-tr-none shadow-sm max-w-[80%]">
-                      <div className="mb-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
-                        {msg.senderLabel || "Equipe"}
-                      </div>
-                      {msg.messageType && msg.messageType !== "text" && (
-                        <div className="mb-1 inline-flex rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-gray-500">
-                          {msg.messageType}
-                        </div>
-                      )}
-                      <p className="text-sm text-gray-800 whitespace-pre-wrap">{msg.text}</p>
-                      <div className="text-right mt-1">
-                        <span className="text-[10px] text-gray-500 font-medium">{msg.time}</span>
-                      </div>
-                    </div>
-                    <div className="w-8 h-8 rounded-full bg-[#2563EB] text-white flex items-center justify-center text-xs font-bold shrink-0">RD</div>
-                  </div>
-                );
-              }
-
-              return null;
-            })}
-            
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Input Area */}
-          <div className="p-4 bg-white border-t border-gray-200 shrink-0">
-             <div className="flex items-end gap-2 bg-gray-50 border border-gray-200 rounded-xl p-2 focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
-               <button className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
-                 <Paperclip className="w-5 h-5" />
-               </button>
-               <textarea 
-                 rows={1}
-                 value={inputText}
-                 onChange={(e) => setInputText(e.target.value)}
-                 onKeyDown={(e) => {
-                   if (e.key === 'Enter' && !e.shiftKey) {
-                     e.preventDefault();
-                     handleSend();
-                   }
-                 }}
-                 placeholder="Digite sua mensagem. Será enviada ao WhatsApp pelo n8n..." 
-                 className="w-full bg-transparent outline-none resize-none text-sm py-2 max-h-32 text-gray-900 placeholder:text-gray-400"
-               />
-               <button 
-                 onClick={handleSend}
-                 disabled={isSending || !inputText.trim()}
-                 className="p-2.5 bg-[#2563EB] text-white rounded-lg shadow-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
-               >
-                 <Send className="w-4 h-4" />
-               </button>
-             </div>
-          </div>
 
         </div>
 

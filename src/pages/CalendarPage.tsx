@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2 } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2, Sparkles } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useSearchParams } from "react-router-dom";
 
@@ -273,98 +273,108 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="flex flex-col h-full w-full space-y-6">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827]">Agenda Integrada</h1>
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-1">Sincronizado com Google Calendar</p>
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+            <Sparkles className="h-3 w-3" />
+            <span>Google Calendar</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Agenda Integrada</h1>
+          <p className="text-xs text-white/40 font-light mt-1">Sincronizado com os horários de consulta da clínica.</p>
         </div>
-        <button onClick={openCreate} className="flex items-center gap-2 px-4 py-2 bg-[#2563EB] text-white text-sm font-bold rounded-lg shadow-sm hover:bg-blue-700 transition-colors">
+        <button onClick={openCreate} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-2xl hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" />
           Novo Evento
         </button>
       </div>
 
+      {/* Linked Lead Info */}
       {linkedLead && (
-        <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-5 py-4 shadow-sm">
-          <div className="flex items-center justify-between gap-4">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Agendamento vinculado</p>
-              <h2 className="mt-1 text-sm font-bold text-emerald-950">{linkedLead.full_name || linkedLead.phone}</h2>
-              <p className="mt-1 text-xs text-emerald-800">
-                {linkedLead.phone || "Sem telefone"}
-                {linkedLead.owner_name ? ` • Responsável: ${linkedLead.owner_name}` : ""}
-              </p>
-            </div>
-            <button
-              onClick={() => {
-                const nextParams = new URLSearchParams(searchParams);
-                nextParams.delete("leadId");
-                setSearchParams(nextParams);
-              }}
-              className="rounded-lg border border-emerald-200 bg-white px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100"
-            >
-              Limpar vínculo
-            </button>
+        <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 px-6 py-4 shadow-md flex items-center justify-between gap-4 backdrop-blur-xl">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Agendamento vinculado</p>
+            <h2 className="mt-1 text-sm font-bold text-white">{linkedLead.full_name || linkedLead.phone}</h2>
+            <p className="mt-1 text-xs text-white/50">
+              {linkedLead.phone || "Sem telefone"}
+              {linkedLead.owner_name ? ` • Responsável: ${linkedLead.owner_name}` : ""}
+            </p>
           </div>
+          <button
+            onClick={() => {
+              const nextParams = new URLSearchParams(searchParams);
+              nextParams.delete("leadId");
+              setSearchParams(nextParams);
+            }}
+            className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors"
+          >
+            Limpar Vínculo
+          </button>
         </div>
       )}
 
-      <div className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 mb-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <button onClick={() => addDays(-7)} className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50">
-            <ChevronLeft className="w-4 h-4 text-gray-600" />
+      {/* Date Switcher */}
+      <div className="flex items-center justify-between bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-4 shadow-lg backdrop-blur-xl">
+        <div className="flex items-center gap-3">
+          <button onClick={() => addDays(-7)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+            <ChevronLeft className="w-4 h-4 text-white" />
           </button>
-          <div className="text-sm font-bold text-gray-900">Próximos 7 dias (a partir de {currentDate.toLocaleDateString()})</div>
-          <button onClick={() => addDays(7)} className="w-8 h-8 flex items-center justify-center rounded border border-gray-200 hover:bg-gray-50">
-            <ChevronRight className="w-4 h-4 text-gray-600" />
+          <div className="text-xs font-bold text-white uppercase tracking-widest font-mono">
+            {currentDate.toLocaleDateString("pt-BR", { day: 'numeric', month: 'short' })} a {new Date(new Date(currentDate).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR", { day: 'numeric', month: 'short' })}
+          </div>
+          <button onClick={() => addDays(7)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
+            <ChevronRight className="w-4 h-4 text-white" />
           </button>
         </div>
-        <button onClick={() => { const now = new Date(); setCurrentDate(now); fetchEvents(now); }} className="text-xs font-bold text-gray-600 bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200">
+        <button onClick={() => { const now = new Date(); setCurrentDate(now); fetchEvents(now); }} className="text-[10px] font-bold uppercase tracking-wider text-[#E5C38C] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-4 py-2 rounded-xl hover:bg-[#D4AF37]/20 transition-colors">
           Hoje
         </button>
       </div>
 
       {error && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{error}</div>
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">{error}</div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
-        <div className="lg:col-span-2 bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden flex flex-col min-h-[380px]">
+      {/* Calendar Grid & Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+        
+        {/* Events List */}
+        <div className="lg:col-span-2 bg-[#0B0D12]/60 border border-white/5 rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[380px] backdrop-blur-xl">
           {loading ? (
-            <div className="flex-1 flex items-center justify-center text-gray-500 text-sm">Sincronizando agenda...</div>
+            <div className="flex-1 flex items-center justify-center text-white/30 text-xs">Sincronizando agenda do Google...</div>
           ) : events.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-              <CalendarIcon className="w-12 h-12 text-gray-300 mb-4" />
-              <p className="text-sm font-medium">Nenhum evento encontrado no período.</p>
+            <div className="flex-1 flex flex-col items-center justify-center text-white/30 p-8">
+              <CalendarIcon className="w-12 h-12 text-white/10 mb-4" />
+              <p className="text-xs font-semibold uppercase tracking-widest">Nenhum evento no período</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100 overflow-y-auto w-full">
+            <div className="divide-y divide-white/5 overflow-y-auto w-full">
               {events.map((event) => (
-                <button key={event.id} onClick={() => setSelectedEvent(event)} className={`w-full text-left p-4 flex gap-6 hover:bg-gray-50 transition-colors ${selectedEvent?.id === event.id ? "bg-blue-50" : ""}`}>
-                  <div className="w-32 shrink-0 flex flex-col items-end text-sm">
-                    <span className="font-bold text-gray-900">{formatEventDate(event)}</span>
-                    <span className="font-medium text-gray-500">{formatEventTime(event)}</span>
+                <button 
+                  key={event.id} 
+                  onClick={() => setSelectedEvent(event)} 
+                  className={`w-full text-left p-5 flex gap-6 hover:bg-white/[0.01] transition-colors relative ${selectedEvent?.id === event.id ? "bg-gradient-to-r from-[#D4AF37]/10 to-transparent" : ""}`}
+                >
+                  {selectedEvent?.id === event.id && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#D4AF37]" />}
+                  <div className="w-32 shrink-0 flex flex-col items-end text-right">
+                    <span className="font-bold text-white text-xs uppercase font-mono">{formatEventDate(event)}</span>
+                    <span className="text-[10px] text-white/40 font-medium font-mono mt-0.5">{formatEventTime(event)}</span>
                   </div>
-                  <div className="flex-1 flex flex-col border-l-4 border-blue-500 pl-4 py-1">
-                    <h3 className="font-bold text-gray-900 text-base mb-1">{event.summary || "Sem título"}</h3>
+                  <div className="flex-1 flex flex-col border-l-2 border-[#D4AF37]/40 pl-4 py-0.5">
+                    <h3 className="font-bold text-white text-sm tracking-wide">{event.summary || "Sem título"}</h3>
                     <div className="flex flex-col gap-1.5 mt-2">
                       {event.location && (
-                        <div className="flex items-start gap-2 text-xs text-gray-600">
-                          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" />
+                        <div className="flex items-start gap-1.5 text-[10px] text-white/50 leading-relaxed font-light">
+                          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/30" />
                           <span>{event.location}</span>
                         </div>
                       )}
                       {event.description && (
-                        <div className="flex items-start gap-2 text-xs text-gray-600">
-                          <AlignLeft className="w-3.5 h-3.5 shrink-0 mt-0.5 text-gray-400" />
+                        <div className="flex items-start gap-1.5 text-[10px] text-white/50 leading-relaxed font-light">
+                          <AlignLeft className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/30" />
                           <span className="line-clamp-2" dangerouslySetInnerHTML={{ __html: event.description || "" }}></span>
-                        </div>
-                      )}
-                      {event.attendees && event.attendees.length > 0 && (
-                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                          <Users className="w-3.5 h-3.5 shrink-0 text-gray-400" />
-                          <span>{event.attendees.length} convidados</span>
                         </div>
                       )}
                     </div>
@@ -375,31 +385,43 @@ export default function CalendarPage() {
           )}
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-4 min-h-[380px]">
+        {/* Selected Event Details Panel */}
+        <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl shadow-xl p-6 min-h-[380px] backdrop-blur-xl">
           {!selectedEvent ? (
-            <div className="h-full flex items-center justify-center text-sm text-gray-500">Selecione um evento para ver detalhes</div>
+            <div className="h-full flex items-center justify-center text-xs text-white/30 font-semibold uppercase tracking-widest">Selecione um evento</div>
           ) : (
-            <div className="space-y-3">
-              <h3 className="text-base font-bold text-gray-900">{selectedEvent.summary || "Sem título"}</h3>
-              <p className="text-sm text-gray-600">{formatEventDate(selectedEvent)} • {formatEventTime(selectedEvent)}</p>
+            <div className="space-y-4">
+              <h3 className="text-base font-bold text-white tracking-wide font-serif">{selectedEvent.summary || "Sem título"}</h3>
+              <p className="text-xs font-mono text-[#E5C38C] font-semibold">{formatEventDate(selectedEvent)} • {formatEventTime(selectedEvent)}</p>
+              
               {linkedLead?.calendar_event_id === selectedEvent.id && (
-                <div className="inline-flex rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">
+                <span className="inline-flex rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-400">
                   Evento vinculado ao lead
+                </span>
+              )}
+              
+              {selectedEvent.location && (
+                <div className="text-xs text-white/60 leading-relaxed font-light">
+                  <strong>Local:</strong> {selectedEvent.location}
                 </div>
               )}
-              {selectedEvent.location && <p className="text-sm text-gray-700"><strong>Local:</strong> {selectedEvent.location}</p>}
-              {selectedEvent.description && <p className="text-sm text-gray-700"><strong>Descrição:</strong> {selectedEvent.description}</p>}
+              {selectedEvent.description && (
+                <div className="text-xs text-white/60 leading-relaxed font-light border-t border-white/5 pt-3">
+                  <strong>Descrição:</strong>
+                  <div className="mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }}></div>
+                </div>
+              )}
 
-              <div className="flex flex-wrap gap-2 pt-2">
-                <button onClick={() => openEdit(selectedEvent)} className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 px-3 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">
-                  <Pencil className="w-4 h-4" /> Editar
+              <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5">
+                <button onClick={() => openEdit(selectedEvent)} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors">
+                  <Pencil className="w-3.5 h-3.5" /> Editar
                 </button>
-                <button onClick={deleteEvent} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-60">
-                  <Trash2 className="w-4 h-4" /> Excluir
+                <button onClick={deleteEvent} disabled={saving} className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-60">
+                  <Trash2 className="w-3.5 h-3.5" /> Excluir
                 </button>
                 {selectedEvent.htmlLink && (
-                  <a href={selectedEvent.htmlLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-600 hover:bg-blue-50">
-                    Abrir no Google Agenda
+                  <a href={selectedEvent.htmlLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-2 text-xs font-semibold text-[#E5C38C] hover:bg-[#D4AF37]/20 transition-colors">
+                    Ver no Calendar
                   </a>
                 )}
               </div>
@@ -408,32 +430,63 @@ export default function CalendarPage() {
         </div>
       </div>
 
+      {/* Modal Dialog Form */}
       {formOpen && (
-        <div className="fixed inset-0 z-50 bg-black/30 flex items-center justify-center p-4">
-          <div className="w-full max-w-xl rounded-2xl bg-white border border-gray-200 shadow-xl p-5 space-y-3">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="w-full max-w-xl rounded-3xl bg-[#0E1118] border border-white/5 shadow-2xl p-6 space-y-4 text-white">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-bold">{formMode === "create" ? "Novo evento" : "Editar evento"}</h3>
-              <button onClick={() => setFormOpen(false)} className="text-gray-500 hover:text-gray-700"><X className="w-5 h-5" /></button>
+              <h3 className="text-base font-bold font-serif tracking-wide">{formMode === "create" ? "Novo Agendamento" : "Editar Agendamento"}</h3>
+              <button onClick={() => setFormOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
             </div>
 
             {linkedLead && (
-              <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
-                Este agendamento será salvo no Google Agenda e vinculado ao lead <strong>{linkedLead.full_name || linkedLead.phone}</strong>.
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-300">
+                Este agendamento será salvo no Google Calendar e vinculado ao lead <strong>{linkedLead.full_name || linkedLead.phone}</strong>.
               </div>
             )}
 
-            <input value={form.summary} onChange={(e) => setForm((s) => ({ ...s, summary: e.target.value }))} placeholder="Título" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <input type="datetime-local" value={form.start} onChange={(e) => setForm((s) => ({ ...s, start: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-              <input type="datetime-local" value={form.end} onChange={(e) => setForm((s) => ({ ...s, end: e.target.value }))} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+            <div className="space-y-3">
+              <input 
+                value={form.summary} 
+                onChange={(e) => setForm((s) => ({ ...s, summary: e.target.value }))} 
+                placeholder="Título da Consulta" 
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#D4AF37] outline-none" 
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <input 
+                  type="datetime-local" 
+                  value={form.start} 
+                  onChange={(e) => setForm((s) => ({ ...s, start: e.target.value }))} 
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none filter invert" 
+                />
+                <input 
+                  type="datetime-local" 
+                  value={form.end} 
+                  onChange={(e) => setForm((s) => ({ ...s, end: e.target.value }))} 
+                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none filter invert" 
+                />
+              </div>
+              <input 
+                value={form.location} 
+                onChange={(e) => setForm((s) => ({ ...s, location: e.target.value }))} 
+                placeholder="Local (ex: Clínica Parauapebas-PA)" 
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#D4AF37] outline-none" 
+              />
+              <textarea 
+                value={form.description} 
+                onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} 
+                placeholder="Descrição ou observações de saúde..." 
+                rows={4} 
+                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#D4AF37] outline-none resize-none" 
+              />
             </div>
-            <input value={form.location} onChange={(e) => setForm((s) => ({ ...s, location: e.target.value }))} placeholder="Local" className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-            <textarea value={form.description} onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} placeholder="Descrição" rows={4} className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
 
-            <div className="flex items-center justify-end gap-2 pt-1">
-              <button onClick={() => setFormOpen(false)} className="rounded-lg border border-gray-300 px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50">Cancelar</button>
-              <button onClick={saveEvent} disabled={saving} className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-60">
-                <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Salvar"}
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
+              <button onClick={() => setFormOpen(false)} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white/60 hover:bg-white/10 transition-colors">Cancelar</button>
+              <button onClick={saveEvent} disabled={saving} className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60">
+                <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Confirmar"}
               </button>
             </div>
           </div>

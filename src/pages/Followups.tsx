@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
-import { Clock, CheckSquare, AlertCircle, PlayCircle, MoreHorizontal } from "lucide-react";
+import { Clock, CheckSquare, AlertCircle, PlayCircle, MoreHorizontal, Sparkles } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 function formatDateTime(dateStr?: string | null) {
   if (!dateStr) return "";
@@ -20,6 +21,7 @@ export default function Followups() {
   const [paraHoje, setParaHoje] = useState<any[]>([]);
   const [proximos, setProximos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     async function fetchFollowups() {
@@ -82,97 +84,131 @@ export default function Followups() {
   }, [supabase]);
 
   return (
-    <div className="flex flex-col h-full w-full">
-      <div className="mb-6 flex items-center justify-between">
+    <div className="flex flex-col h-full w-full space-y-6 animate-fade-in">
+      
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-[#111827]">Follow-ups</h1>
-          <p className="text-[10px] uppercase tracking-widest text-gray-400 font-semibold mt-1">Fila operacional baseada em retorno prometido e prioridade clínica</p>
+          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+            <Sparkles className="h-3 w-3" />
+            <span>Fila Operacional</span>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Retornos & Follow-ups</h1>
+          <p className="text-xs text-white/40 font-light mt-1">Contatos sugeridos com base em tempo sem contato e prioridade da agenda.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 mb-2">
-            <AlertCircle className="w-5 h-5 text-red-500" />
-            <h3 className="font-bold text-gray-900">Atrasados <span className="text-gray-400 font-normal">({atrasados.length})</span></h3>
+      {/* Grid Columns */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 items-start">
+        
+        {/* Coluna 1: Atrasados (Críticos) */}
+        <div className="flex flex-col gap-4 bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-1">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-400" />
+              <h3 className="font-semibold text-white text-xs tracking-wider uppercase">Vencidos</h3>
+            </div>
+            <span className="bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">{atrasados.length}</span>
           </div>
 
-          {loading && <p className="text-sm text-gray-500">Carregando...</p>}
-          {!loading && atrasados.length === 0 && <p className="text-sm text-gray-500">Nenhum follow-up atrasado.</p>}
+          {loading && <p className="text-xs text-white/30 text-center py-4">Carregando...</p>}
+          {!loading && atrasados.length === 0 && (
+            <p className="text-xs text-white/30 text-center py-8">Nenhum lead pendente de retorno atrasado.</p>
+          )}
 
           {atrasados.map((lead) => (
-            <div key={lead.id} className="bg-red-50 border border-red-100 rounded-2xl p-5 shadow-sm">
-              <div className="flex items-start justify-between mb-2">
-                <span className="bg-red-100 text-red-700 text-[10px] font-bold uppercase px-2 py-0.5 rounded">
-                  {lead.next_followup_at ? "Retorno vencido" : "+48h sem contato"}
+            <div key={lead.id} className="bg-[#0E1118]/70 border border-red-500/20 p-4 rounded-2xl shadow-md space-y-3">
+              <div className="flex items-start justify-between">
+                <span className="bg-red-500/10 border border-red-500/10 text-red-400 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                  {lead.next_followup_at ? "Atrasado" : "+48h Inativo"}
                 </span>
-                <button><MoreHorizontal className="w-4 h-4 text-red-300" /></button>
+                <button className="text-white/20 hover:text-white"><MoreHorizontal className="w-4 h-4" /></button>
               </div>
-              <h4 className="font-bold text-gray-900 text-sm">{lead.full_name || lead.nome || lead.phone || lead.telefone}</h4>
-              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                {lead.owner_name ? `Responsável: ${lead.owner_name}` : `Origem: ${lead.origin || lead.origem || 'Desconhecido'}`}
-              </p>
-              {lead.next_followup_at && (
-                <p className="mt-2 text-[11px] font-medium text-red-700">Previsto para {formatDateTime(lead.next_followup_at)}</p>
-              )}
-              <div className="mt-4 pt-4 border-t border-red-200/50 flex gap-2">
-                <button className="flex-1 bg-white border border-red-200 text-red-700 text-xs font-bold py-1.5 rounded-lg hover:bg-red-50 shadow-sm flex items-center justify-center gap-2">
-                  <PlayCircle className="w-3.5 h-3.5" />
-                  Retomar
-                </button>
+              <div>
+                <h4 className="font-bold text-white text-xs">{lead.full_name || lead.nome || lead.phone || lead.telefone}</h4>
+                <p className="text-[10px] text-white/50 mt-1">
+                  {lead.owner_name ? `Resp: ${lead.owner_name}` : `Origem: ${lead.origin || lead.origem || 'WhatsApp'}`}
+                </p>
+                {lead.next_followup_at && (
+                  <p className="mt-2 text-[10px] font-semibold text-red-400 font-mono">Deveria retornar em {formatDateTime(lead.next_followup_at)}</p>
+                )}
               </div>
+              <button 
+                onClick={() => navigate(`/conversations?leadId=${encodeURIComponent(lead.id)}`)}
+                className="w-full bg-red-500/10 border border-red-500/20 text-red-400 text-[10px] font-bold py-2 rounded-xl hover:bg-red-500/20 transition-all flex items-center justify-center gap-1.5"
+              >
+                <PlayCircle className="w-3.5 h-3.5" />
+                Retomar Atendimento
+              </button>
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Clock className="w-5 h-5 text-blue-500" />
-            <h3 className="font-bold text-gray-900">Para hoje <span className="text-gray-400 font-normal">({paraHoje.length})</span></h3>
+        {/* Coluna 2: Para Hoje */}
+        <div className="flex flex-col gap-4 bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 backdrop-blur-xl">
+          <div className="flex items-center justify-between border-b border-white/5 pb-3 mb-1">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-blue-400" />
+              <h3 className="font-semibold text-white text-xs tracking-wider uppercase">Para Hoje</h3>
+            </div>
+            <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded-full font-mono">{paraHoje.length}</span>
           </div>
 
-          {loading && <p className="text-sm text-gray-500">Carregando...</p>}
-          {!loading && paraHoje.length === 0 && <p className="text-sm text-gray-500">Tudo em dia para hoje.</p>}
+          {loading && <p className="text-xs text-white/30 text-center py-4">Carregando...</p>}
+          {!loading && paraHoje.length === 0 && (
+            <p className="text-xs text-white/30 text-center py-8">Tudo em dia para o dia de hoje.</p>
+          )}
 
           {paraHoje.map((lead) => (
-            <div key={lead.id} className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm hover:border-blue-300 transition-colors">
-              <div className="flex items-start justify-between mb-2">
-                <span className="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-bold uppercase px-2 py-0.5 rounded">
-                  {lead.next_followup_at ? "Retorno combinado" : "Atenção sugerida"}
+            <div key={lead.id} className="bg-[#0E1118]/70 border border-white/5 p-4 rounded-2xl shadow-md space-y-3 hover:border-[#D4AF37]/30 transition-colors">
+              <div className="flex items-start justify-between">
+                <span className="bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full">
+                  {lead.next_followup_at ? "Retorno Agendado" : "Atenção Sugerida"}
                 </span>
               </div>
-              <h4 className="font-bold text-gray-900 text-sm">{lead.full_name || lead.nome || lead.phone || lead.telefone}</h4>
-              <p className="text-xs text-gray-600 mt-1 line-clamp-2">
-                {lead.next_followup_at ? `Hoje às ${formatDateTime(lead.next_followup_at)}` : `Temperatura: ${lead.temperature || lead.temperatura || 'Frio'}`}
-              </p>
-              <div className="mt-4 pt-4 border-t border-gray-100 flex gap-2">
-                <button className="flex-1 bg-[#2563EB] text-white text-xs font-bold py-1.5 rounded-lg hover:bg-blue-700 shadow-sm">Atender Lead</button>
+              <div>
+                <h4 className="font-bold text-white text-xs">{lead.full_name || lead.nome || lead.phone || lead.telefone}</h4>
+                <p className="text-[10px] text-white/50 mt-1">
+                  {lead.next_followup_at ? `Hoje às ${new Date(lead.next_followup_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : `Temperatura: ${lead.temperature || lead.temperatura || 'Quente'}`}
+                </p>
               </div>
+              <button 
+                onClick={() => navigate(`/conversations?leadId=${encodeURIComponent(lead.id)}`)}
+                className="w-full bg-[#D4AF37] text-[#0B0D12] text-[10px] font-bold py-2 rounded-xl hover:opacity-90 transition-opacity"
+              >
+                Atender Lead
+              </button>
             </div>
           ))}
         </div>
 
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2 mb-2">
-            <CheckSquare className="w-5 h-5 text-gray-400" />
-            <h3 className="font-bold text-gray-900">Próximos retornos</h3>
+        {/* Coluna 3: Próximos */}
+        <div className="flex flex-col gap-4 bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 backdrop-blur-xl">
+          <div className="flex items-center gap-2 border-b border-white/5 pb-3 mb-1">
+            <CheckSquare className="w-4 h-4 text-white/40" />
+            <h3 className="font-semibold text-white text-xs tracking-wider uppercase">Planejados</h3>
           </div>
 
           {proximos.length === 0 ? (
-            <div className="bg-gray-50 border border-gray-200 rounded-2xl p-6 text-center">
-              <p className="text-xs font-bold text-gray-500 uppercase">Sem agenda futura</p>
-              <p className="text-xs text-gray-400 mt-2">Os retornos salvos nas conversas aparecerão aqui.</p>
+            <div className="border border-dashed border-white/5 rounded-2xl p-6 text-center bg-white/[0.01]">
+              <p className="text-[10px] font-bold text-white/20 uppercase tracking-widest">Sem agenda futura</p>
+              <p className="text-[10px] text-white/40 mt-1 font-light">Os retornos futuros salvos aparecerão aqui.</p>
             </div>
           ) : (
             proximos.map((lead) => (
-              <div key={lead.id} className="bg-gray-50 border border-gray-200 rounded-2xl p-4 shadow-sm">
-                <p className="text-sm font-bold text-gray-900">{lead.full_name || lead.nome || lead.phone || lead.telefone}</p>
-                <p className="mt-1 text-xs text-gray-500">{formatDateTime(lead.next_followup_at)}</p>
-                <p className="mt-2 text-[11px] text-gray-500">{lead.owner_name || 'Sem responsável'}</p>
+              <div 
+                key={lead.id} 
+                onClick={() => navigate(`/conversations?leadId=${encodeURIComponent(lead.id)}`)}
+                className="bg-[#0E1118]/70 border border-white/5 p-4 rounded-2xl shadow-md cursor-pointer hover:border-white/10 transition-colors"
+              >
+                <p className="font-semibold text-white text-xs">{lead.full_name || lead.nome || lead.phone || lead.telefone}</p>
+                <p className="mt-1.5 text-[10px] text-[#E5C38C] font-mono font-medium">Retorno: {formatDateTime(lead.next_followup_at)}</p>
+                <p className="mt-1 text-[9px] uppercase tracking-wider font-semibold text-white/35">Resp: {lead.owner_name || 'Sem responsável'}</p>
               </div>
             ))
           )}
         </div>
+
       </div>
     </div>
   );

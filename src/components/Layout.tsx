@@ -100,12 +100,13 @@ export default function Layout() {
         </div>
 
         <div className="flex items-center gap-6">
-          <div className="flex items-center gap-2 bg-white/[0.02] border border-white/5 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+          <div className="flex items-center gap-2 bg-white/[0.02] dark:bg-black/20 border border-white/5 dark:border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md">
             <div className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></div>
-            <span className="text-[10px] uppercase tracking-widest font-semibold text-white/60">n8n Conectado</span>
+            <span className="text-[10px] uppercase tracking-widest font-semibold text-slate-800 dark:text-white/60">n8n</span>
           </div>
           
-          <div className="h-8 w-px bg-white/5"></div>
+          <div className="h-8 w-px bg-slate-200 dark:bg-white/5"></div>
+
           
           <div className="flex items-center gap-3">
             <div className="text-right">

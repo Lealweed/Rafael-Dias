@@ -146,8 +146,9 @@ async function startServer() {
           }
 
           // Find lead by phone using ilike to match suffixes if needed, or exact match
-          let { data: leads, error: findError } = await supabase.from('leads').select('id').eq('phone', phone).limit(1);
+          let { data: leads, error: findError } = await supabase.from('leads').select('id, automation_status').like('phone', `%${phone.slice(-8)}`).limit(1);
           let lead_id = leads && leads.length > 0 ? leads[0].id : null;
+          let current_automation_status = leads && leads.length > 0 ? leads[0].automation_status : 'active';
 
           if (!lead_id) {
              // Create new lead
@@ -155,9 +156,13 @@ async function startServer() {
                 full_name: name,
                 phone: phone,
                 origin: 'n8n Webhook',
-                temperature: 'cold'
-             }).select('id').single();
-             if (newLead) lead_id = newLead.id;
+                temperature: 'cold',
+                automation_status: 'active'
+             }).select('id, automation_status').single();
+             if (newLead) {
+                 lead_id = newLead.id;
+                 current_automation_status = newLead.automation_status || 'active';
+             }
           }
 
           if (lead_id) {
@@ -188,7 +193,13 @@ async function startServer() {
         console.warn("Could not extract phone number from payload", payload);
       }
 
-      res.json({ received: true, simulated: false, timestamp: new Date().toISOString() });
+      // We explicitly return automation_status here so n8n can immediately stop the flow if it is "paused_human"
+      res.json({ 
+          received: true, 
+          simulated: false, 
+          automation_status: current_automation_status,
+          timestamp: new Date().toISOString() 
+      });
     } catch (err: any) {
       console.error("Webhook processing error:", err);
       res.status(500).json({ error: "Internal error processing webhook" });

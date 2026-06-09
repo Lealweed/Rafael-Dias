@@ -52,7 +52,7 @@ async function findLeadByPhone(phone: string) {
   const { data, error } = await supabase
     .from('leads')
     .select('*')
-    .eq('phone', normalized)
+    .like('phone', `%${normalized.slice(-8)}`)
     .limit(1)
     .maybeSingle();
 
@@ -76,7 +76,7 @@ async function createLeadFromLegacy(phone: string, name?: string | null) {
     legacyLookup = await supabase
       .from('Usuarios')
       .select('id, nome, telefone')
-      .eq('telefone', normalized)
+      .like('telefone', `%${normalized.slice(-8)}`)
       .limit(1)
       .maybeSingle();
   } catch {

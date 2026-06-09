@@ -66,7 +66,7 @@ export default function Pipeline() {
     <div className="flex flex-col h-full w-full space-y-6">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
         <div>
           <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
             <Sparkles className="h-3 w-3" />
@@ -75,7 +75,7 @@ export default function Pipeline() {
           <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Funil Comercial</h1>
           <p className="text-xs text-white/40 font-light mt-1">Organizado por etapa real do atendimento e qualificação.</p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button className="flex items-center justify-center gap-2 px-4 py-2.5 border border-white/10 rounded-2xl text-xs font-semibold uppercase tracking-wider text-white/60 bg-white/5 hover:bg-white/10 transition-colors">
             Configurar Estágios
           </button>
@@ -87,7 +87,7 @@ export default function Pipeline() {
       </div>
 
       {/* Kanban Board */}
-      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 snap-x min-h-[500px] h-[calc(100vh-220px)] scrollbar-thin">
+      <div className="flex-1 flex gap-6 overflow-x-auto pb-4 snap-x min-h-[500px] h-full scrollbar-thin">
         {loading ? (
           <div className="w-full flex items-center justify-center text-xs text-white/35">Carregando funil comercial...</div>
         ) : stages.map((stage) => (

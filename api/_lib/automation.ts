@@ -24,7 +24,7 @@ export async function findLeadByIdOrPhone(params: { leadId?: string | null; phon
   if (leadId) {
     query = query.eq('id', leadId);
   } else {
-    query = query.eq('phone', phone);
+    query = query.like('phone', `%${phone.slice(-8)}`);
   }
 
   const { data, error } = await query.maybeSingle();

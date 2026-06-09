@@ -641,14 +641,14 @@ export default function Conversations() {
             <>
               {/* Chat Header */}
               <div className="border-b border-white/5 bg-[#0E1118]/80 p-4 md:p-6 shrink-0 space-y-4">
-                <div className="flex flex-col xl:flex-row xl:justify-between gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                   <div className="flex items-start gap-3.5 flex-1 min-w-0">
                     <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/20 text-[#E5C38C] font-semibold font-serif text-base uppercase">
                       {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'RD'}
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex flex-col gap-2">
                       <h2 className="text-sm font-bold text-white truncate">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
-                      <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                      <div className="flex items-center gap-2 flex-wrap">
                         {automationState?.automation_status === 'paused_human' ? (
                           <span className="inline-flex shrink-0 items-center gap-1 text-[9px] uppercase tracking-wider font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
                             Atendimento Humano
@@ -676,7 +676,7 @@ export default function Conversations() {
                   </div>
 
                   {/* Ações Rápidas no Header */}
-                  <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+                  <div className="flex flex-wrap items-start gap-2.5 shrink-0 pt-1">
                     <select
                       value={selectedLeadStatus}
                       onChange={(e) => handleConversationStatusChange(e.target.value)}

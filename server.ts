@@ -125,6 +125,7 @@ async function startServer() {
       // 2. Process message & Lead
       // Extract phone from various possible formats (Evolution API, WZAPI, Wati, Gupshup, generic)
       let phone = payload.phone || payload.destination || payload.from || payload.remoteJid || payload.wa_id || payload.sender;
+      let current_automation_status = 'active';
       
       // If it's an object with data (like Evolution API)
       if (payload.data && payload.data.key && payload.data.key.remoteJid) {
@@ -148,7 +149,7 @@ async function startServer() {
           // Find lead by phone using ilike to match suffixes if needed, or exact match
           let { data: leads, error: findError } = await supabase.from('leads').select('id, automation_status').like('phone', `%${phone.slice(-8)}`).limit(1);
           let lead_id = leads && leads.length > 0 ? leads[0].id : null;
-          let current_automation_status = leads && leads.length > 0 ? leads[0].automation_status : 'active';
+          current_automation_status = leads && leads.length > 0 ? leads[0].automation_status : 'active';
 
           if (!lead_id) {
              // Create new lead
@@ -166,6 +167,20 @@ async function startServer() {
           }
 
           if (lead_id) {
+             const textStr = typeof content === 'string' ? content : JSON.stringify(content);
+             const keywords = ['humano', 'atendente', 'falar com', 'cancelar', 'reagendar', 'desmarcar', 'remarcar', 'suporte', 'atendimento', 'pessoalmente'];
+             const needsHandoff = keywords.some(kw => textStr.toLowerCase().includes(kw));
+
+             if (needsHandoff && current_automation_status !== 'paused_human') {
+                 const stateUpdate = await setLeadAutomationState({
+                     leadId: lead_id,
+                     status: 'paused_human',
+                 });
+                 if (stateUpdate.ok) {
+                     current_automation_status = 'paused_human';
+                 }
+             }
+
              // Ensure conversation exists
              let { data: convs } = await supabase.from('conversations').select('id').eq('lead_id', lead_id).limit(1);
              let conv_id = convs && convs.length > 0 ? convs[0].id : null;

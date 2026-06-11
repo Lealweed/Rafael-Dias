@@ -1,5 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
-import { updateLeadOps } from '../_lib/crm.js';
+import { updateLeadOps, appendSystemMessage } from '../_lib/crm.js';
+
+function formatDateTimeShort(value?: string | null) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleString('pt-BR', {
+    timeZone: 'America/Sao_Paulo',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
 type CalendarAction = 'list' | 'create' | 'update' | 'delete';
 
@@ -21,8 +34,8 @@ async function isAuthorizedBySupabaseUser(req: any): Promise<boolean> {
   const header = getAuthHeader(req);
   if (!header || !header.toLowerCase().startsWith('bearer ')) return false;
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseAnon = process.env.SUPABASE_ANON_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnon = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   if (!supabaseUrl || !supabaseAnon) return false;
 
   try {
@@ -291,6 +304,10 @@ export default async function handler(req: any, res: any) {
           lastReminderSentAt: null,
           lastNoShowCheckSentAt: null,
         });
+        await appendSystemMessage({
+          leadId,
+          content: `Consulta agendada para o dia ${formatDateTimeShort(normalizedStart)} no Google Calendar.`,
+        });
       }
       const responsePayload = {
         ok: true,
@@ -364,6 +381,10 @@ export default async function handler(req: any, res: any) {
           lastReminderSentAt: null,
           lastNoShowCheckSentAt: null,
         });
+        await appendSystemMessage({
+          leadId,
+          content: `Consulta reagendada para o dia ${formatDateTimeShort(nextStart)} no Google Calendar.`,
+        });
       }
       const responsePayload = {
         ok: true,
@@ -388,6 +409,10 @@ export default async function handler(req: any, res: any) {
           leadId,
           calendarEventId: null,
           appointmentStatus: 'canceled',
+        });
+        await appendSystemMessage({
+          leadId,
+          content: `Consulta desmarcada (removida do Google Calendar).`,
         });
       }
       const responsePayload = {

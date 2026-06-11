@@ -1,3 +1,5 @@
+import { appendSystemMessage } from '../_lib/crm.js';
+
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
 const GOOGLE_DOCS_API = 'https://docs.googleapis.com/v1/documents';
 
@@ -56,6 +58,7 @@ export default async function handler(req: any, res: any) {
     return json(res, 405, { ok: false, error: 'Method not allowed' });
   }
 
+  const leadId = String(req.body?.leadId || '').trim();
   const contactName = String(req.body?.contactName || '').trim();
   const phone = String(req.body?.phone || '').trim();
   const origin = String(req.body?.origin || '').trim();
@@ -100,6 +103,12 @@ export default async function handler(req: any, res: any) {
     });
 
     const docUrl = `https://docs.google.com/document/d/${created.documentId}/edit`;
+    if (leadId) {
+      await appendSystemMessage({
+        leadId,
+        content: `Contrato/Proposta Comercial gerado no Google Docs. Link: ${docUrl}`,
+      });
+    }
     return json(res, 200, {
       ok: true,
       documentId: created.documentId,

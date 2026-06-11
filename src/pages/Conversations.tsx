@@ -183,8 +183,17 @@ export default function Conversations() {
       setLoadingChats(false);
     }
     fetchChats();
-    const intervalId = setInterval(fetchChats, 5000);
-    return () => clearInterval(intervalId);
+
+    const channel = supabase
+      .channel('realtime-leads')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
+        fetchChats();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [searchParams, supabase]);
 
   // Load messages when selectedChat changes
@@ -270,9 +279,21 @@ export default function Conversations() {
     }
 
     fetchMessages();
-    const intervalId = setInterval(fetchMessages, 5000);
-    return () => clearInterval(intervalId);
-  }, [selectedChat]);
+
+    const channelMessages = supabase
+      .channel('realtime-messages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
+        fetchMessages();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'integration_events' }, () => {
+        fetchMessages();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channelMessages);
+    };
+  }, [selectedChat, supabase]);
 
   useEffect(() => {
     async function fetchAutomationState() {
@@ -408,6 +429,7 @@ export default function Conversations() {
     setIsGeneratingDoc(true);
     try {
       const payload = {
+        leadId: selectedChat.id,
         contactName: selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone,
         phone: selectedChat.phone || selectedChat.telefone || '',
         origin: selectedChat.origin || selectedChat.origem || '',

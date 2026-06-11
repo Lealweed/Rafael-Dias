@@ -129,6 +129,22 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'Lead sync failed', details: lead.reason });
     }
 
+    // Auto-Pause check
+    const textStr = String(content || '');
+    const keywords = ['humano', 'atendente', 'falar com', 'cancelar', 'reagendar', 'desmarcar', 'remarcar', 'suporte', 'atendimento', 'pessoalmente'];
+    const needsHandoff = keywords.some(kw => textStr.toLowerCase().includes(kw));
+
+    if (needsHandoff && lead.lead.automation_status !== 'paused_human') {
+      const { setLeadAutomationState } = await import('../_lib/automation.js');
+      const updated = await setLeadAutomationState({
+        leadId: lead.lead.id,
+        status: 'paused_human',
+      });
+      if (updated.ok) {
+        lead.lead = updated.lead;
+      }
+    }
+
     const messageWrite = await appendConversationMessage({
       leadId: lead.lead.id,
       direction: 'inbound',
@@ -147,6 +163,7 @@ export default async function handler(req: any, res: any) {
       simulated: false,
       leadId: lead.lead.id,
       conversationId: messageWrite.conversationId,
+      automation_status: lead.lead.automation_status,
       timestamp: new Date().toISOString(),
     });
   } catch (err: any) {

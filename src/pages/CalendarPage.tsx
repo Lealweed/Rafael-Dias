@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2, Sparkles } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2, Sparkles, CheckCircle2 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useSearchParams } from "react-router-dom";
 
@@ -53,7 +53,8 @@ export default function CalendarPage() {
   const [saving, setSaving] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [linkedLead, setLinkedLead] = useState<any>(null);
-  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentDate, setCurrentDate] = useState(new Date()); // Represents currently visible month
+  const [selectedDate, setSelectedDate] = useState(new Date()); // Represents clicked day
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [form, setForm] = useState<EventFormState>({
@@ -64,11 +65,11 @@ export default function CalendarPage() {
     end: "",
   });
 
+  const linkedLeadId = String(searchParams.get("leadId") || "").trim();
+
   useEffect(() => {
     fetchEvents(currentDate);
-  }, []);
-
-  const linkedLeadId = String(searchParams.get("leadId") || "").trim();
+  }, [currentDate]);
 
   useEffect(() => {
     async function fetchLinkedLead() {
@@ -92,8 +93,8 @@ export default function CalendarPage() {
       if (data.last_appointment_at) {
         const appointmentDate = new Date(data.last_appointment_at);
         if (!Number.isNaN(appointmentDate.getTime())) {
+          setSelectedDate(appointmentDate);
           setCurrentDate(appointmentDate);
-          fetchEvents(appointmentDate);
         }
       }
     }
@@ -105,13 +106,14 @@ export default function CalendarPage() {
     setLoading(true);
     setError(null);
     try {
+      const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
       const res = await fetch("/api/n8n/calendar", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "list",
-          timeMin: date.toISOString(),
-          days: 7,
+          timeMin: startOfMonth.toISOString(),
+          days: 35,
         }),
       });
 
@@ -153,7 +155,7 @@ export default function CalendarPage() {
   };
 
   const openCreate = () => {
-    const start = new Date(currentDate);
+    const start = new Date(selectedDate);
     start.setHours(9, 0, 0, 0);
     const end = new Date(start);
     end.setHours(10, 0, 0, 0);
@@ -250,11 +252,49 @@ export default function CalendarPage() {
     }
   };
 
-  const addDays = (num: number) => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + num);
-    setCurrentDate(newDate);
-    fetchEvents(newDate);
+  // Monthly grid days generator
+  const calendarDays = useMemo(() => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDayIndex = new Date(year, month, 1).getDay(); // Index of first day of the month
+    const totalDays = new Date(year, month + 1, 0).getDate(); // Total days in this month
+
+    const days = [];
+    // Empty boxes for preceding month
+    for (let i = 0; i < firstDayIndex; i++) {
+      days.push(null);
+    }
+    // Days of the month
+    for (let i = 1; i <= totalDays; i++) {
+      days.push(new Date(year, month, i));
+    }
+    return days;
+  }, [currentDate]);
+
+  // Navigate months
+  const changeMonth = (val: number) => {
+    const next = new Date(currentDate);
+    next.setMonth(currentDate.getMonth() + val);
+    setCurrentDate(next);
+  };
+
+  // Filter events for the selected date
+  const selectedDayEvents = useMemo(() => {
+    return events.filter(e => {
+      const start = e.start?.dateTime || e.start?.date;
+      if (!start) return false;
+      const eventDate = new Date(start);
+      return eventDate.toDateString() === selectedDate.toDateString();
+    });
+  }, [events, selectedDate]);
+
+  // Check if a day has events to show helper dots
+  const dayHasEvents = (date: Date) => {
+    return events.some(e => {
+      const start = e.start?.dateTime || e.start?.date;
+      if (!start) return false;
+      return new Date(start).toDateString() === date.toDateString();
+    });
   };
 
   const formatEventTime = (event: CalendarEvent) => {
@@ -264,12 +304,6 @@ export default function CalendarPage() {
     const start = new Date(event.start.dateTime);
     const end = new Date(event.end.dateTime);
     return `${start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} - ${end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
-  };
-
-  const formatEventDate = (event: CalendarEvent) => {
-    const date = new Date(event.start?.dateTime || event.start?.date || "");
-    if (Number.isNaN(date.getTime())) return "Data inválida";
-    return date.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" });
   };
 
   return (
@@ -283,11 +317,11 @@ export default function CalendarPage() {
             <span>Google Calendar</span>
           </div>
           <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Agenda Integrada</h1>
-          <p className="text-xs text-white/40 font-light mt-1">Sincronizado com os horários de consulta da clínica.</p>
+          <p className="text-xs text-white/40 font-light mt-1">Navegação em grade de calendário mensal e controle de horários.</p>
         </div>
         <button onClick={openCreate} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-2xl hover:opacity-90 transition-opacity">
           <Plus className="w-4 h-4" />
-          Novo Evento
+          Novo Agendamento
         </button>
       </div>
 
@@ -315,119 +349,167 @@ export default function CalendarPage() {
         </div>
       )}
 
-      {/* Date Switcher */}
-      <div className="flex items-center justify-between bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-4 shadow-lg backdrop-blur-xl">
-        <div className="flex items-center gap-3">
-          <button onClick={() => addDays(-7)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
-            <ChevronLeft className="w-4 h-4 text-white" />
-          </button>
-          <div className="text-xs font-bold text-white uppercase tracking-widest font-mono">
-            {currentDate.toLocaleDateString("pt-BR", { day: 'numeric', month: 'short' })} a {new Date(new Date(currentDate).getTime() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString("pt-BR", { day: 'numeric', month: 'short' })}
-          </div>
-          <button onClick={() => addDays(7)} className="w-9 h-9 flex items-center justify-center rounded-xl border border-white/10 hover:bg-white/5 transition-colors">
-            <ChevronRight className="w-4 h-4 text-white" />
-          </button>
-        </div>
-        <button onClick={() => { const now = new Date(); setCurrentDate(now); fetchEvents(now); }} className="text-[10px] font-bold uppercase tracking-wider text-[#E5C38C] bg-[#D4AF37]/10 border border-[#D4AF37]/20 px-4 py-2 rounded-xl hover:bg-[#D4AF37]/20 transition-colors">
-          Hoje
-        </button>
-      </div>
-
       {error && (
         <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">{error}</div>
       )}
 
-      {/* Calendar Grid & Details */}
+      {/* Main Grid: Left Calendar / Right Daily Agenda */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
         
-        {/* Events List */}
-        <div className="lg:col-span-2 bg-[#0B0D12]/60 border border-white/5 rounded-3xl shadow-xl overflow-hidden flex flex-col min-h-[380px] backdrop-blur-xl">
-          {loading ? (
-            <div className="flex-1 flex items-center justify-center text-white/30 text-xs">Sincronizando agenda do Google...</div>
-          ) : events.length === 0 ? (
-            <div className="flex-1 flex flex-col items-center justify-center text-white/30 p-8">
-              <CalendarIcon className="w-12 h-12 text-white/10 mb-4" />
-              <p className="text-xs font-semibold uppercase tracking-widest">Nenhum evento no período</p>
-            </div>
-          ) : (
-            <div className="divide-y divide-white/5 overflow-y-auto w-full">
-              {events.map((event) => (
-                <button 
-                  key={event.id} 
-                  onClick={() => setSelectedEvent(event)} 
-                  className={`w-full text-left p-5 flex gap-6 hover:bg-white/[0.01] transition-colors relative ${selectedEvent?.id === event.id ? "bg-gradient-to-r from-[#D4AF37]/10 to-transparent" : ""}`}
-                >
-                  {selectedEvent?.id === event.id && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#D4AF37]" />}
-                  <div className="w-32 shrink-0 flex flex-col items-end text-right">
-                    <span className="font-bold text-white text-xs uppercase font-mono">{formatEventDate(event)}</span>
-                    <span className="text-[10px] text-white/40 font-medium font-mono mt-0.5">{formatEventTime(event)}</span>
-                  </div>
-                  <div className="flex-1 flex flex-col border-l-2 border-[#D4AF37]/40 pl-4 py-0.5">
-                    <h3 className="font-bold text-white text-sm tracking-wide">{event.summary || "Sem título"}</h3>
-                    <div className="flex flex-col gap-1.5 mt-2">
-                      {event.location && (
-                        <div className="flex items-start gap-1.5 text-[10px] text-white/50 leading-relaxed font-light">
-                          <MapPin className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/30" />
-                          <span>{event.location}</span>
-                        </div>
-                      )}
-                      {event.description && (
-                        <div className="flex items-start gap-1.5 text-[10px] text-white/50 leading-relaxed font-light">
-                          <AlignLeft className="w-3.5 h-3.5 shrink-0 mt-0.5 text-white/30" />
-                          <span className="line-clamp-2" dangerouslySetInnerHTML={{ __html: event.description || "" }}></span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+        {/* MONTHLY CALENDAR GRID (Left 2/3) */}
+        <div className="lg:col-span-2 bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col backdrop-blur-xl justify-between">
+          <div>
+            {/* Calendar Controls */}
+            <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-6">
+              <h3 className="text-base font-serif font-bold text-white uppercase tracking-wider">
+                {currentDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
+              </h3>
+              <div className="flex gap-2">
+                <button onClick={() => changeMonth(-1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all">
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Selected Event Details Panel */}
-        <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl shadow-xl p-6 min-h-[380px] backdrop-blur-xl">
-          {!selectedEvent ? (
-            <div className="h-full flex items-center justify-center text-xs text-white/30 font-semibold uppercase tracking-widest">Selecione um evento</div>
-          ) : (
-            <div className="space-y-4">
-              <h3 className="text-base font-bold text-white tracking-wide font-serif">{selectedEvent.summary || "Sem título"}</h3>
-              <p className="text-xs font-mono text-[#E5C38C] font-semibold">{formatEventDate(selectedEvent)} • {formatEventTime(selectedEvent)}</p>
-              
-              {linkedLead?.calendar_event_id === selectedEvent.id && (
-                <span className="inline-flex rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-emerald-400">
-                  Evento vinculado ao lead
-                </span>
-              )}
-              
-              {selectedEvent.location && (
-                <div className="text-xs text-white/60 leading-relaxed font-light">
-                  <strong>Local:</strong> {selectedEvent.location}
-                </div>
-              )}
-              {selectedEvent.description && (
-                <div className="text-xs text-white/60 leading-relaxed font-light border-t border-white/5 pt-3">
-                  <strong>Descrição:</strong>
-                  <div className="mt-1 whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }}></div>
-                </div>
-              )}
-
-              <div className="flex flex-wrap gap-2 pt-4 border-t border-white/5">
-                <button onClick={() => openEdit(selectedEvent)} className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors">
-                  <Pencil className="w-3.5 h-3.5" /> Editar
+                <button onClick={() => { const today = new Date(); setSelectedDate(today); setCurrentDate(today); }} className="px-3 py-1 rounded-xl border border-white/10 hover:bg-white/5 text-[10px] font-semibold uppercase tracking-wider text-[#E5C38C] transition-all">
+                  Hoje
                 </button>
-                <button onClick={deleteEvent} disabled={saving} className="inline-flex items-center gap-1.5 rounded-xl border border-red-500/20 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-60">
-                  <Trash2 className="w-3.5 h-3.5" /> Excluir
+                <button onClick={() => changeMonth(1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all">
+                  <ChevronRight className="h-4 w-4" />
                 </button>
-                {selectedEvent.htmlLink && (
-                  <a href={selectedEvent.htmlLink} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1.5 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/10 px-3 py-2 text-xs font-semibold text-[#E5C38C] hover:bg-[#D4AF37]/20 transition-colors">
-                    Ver no Calendar
-                  </a>
-                )}
               </div>
             </div>
-          )}
+
+            {/* Calendar Grid Headers */}
+            <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">
+              <span>Dom</span>
+              <span>Seg</span>
+              <span>Ter</span>
+              <span>Qua</span>
+              <span>Qui</span>
+              <span>Sex</span>
+              <span>Sáb</span>
+            </div>
+
+            {/* Days Grid */}
+            <div className="grid grid-cols-7 gap-2">
+              {calendarDays.map((day, idx) => {
+                if (!day) return <div key={`empty-${idx}`} className="aspect-square bg-transparent" />;
+                const isSelected = day.toDateString() === selectedDate.toDateString();
+                const isToday = day.toDateString() === new Date().toDateString();
+                const hasEvents = dayHasEvents(day);
+
+                return (
+                  <button
+                    key={`day-${day.getDate()}`}
+                    onClick={() => setSelectedDate(day)}
+                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative transition-all border ${
+                      isSelected 
+                        ? "bg-vibrant-gold-brushed text-[#0D0D0F] border-transparent font-bold shadow-md"
+                        : isToday
+                          ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#E5C38C] hover:bg-[#D4AF37]/20"
+                          : "border-white/5 bg-white/[0.01] hover:bg-white/5 text-white"
+                    }`}
+                  >
+                    <span className="text-xs font-mono">{day.getDate()}</span>
+                    {hasEvents && (
+                      <span className={`absolute bottom-2.5 h-1 w-1 rounded-full ${
+                        isSelected ? "bg-[#0D0D0F]" : "bg-[#D4AF37]"
+                      }`} />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+          <div className="text-[10px] text-white/30 pt-4 border-t border-white/5 mt-6">
+            * Clique em qualquer dia para ver ou criar agendamentos específicos daquele dia.
+          </div>
         </div>
+
+        {/* DAILY AGENDA & DETAILS (Right 1/3) */}
+        <div className="flex flex-col gap-6">
+          {/* Daily events list */}
+          <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 flex flex-col flex-1 min-h-[250px] overflow-hidden backdrop-blur-xl">
+            <div className="pb-3 border-b border-white/5 mb-4 flex justify-between items-center shrink-0">
+              <div>
+                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Agendados do Dia</h4>
+                <p className="text-[9px] text-[#E5C38C] font-mono mt-0.5">
+                  {selectedDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                </p>
+              </div>
+              <button 
+                onClick={openCreate}
+                className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[#E5C38C]"
+                title="Agendar novo horário para hoje"
+              >
+                <Plus className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto space-y-2">
+              {loading ? (
+                <div className="h-full flex items-center justify-center text-[10px] text-white/20 uppercase font-bold tracking-widest">Sincronizando...</div>
+              ) : selectedDayEvents.length === 0 ? (
+                <div className="h-full flex flex-col items-center justify-center py-10 text-white/20 text-center">
+                  <CalendarIcon className="h-7 w-7 text-white/10 mb-2" />
+                  <p className="text-[10px] uppercase font-bold tracking-wider">Nenhum agendamento</p>
+                </div>
+              ) : (
+                selectedDayEvents.map((evt) => (
+                  <button
+                    key={evt.id}
+                    onClick={() => setSelectedEvent(evt)}
+                    className={`w-full text-left p-3.5 rounded-2xl border transition-all flex justify-between items-center ${
+                      selectedEvent?.id === evt.id
+                        ? "bg-[#D4AF37]/15 border-[#D4AF37]/30 text-[#E5C38C]"
+                        : "bg-white/[0.01] border-white/5 hover:bg-white/5 text-white/80"
+                    }`}
+                  >
+                    <div>
+                      <h5 className="font-bold text-xs leading-tight line-clamp-1">{evt.summary || "Sem título"}</h5>
+                      <span className="text-[9px] text-white/40 block mt-1 font-mono">{formatEventTime(evt)}</span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Event details */}
+          <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 shrink-0 backdrop-blur-xl">
+            {!selectedEvent ? (
+              <div className="py-6 text-center text-[10px] text-white/20 font-bold uppercase tracking-widest">Selecione uma consulta</div>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <h4 className="font-serif font-bold text-white text-sm leading-tight">{selectedEvent.summary || "Sem título"}</h4>
+                  <span className="text-[9px] text-[#E5C38C] font-mono mt-1 block">{formatEventTime(selectedEvent)}</span>
+                </div>
+
+                {selectedEvent.location && (
+                  <div className="text-[11px] text-white/60 leading-relaxed font-light">
+                    <strong>Local:</strong> {selectedEvent.location}
+                  </div>
+                )}
+                
+                {selectedEvent.description && (
+                  <div className="text-[11px] text-white/60 leading-relaxed font-light border-t border-white/5 pt-2">
+                    <strong>Observações:</strong>
+                    <div className="mt-1 whitespace-pre-wrap max-h-20 overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }}></div>
+                  </div>
+                )}
+
+                <div className="flex gap-2 pt-3 border-t border-white/5">
+                  <button onClick={() => openEdit(selectedEvent)} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-white/10 transition-colors">
+                    <Pencil className="w-3 h-3" /> Editar
+                  </button>
+                  <button onClick={deleteEvent} disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-500/20 py-2 text-[10px] font-bold uppercase tracking-wider text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-60">
+                    <Trash2 className="w-3 h-3" /> Excluir
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
       </div>
 
       {/* Modal Dialog Form */}

@@ -40,6 +40,56 @@ export default function Leads() {
   const [notifMsg, setNotifMsg] = useState("");
   const [sendingNotif, setSendingNotif] = useState(false);
 
+  // Lead/Patient Registration Modal States
+  const [createModalOpen, setCreateModalOpen] = useState(false);
+  const [newLeadName, setNewLeadName] = useState("");
+  const [newLeadPhone, setNewLeadPhone] = useState("");
+  const [newLeadInterest, setNewLeadInterest] = useState("");
+  const [newLeadTemp, setNewLeadTemp] = useState("cold");
+  const [newLeadStatus, setNewLeadStatus] = useState("novo");
+  const [creatingLead, setCreatingLead] = useState(false);
+
+  // Function to register a new lead/patient
+  const handleCreateLead = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLeadName.trim() || !newLeadPhone.trim()) {
+      alert("Por favor, preencha o nome e o telefone.");
+      return;
+    }
+    setCreatingLead(true);
+    try {
+      const cleanPhone = newLeadPhone.replace(/\D/g, "");
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          full_name: newLeadName.trim(),
+          phone: cleanPhone,
+          interest: newLeadInterest.trim() || "Avaliação",
+          temperature: newLeadTemp,
+          conversation_status: newLeadStatus,
+          origin: "Cadastro Interno",
+          last_interaction_at: new Date().toISOString()
+        })
+        .select("*")
+        .single();
+
+      if (error) {
+        alert("Erro ao cadastrar paciente: " + error.message);
+      } else {
+        setLeads([data, ...leads]);
+        setNewLeadName("");
+        setNewLeadPhone("");
+        setNewLeadInterest("");
+        setCreateModalOpen(false);
+        alert("Paciente cadastrado com sucesso! Já pode acessar o portal com o telefone informado.");
+      }
+    } catch (err) {
+      alert("Erro ao cadastrar.");
+    } finally {
+      setCreatingLead(false);
+    }
+  };
+
   useEffect(() => {
     async function fetchLeads() {
       let { data, error } = await supabase
@@ -379,9 +429,12 @@ export default function Leads() {
             <p className="text-xs text-white/40 font-light mt-1">Base de contatos, qualificação e funil de atendimento.</p>
           </div>
           
-          <button className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-2xl hover:opacity-90 shadow-md transition-opacity">
+          <button 
+            onClick={() => setCreateModalOpen(true)}
+            className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-2xl hover:opacity-90 shadow-md transition-opacity"
+          >
             <Plus className="w-4 h-4" />
-            Novo Lead
+            Novo Paciente
           </button>
         </div>
 
@@ -858,6 +911,96 @@ export default function Leads() {
               )}
 
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* NOVO PACIENTE MODAL */}
+      {createModalOpen && (
+        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-md bg-[#0E1118] border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative animate-fade-in">
+            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+              <h3 className="font-serif text-lg font-bold text-white">Cadastrar Novo Paciente</h3>
+              <button 
+                onClick={() => setCreateModalOpen(false)}
+                className="p-1 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-all"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateLead} className="space-y-4">
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Nome Completo</label>
+                <input
+                  type="text"
+                  required
+                  value={newLeadName}
+                  onChange={(e) => setNewLeadName(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                  placeholder="Nome do paciente"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Telefone de Acesso (WhatsApp)</label>
+                <input
+                  type="tel"
+                  required
+                  value={newLeadPhone}
+                  onChange={(e) => setNewLeadPhone(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                  placeholder="(94) 99999-9999"
+                />
+                <span className="text-[9px] text-white/30 block">Este número será usado pelo paciente para acessar o Portal do Paciente.</span>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Procedimento / Interesse</label>
+                <input
+                  type="text"
+                  value={newLeadInterest}
+                  onChange={(e) => setNewLeadInterest(e.target.value)}
+                  className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                  placeholder="Ex: Toxina Botulínica, Preenchimento..."
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Temperatura</label>
+                  <select
+                    value={newLeadTemp}
+                    onChange={(e) => setNewLeadTemp(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3 py-2.5 text-xs text-white focus:outline-none"
+                  >
+                    <option value="cold">Frio (Apenas Contato)</option>
+                    <option value="warm">Morno (Interessado)</option>
+                    <option value="hot">Quente (Quer Agendar)</option>
+                  </select>
+                </div>
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Fase Inicial</label>
+                  <select
+                    value={newLeadStatus}
+                    onChange={(e) => setNewLeadStatus(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3 py-2.5 text-xs text-white focus:outline-none"
+                  >
+                    <option value="novo">Novo</option>
+                    <option value="em_atendimento">Em Atendimento</option>
+                    <option value="agendado">Agendado</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={creatingLead}
+                className="w-full rounded-2xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md disabled:opacity-50 mt-2"
+              >
+                {creatingLead ? "Cadastrando..." : "Cadastrar Paciente"}
+              </button>
+            </form>
           </div>
         </div>
       )}

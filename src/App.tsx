@@ -21,6 +21,7 @@ import CalendarPage from "./pages/CalendarPage";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Home from "./pages/Home";
+import ClientPortal from "./pages/ClientPortal";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeContext";
 
@@ -58,6 +59,7 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/portal" element={<ClientPortal />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />
         <Route path="/login" element={!session ? <Login /> : <Navigate to="/dashboard" />} />

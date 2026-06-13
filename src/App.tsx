@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import ConfigPage from "./pages/Config";
 import Layout from "./components/Layout";
 import Leads from "./pages/Leads";
+import Patients from "./pages/Patients";
 import Conversations from "./pages/Conversations";
 import Followups from "./pages/Followups";
 import Pipeline from "./pages/Pipeline";
@@ -70,6 +71,7 @@ export default function App() {
         <Route element={session ? <Layout /> : <Navigate to="/login" />}>
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/leads" element={<Leads />} />
+          <Route path="/patients" element={<Patients />} />
           <Route path="/conversations" element={<Conversations />} />
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/follow-ups" element={<Followups />} />

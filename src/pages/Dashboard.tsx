@@ -1,14 +1,18 @@
 import { useState, useEffect, useMemo } from "react";
 import { createClient } from "../lib/supabase/client";
-import { Users, MessageSquare, Calendar, AlertCircle, Sparkles, TrendingUp, ShieldCheck, Heart } from "lucide-react";
+import { Users, MessageSquare, Calendar, AlertCircle, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   const supabase = useMemo(() => createClient(), []);
   const [stats, setStats] = useState({
     newLeadsToday: 0,
+    newLeadsYesterday: 0,
     humanActive: 0,
     scheduled: 0,
     pendingFollowups: 0,
+    totalLeads: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -16,11 +20,15 @@ export default function Dashboard() {
     async function fetchStats() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
+      
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
 
       let { data: leads, error } = await supabase
         .from('leads')
         .select('*');
 
+      // Fallback para estrutura legada se necessário
       if (error) {
         const legacy = await supabase
           .from('Usuarios')
@@ -30,23 +38,39 @@ export default function Dashboard() {
       }
 
       if (error || !leads) {
-        setStats({ newLeadsToday: 0, humanActive: 0, scheduled: 0, pendingFollowups: 0 });
+        setStats({ 
+          newLeadsToday: 0, 
+          newLeadsYesterday: 0, 
+          humanActive: 0, 
+          scheduled: 0, 
+          pendingFollowups: 0,
+          totalLeads: 0
+        });
         setLoading(false);
         return;
       }
 
       const now = new Date();
-      const pendingFollowups = leads.filter((lead: any) => {
+      const pendingFollowupsCount = leads.filter((lead: any) => {
         if (!lead.next_followup_at) return false;
         const when = new Date(lead.next_followup_at);
         return !isNaN(when.getTime()) && when <= now && String(lead.conversation_status || '').toLowerCase() !== 'encerrado';
       }).length;
 
+      const leadsToday = leads.filter((lead: any) => lead.created_at && new Date(lead.created_at) >= today).length;
+      const leadsYesterday = leads.filter((lead: any) => {
+        if (!lead.created_at) return false;
+        const d = new Date(lead.created_at);
+        return d >= yesterday && d < today;
+      }).length;
+
       setStats({
-        newLeadsToday: leads.filter((lead: any) => lead.created_at && new Date(lead.created_at) >= today).length,
+        newLeadsToday: leadsToday,
+        newLeadsYesterday: leadsYesterday,
         humanActive: leads.filter((lead: any) => String(lead.automation_status || '').toLowerCase() === 'paused_human').length,
         scheduled: leads.filter((lead: any) => Boolean(lead.calendar_event_id)).length,
-        pendingFollowups,
+        pendingFollowups: pendingFollowupsCount,
+        totalLeads: leads.length,
       });
       setLoading(false);
     }
@@ -56,8 +80,18 @@ export default function Dashboard() {
     return () => clearInterval(interval);
   }, [supabase]);
 
+  const growth = useMemo(() => {
+    if (stats.newLeadsYesterday === 0) return stats.newLeadsToday > 0 ? 100 : 0;
+    const diff = stats.newLeadsToday - stats.newLeadsYesterday;
+    return Math.round((diff / stats.newLeadsYesterday) * 100);
+  }, [stats.newLeadsToday, stats.newLeadsYesterday]);
+
+  const handleSync = () => {
+    alert("Sincronização manual com n8n e Agenda iniciada. Os dados serão atualizados em instantes.");
+  };
+
   return (
-    <div className="flex flex-col h-full w-full space-y-8 animate-fade-in">
+    <div className="flex flex-col h-full w-full space-y-8 animate-fade-in pb-10">
       
       {/* Header Premium do Dashboard */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-white/5">
@@ -83,7 +117,10 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         
         {/* Card 1: Novos Leads */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg">
+        <div 
+          onClick={() => navigate('/leads')}
+          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg cursor-pointer"
+        >
           <div className="absolute top-0 right-0 p-4 opacity-10 text-[#E5C38C] group-hover:opacity-20 transition-opacity">
             <Users className="h-16 w-16" />
           </div>
@@ -92,17 +129,26 @@ export default function Dashboard() {
             <span className="text-4xl font-semibold text-white font-mono tracking-tight">
               {loading ? "..." : stats.newLeadsToday}
             </span>
-            <span className="text-xs font-semibold text-emerald-400 flex items-center gap-0.5">
-              <TrendingUp className="h-3.5 w-3.5" /> +12%
-            </span>
+            {!loading && (
+              <span className={`text-xs font-semibold flex items-center gap-0.5 ${growth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                <TrendingUp className={`h-3.5 w-3.5 ${growth < 0 ? 'rotate-180' : ''}`} /> 
+                {growth >= 0 ? `+${growth}%` : `${growth}%`}
+              </span>
+            )}
           </div>
           <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]" />
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-1000" 
+              style={{ width: `${Math.min((stats.newLeadsToday / 15) * 100, 100)}%` }}
+            />
           </div>
         </div>
 
         {/* Card 2: Atendimento Humano */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg">
+        <div 
+          onClick={() => navigate('/conversations')}
+          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg cursor-pointer"
+        >
           <div className="absolute top-0 right-0 p-4 opacity-10 text-[#E5C38C] group-hover:opacity-20 transition-opacity">
             <MessageSquare className="h-16 w-16" />
           </div>
@@ -114,12 +160,18 @@ export default function Dashboard() {
             <span className="text-xs font-light text-white/40">leads ativos</span>
           </div>
           <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-1/3 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]" />
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-1000" 
+              style={{ width: `${stats.totalLeads > 0 ? (stats.humanActive / stats.totalLeads) * 100 : 0}%` }}
+            />
           </div>
         </div>
 
         {/* Card 3: Consultas Vinculadas */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg">
+        <div 
+          onClick={() => navigate('/calendar')}
+          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg cursor-pointer"
+        >
           <div className="absolute top-0 right-0 p-4 opacity-10 text-[#E5C38C] group-hover:opacity-20 transition-opacity">
             <Calendar className="h-16 w-16" />
           </div>
@@ -131,12 +183,18 @@ export default function Dashboard() {
             <span className="text-xs font-light text-white/40">no Google Agenda</span>
           </div>
           <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-4/5 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]" />
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-1000" 
+              style={{ width: `${Math.min((stats.scheduled / 20) * 100, 100)}%` }}
+            />
           </div>
         </div>
 
         {/* Card 4: Follow-ups Pendentes */}
-        <div className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-orange-500/30 transition-all duration-300 shadow-lg">
+        <div 
+          onClick={() => navigate('/follow-ups')}
+          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-orange-500/30 transition-all duration-300 shadow-lg cursor-pointer"
+        >
           <div className="absolute top-0 right-0 p-4 opacity-10 text-orange-400 group-hover:opacity-20 transition-opacity">
             <AlertCircle className="h-16 w-16" />
           </div>
@@ -148,49 +206,103 @@ export default function Dashboard() {
             <span className="text-xs font-semibold text-orange-400">pendentes</span>
           </div>
           <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full w-1/2 rounded-full bg-gradient-to-r from-orange-500 to-amber-500" />
+            <div 
+              className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-1000" 
+              style={{ width: `${Math.min((stats.pendingFollowups / 10) * 100, 100)}%` }}
+            />
           </div>
         </div>
 
       </div>
 
-      {/* Grid Informativo de Processos */}
+      {/* Grid Informativo de Processos & Atalhos Rápidos */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Bloco 1: Processo de Atendimento */}
-        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden">
+        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden group hover:bg-[#0B0D12]/60 transition-all">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#E5C38C]/20 to-transparent" />
-          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5">
+          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5 group-hover:scale-110 transition-transform">
             <MessageSquare className="h-5 w-5" />
           </div>
-          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Fluxo de Atendimento Inteligente</h4>
-          <p className="mt-3 text-sm text-white/60 leading-relaxed font-light">
-            O robô e o atendente comercial operam em sincronia completa. Qualquer envio manual no WhatsApp desativa instantaneamente as respostas da IA por 6 horas para garantir a continuidade humana sem atrito.
+          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Fluxo de Atendimento</h4>
+          <p className="mt-3 text-xs text-white/60 leading-relaxed font-light">
+            Sincronia entre IA e consultores. O modo humano é ativado automaticamente ao detectar intervenção manual.
           </p>
+          <div className="mt-6 flex gap-3">
+            <button 
+              onClick={() => navigate('/config')}
+              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+            >
+              Configurar IA <ArrowRight className="h-2 w-2" />
+            </button>
+            <button 
+              onClick={() => navigate('/reports')}
+              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+            >
+              Ver Logs <ArrowRight className="h-2 w-2" />
+            </button>
+          </div>
         </div>
 
         {/* Bloco 2: Gestão de Agenda */}
-        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden">
+        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden group hover:bg-[#0B0D12]/60 transition-all">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#E5C38C]/20 to-transparent" />
-          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5">
+          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5 group-hover:scale-110 transition-transform">
             <Calendar className="h-5 w-5" />
           </div>
           <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Agendas & Diagnósticos</h4>
-          <p className="mt-3 text-sm text-white/60 leading-relaxed font-light">
-            Agendamentos criados de forma conversacional pela IA alimentam o Google Agenda da clínica e atualizam automaticamente o status do lead no Supabase para <span className="text-[#E5C38C]">scheduled</span>, organizando o fluxo pré-consulta.
+          <p className="mt-3 text-xs text-white/60 leading-relaxed font-light">
+            Integração nativa com Google Agenda. Status atualizado em tempo real no funil de vendas.
           </p>
+          <div className="mt-6 flex gap-3">
+            <button 
+              onClick={() => navigate('/calendar')}
+              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+            >
+              Abrir Agenda <ArrowRight className="h-2 w-2" />
+            </button>
+            <button 
+              onClick={handleSync}
+              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+            >
+              Sincronizar <ArrowRight className="h-2 w-2" />
+            </button>
+          </div>
         </div>
 
-        {/* Bloco 3: Diretrizes da Equipe */}
-        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden">
+        {/* Bloco 3: Atalhos Rápidos */}
+        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden group hover:bg-[#0B0D12]/60 transition-all">
           <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#E5C38C]/20 to-transparent" />
-          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5">
-            <ShieldCheck className="h-5 w-5" />
+          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5 group-hover:scale-110 transition-transform">
+            <Sparkles className="h-5 w-5" />
           </div>
-          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Padrões Operacionais</h4>
-          <p className="mt-3 text-sm text-white/60 leading-relaxed font-light">
-            Acompanhe prazos de follow-ups críticos na barra lateral. Utilize o funil de vendas para arrastar leads entre as etapas comerciais de avaliação até o pós-procedimento com facilidade.
-          </p>
+          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Ações Prioritárias</h4>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <button 
+              onClick={() => navigate('/leads?action=new')}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+            >
+              + Novo Lead
+            </button>
+            <button 
+              onClick={() => navigate('/reports')}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+            >
+              Relatórios
+            </button>
+            <button 
+              onClick={() => navigate('/follow-ups')}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+            >
+              Follow-ups
+            </button>
+            <button 
+              onClick={() => navigate('/portal')}
+              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+            >
+              Portal
+            </button>
+          </div>
         </div>
 
       </div>

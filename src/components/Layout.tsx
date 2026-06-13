@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut, UserCheck } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 
 export default function Layout() {
@@ -90,14 +90,24 @@ export default function Layout() {
         </div>
 
         {/* Busca Global Customizada */}
-        <div className="hidden md:flex h-11 w-full max-w-[450px] items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 focus-within:border-[#D4AF37]/45 transition-colors">
+        <form 
+          onSubmit={(e) => {
+            e.preventDefault();
+            const term = (e.currentTarget.elements.namedItem("search") as HTMLInputElement).value;
+            if (term) {
+              window.location.href = `/leads?search=${encodeURIComponent(term)}`;
+            }
+          }}
+          className="hidden md:flex h-11 w-full max-w-[450px] items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.02] px-4 focus-within:border-[#D4AF37]/45 transition-colors"
+        >
           <Search className="h-4 w-4 text-white/30" />
           <input
+            name="search"
             type="text"
             placeholder="Busca global de leads por nome ou telefone..."
             className="w-full bg-transparent text-xs outline-none placeholder:text-white/20 text-white"
           />
-        </div>
+        </form>
 
         <div className="flex items-center gap-6">
           <div className="flex items-center gap-2 bg-white/[0.02] dark:bg-black/20 border border-white/5 dark:border-white/10 px-3.5 py-1.5 rounded-full backdrop-blur-md">
@@ -140,6 +150,13 @@ export default function Layout() {
               <div className="flex items-center gap-3">
                 <Users className={navIconClass("/leads")} />
                 <span>Leads CRM</span>
+              </div>
+            </Link>
+
+            <Link to="/patients" className={navLinkClass("/patients")}>
+              <div className="flex items-center gap-3">
+                <UserCheck className={navIconClass("/patients")} />
+                <span>Portal Pacientes</span>
               </div>
             </Link>
             

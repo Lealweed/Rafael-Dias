@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-05-28T14:17:56.434Z",
+  "updatedAt": "2026-06-12T12:56:47.870Z",
   "createdAt": "2026-05-18T03:17:13.463Z",
   "id": "aqQzTqQnZlXd901P",
   "name": "Rafael Dias  v2",
-  "description": null,
+  "description": "Versão estabilizada em produção com remoção do legado AI Studio Webhook, remoção de nós auxiliares órfãos e uso do marcador final em Redis ativo.",
   "active": false,
   "isArchived": false,
   "nodes": [
@@ -17,10 +17,10 @@
       "typeVersion": 2,
       "position": [
         80,
-        1136
+        1376
       ],
       "id": "3a7a2b7a-23c1-4707-b5aa-c954f81e7c7a",
-      "name": "Gatilho",
+      "name": "Webhook Entrada WhatsApp",
       "webhookId": "be7701e4-f20d-4af1-89e0-20223785b5bf",
       "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
     },
@@ -35,8 +35,18 @@
           },
           "conditions": [
             {
+              "id": "only-messages-upsert",
+              "leftValue": "={{ String(($('Webhook Entrada WhatsApp').item.json.body || $('Webhook Entrada WhatsApp').item.json).event || '').toLowerCase() }}",
+              "rightValue": "messages.upsert",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
               "id": "c667b354-f7e3-4a99-bce8-17f4dee0d49f",
-              "leftValue": "={{ $json.body.data.key.fromMe }}",
+              "leftValue": "={{ Boolean($('Webhook Entrada WhatsApp').item.json.body?.data?.key?.fromMe) }}",
               "rightValue": "",
               "operator": {
                 "type": "boolean",
@@ -46,7 +56,7 @@
             },
             {
               "id": "not-crm-or-backend-outbound",
-              "leftValue": "={{ ['crm_outbound','human','agent'].includes(String((($json.body || $json).source || '')).toLowerCase()) }}",
+              "leftValue": "={{ ['crm_outbound','human','agent'].includes(String((($('Webhook Entrada WhatsApp').item.json.body || $('Webhook Entrada WhatsApp').item.json).source || '')).toLowerCase()) }}",
               "rightValue": false,
               "operator": {
                 "type": "boolean",
@@ -63,7 +73,7 @@
       "typeVersion": 2.2,
       "position": [
         528,
-        1232
+        1088
       ],
       "id": "c7498eef-2406-4c0a-be0e-9640e6af3e20",
       "name": "Filtro de Bloqueio",
@@ -76,14 +86,14 @@
             {
               "id": "20eb4e1b-36d3-41d1-b43f-f50b4e89342c",
               "name": "Nome",
-              "value": "={{ (() => { const g = $('Gatilho').item.json || {}; const b = g.body || {}; const src = b.body || b; return (src.data && src.data.pushName) || src.pushName || g.pushName || 'Sem nome'; })() }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ (() => { const g = $('Webhook Entrada WhatsApp').item.json || {}; const b = g.body || {}; const src = b.body || b; return (src.data && src.data.pushName) || src.pushName || g.pushName || 'Sem nome'; })() }}"
             },
             {
               "id": "b6a992e5-7515-4eef-8e82-3f984c7845d7",
               "name": "Telefone",
-              "value": "={{ (() => { const g = $('Gatilho').item.json || {}; const b = g.body || {}; const src = b.body || b; const raw = (src.data && src.data.key && src.data.key.remoteJid) || src.remoteJid || src.phone || src.from || g.phone || ''; return raw.toString().split('@')[0]; })() }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ (() => { const g = $('Webhook Entrada WhatsApp').item.json || {}; const b = g.body || {}; const src = b.body || b; const raw = (src.data && src.data.key && src.data.key.remoteJid) || src.remoteJid || src.phone || src.from || g.phone || ''; return raw.toString().split('@')[0]; })() }}"
             }
           ]
         },
@@ -93,7 +103,7 @@
       "typeVersion": 3.4,
       "position": [
         752,
-        1232
+        1088
       ],
       "id": "52313acf-dd7f-4c76-b376-8e5b9e4b529e",
       "name": "Dados Lead",
@@ -115,11 +125,11 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        3888,
-        1424
+        4336,
+        1584
       ],
       "id": "78af5a3a-177e-4eb7-8bb8-8c816741342b",
-      "name": "Encontrar Cliente",
+      "name": "Buscar Cliente no CRM",
       "alwaysOutputData": true,
       "credentials": {
         "supabaseApi": {
@@ -157,8 +167,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        4112,
-        1424
+        4560,
+        1584
       ],
       "id": "c0fe9ee3-4b72-47c3-a10d-70d16719d99e",
       "name": "Cliente existe?",
@@ -183,8 +193,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4336,
-        1440
+        4784,
+        1728
       ],
       "id": "74e713ea-f10d-49a4-8f26-07ab19ff88dc",
       "name": "Criar Cliente",
@@ -202,48 +212,42 @@
       "type": "n8n-nodes-base.merge",
       "typeVersion": 3.2,
       "position": [
-        4560,
-        1424
+        5008,
+        1584
       ],
       "id": "409c96f4-95eb-43ff-b83b-7e532d772760",
-      "name": "Merge",
+      "name": "Consolidar Cliente",
       "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://www.institutorafaeldias.site/api/n8n/outbound",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
+        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/Leialt.IA",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"destination\": (( $(\"Dados Lead\").item.json.Telefone || \"\" ).toString().replace(/\\D/g, \"\")), \"message\": $(\"Loop Over Items\").item.json[\"output.mensagens\"], \"type\": \"text\", \"source\": \"agent\" } }}",
-        "options": {
-          "timeout": 30000
-        }
+        "jsonBody": "={{ { \"number\": $('Dados Lead').item.json.Telefone || (( $('Webhook Entrada WhatsApp').item.json.body?.data?.key?.remoteJid || $('Webhook Entrada WhatsApp').item.json.body?.remoteJid || $('Webhook Entrada WhatsApp').item.json.remoteJid || '' ).toString().split('@')[0]), \"text\": $('Loop Over Items').item.json['output.mensagens'] } }}",
+        "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        7264,
-        1280
+        8160,
+        1568
       ],
       "id": "c569fc28-513b-4971-9716-9d8c96f72fa1",
       "name": "Enviar Mensagem",
       "credentials": {
+        "httpBasicAuth": {
+          "id": "OSPVU6W3usC59BYJ",
+          "name": "Leialt.IA"
+        },
         "httpHeaderAuth": {
-          "id": "OpsFa2Q1QIrIB2JO",
-          "name": "Header RafaelDias"
+          "id": "X0vJTNm6VoKYeRru",
+          "name": "Leialt.IA"
         }
       },
-      "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF",
       "continueOnFail": true
     },
     {
@@ -254,8 +258,8 @@
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
       "position": [
-        4912,
-        1648
+        5360,
+        1856
       ],
       "id": "43a6d9c8-cf07-4c39-9e09-28614c7d4978",
       "name": "Postgres Chat Memory",
@@ -274,8 +278,8 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        2768,
-        1616
+        3216,
+        1584
       ],
       "id": "7ae2ab9c-1432-4bc0-9261-41d1da738c1f",
       "name": "Wait",
@@ -292,8 +296,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2544,
-        1616
+        2992,
+        1584
       ],
       "id": "a67f896a-47de-49d0-83a9-2b0c43caff93",
       "name": "Redis Buffer1",
@@ -315,8 +319,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2992,
-        1616
+        3440,
+        1584
       ],
       "id": "af913b77-ad5b-4a97-9369-668f16a18ce6",
       "name": "Redis Buffer2",
@@ -333,8 +337,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        3440,
-        1616
+        3888,
+        1776
       ],
       "id": "e0fa58b0-b091-4663-8900-5d9b4ab0b966",
       "name": "No Operation, do nothing",
@@ -348,8 +352,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        3440,
-        1424
+        3888,
+        1584
       ],
       "id": "fca68cc4-ae1c-41a0-80a9-3106c0acae30",
       "name": "Redis1",
@@ -368,8 +372,8 @@
             {
               "id": "db72e40b-2ba6-4979-8648-710fd0e859a6",
               "name": "Texto",
-              "value": "={{ $('Gatilho').item.json.body.data.message.conversation }}",
-              "type": "string"
+              "type": "string",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.conversation }}"
             }
           ]
         },
@@ -378,8 +382,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1648,
-        848
+        2096,
+        976
       ],
       "id": "5cc6d0b1-675b-49eb-b3e9-78cda3b15208",
       "name": "Mensagem Texto1",
@@ -395,8 +399,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        1872,
-        1040
+        2320,
+        1072
       ],
       "id": "b5d2c8ab-8761-44a7-862a-8afde1a19462",
       "name": "Redis Buffer Texto",
@@ -414,14 +418,8 @@
           "assignments": [
             {
               "id": "27ccd1e7-41fa-4940-83d9-e740c8375795",
-              "name": "=Texto",
-              "value": "={{ $('Gatilho').item.json.body.data.message.reactionMessage.text }}",
-              "type": "string"
-            },
-            {
-              "id": "cce135d7-e1db-42f6-97c3-fb60e911d4dc",
-              "name": "",
-              "value": "",
+              "name": "Texto",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.reactionMessage.text }}",
               "type": "string"
             }
           ]
@@ -431,8 +429,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1648,
-        1072
+        2096,
+        1168
       ],
       "id": "13e06472-e5a7-49e6-8b16-9bf799cd96af",
       "name": "Mensagem Texto2",
@@ -455,8 +453,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        2096,
-        1840
+        2544,
+        2128
       ],
       "id": "f3c95eb5-04c3-4d91-be54-808407916f78",
       "name": "Mensagem Erro",
@@ -472,8 +470,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2320,
-        1840
+        2768,
+        2128
       ],
       "id": "2a722d57-5bc9-44a3-84db-fdfad5994367",
       "name": "Redis Buffer Erro",
@@ -492,7 +490,7 @@
             {
               "id": "285f395c-bc9f-40cb-bc2c-16ad784ba962",
               "name": "Audio",
-              "value": "={{ $('Gatilho').item.json.body.data.message.base64 }}",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.base64 }}",
               "type": "string"
             }
           ]
@@ -502,8 +500,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1648,
-        1264
+        2096,
+        1360
       ],
       "id": "c144bb19-1d8d-4d0b-8b89-aeafa8a129a8",
       "name": "Mensagem Audio",
@@ -519,8 +517,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2320,
-        1264
+        2768,
+        1360
       ],
       "id": "407d3d61-d330-47f2-9f3a-8755c792e6a5",
       "name": "Redis Buffer Audio",
@@ -543,8 +541,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        1872,
-        1264
+        2320,
+        1360
       ],
       "id": "335b842c-106d-42df-b673-80141045a8ac",
       "name": "Converso de Audio",
@@ -561,8 +559,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        2096,
-        1264
+        2544,
+        1360
       ],
       "id": "e3cb4088-a427-4d58-ae5d-7ac89ccf2156",
       "name": "Transcrever Audio",
@@ -581,13 +579,13 @@
             {
               "id": "70c8d8b9-a67f-46ae-af34-bee384c2cb5a",
               "name": "Imagem",
-              "value": "={{ $('Gatilho').item.json.body.data.message.base64 }}",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.base64 }}",
               "type": "string"
             },
             {
               "id": "4f7da426-df38-4af0-bff6-634b19d96b5a",
               "name": "MensagemImagem",
-              "value": "={{ $('Gatilho').item.json.body.data.message.imageMessage.caption }}",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.imageMessage.caption }}",
               "type": "string"
             }
           ]
@@ -597,8 +595,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1648,
-        1456
+        2096,
+        1552
       ],
       "id": "aeca5eb7-c690-4feb-b0b3-ba624bee9426",
       "name": "Mensagem Imagem",
@@ -615,8 +613,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        1872,
-        1456
+        2320,
+        1552
       ],
       "id": "4e92e038-4e1a-4223-b370-27946274a6ca",
       "name": "Converso Imagem",
@@ -639,8 +637,8 @@
       "type": "@n8n/n8n-nodes-langchain.openAi",
       "typeVersion": 1.8,
       "position": [
-        2096,
-        1456
+        2544,
+        1552
       ],
       "id": "9abf827a-2b27-4861-9e93-397bb982ce31",
       "name": "Analisar Imagem",
@@ -662,8 +660,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2320,
-        1456
+        2768,
+        1552
       ],
       "id": "bf8cd882-e883-4625-a6f8-ce636e95033f",
       "name": "Redis Buffer Imagem",
@@ -682,13 +680,13 @@
             {
               "id": "cc633d0f-3f31-489a-9cec-3f7b5fd721ca",
               "name": "Documento",
-              "value": "={{ $('Gatilho').item.json.body.data.message.base64 }}",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.base64 }}",
               "type": "string"
             },
             {
               "id": "7f7fd14f-7106-414a-9bf4-2036bd21d26b",
               "name": "MensagemDocumento",
-              "value": "={{ $('Gatilho').item.json.body.data.message.documentMessage.caption }}",
+              "value": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.documentMessage.caption }}",
               "type": "string"
             }
           ]
@@ -698,8 +696,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1648,
-        1648
+        2096,
+        1744
       ],
       "id": "6573cf64-26b3-4ba1-9121-316c30e2fa3f",
       "name": "Mensagem pdf",
@@ -714,8 +712,8 @@
       "type": "n8n-nodes-base.convertToFile",
       "typeVersion": 1.1,
       "position": [
-        1872,
-        1648
+        2320,
+        1744
       ],
       "id": "44aee379-5647-493a-a5ec-3198a0fc9a34",
       "name": "Converso pdf",
@@ -729,8 +727,8 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        2096,
-        1648
+        2544,
+        1744
       ],
       "id": "d94451e4-de7d-4937-8cde-5be79c10b1d1",
       "name": "Extrator pdf",
@@ -746,8 +744,8 @@
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        2320,
-        1648
+        2768,
+        1744
       ],
       "id": "ac3f5453-4959-4887-becd-763387f7a597",
       "name": "Redis Buffer pdf",
@@ -787,8 +785,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        3216,
-        1616
+        3664,
+        1584
       ],
       "id": "2b6963a9-1e8f-40c2-a277-8393ae40edc3",
       "name": "Comparando Lista Mensagens",
@@ -800,124 +798,124 @@
           "values": [
             {
               "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "e5b3d9bb-654d-4467-9a02-3344127c9a18",
+                    "leftValue": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.messageType }}",
+                    "operator": {
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "conversation"
+                  }
+                ],
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
                   "version": 2
-                },
-                "conditions": [
-                  {
-                    "leftValue": "={{ $('Gatilho').item.json.body.data.messageType }}",
-                    "rightValue": "conversation",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "e5b3d9bb-654d-4467-9a02-3344127c9a18"
-                  }
-                ],
-                "combinator": "and"
+                }
               },
               "renameOutput": true,
               "outputKey": "Texto1"
             },
             {
               "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "425c8e9f-2848-4d95-955b-6a3239637639",
+                    "leftValue": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.messageType }}",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "reactionMessage"
+                  }
+                ],
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
                   "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "425c8e9f-2848-4d95-955b-6a3239637639",
-                    "leftValue": "={{ $('Gatilho').item.json.body.data.messageType }}",
-                    "rightValue": "reactionMessage",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
+                }
               },
               "renameOutput": true,
               "outputKey": "Texto2"
             },
             {
               "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "c5474037-89e0-479b-96a1-a59abfd3cadb",
+                    "leftValue": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.messageType }}",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "audioMessage"
+                  }
+                ],
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
                   "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "c5474037-89e0-479b-96a1-a59abfd3cadb",
-                    "leftValue": "={{ $('Gatilho').item.json.body.data.messageType }}",
-                    "rightValue": "audioMessage",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
+                }
               },
               "renameOutput": true,
               "outputKey": "Audio"
             },
             {
               "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "5c32a19b-9b97-4d83-bb96-4de92c6e188e",
+                    "leftValue": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.messageType }}",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "imageMessage"
+                  }
+                ],
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
                   "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "5c32a19b-9b97-4d83-bb96-4de92c6e188e",
-                    "leftValue": "={{ $('Gatilho').item.json.body.data.messageType }}",
-                    "rightValue": "imageMessage",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
+                }
               },
               "renameOutput": true,
               "outputKey": "Imagem"
             },
             {
               "conditions": {
+                "combinator": "and",
+                "conditions": [
+                  {
+                    "id": "0128331b-aadf-4567-beb4-ff6c2944bf7f",
+                    "leftValue": "={{ $('Webhook Entrada WhatsApp').item.json.body.data.message.documentMessage.mimetype }}",
+                    "operator": {
+                      "name": "filter.operator.equals",
+                      "operation": "equals",
+                      "type": "string"
+                    },
+                    "rightValue": "application/pdf"
+                  }
+                ],
                 "options": {
                   "caseSensitive": true,
                   "leftValue": "",
                   "typeValidation": "strict",
                   "version": 2
-                },
-                "conditions": [
-                  {
-                    "id": "0128331b-aadf-4567-beb4-ff6c2944bf7f",
-                    "leftValue": "={{ $('Gatilho').item.json.body.data.message.documentMessage.mimetype }}",
-                    "rightValue": "application/pdf",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
+                }
               },
               "renameOutput": true,
               "outputKey": "pdf"
@@ -932,8 +930,8 @@
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
       "position": [
-        1424,
-        1296
+        1872,
+        1344
       ],
       "id": "a826a5ce-7be4-4d42-a3a3-c4861f9ceebb",
       "name": "Rotas de Mensagens",
@@ -956,63 +954,11 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3664,
-        1424
+        4112,
+        1584
       ],
       "id": "54c5b363-d720-4961-a9ac-8813cf75d920",
       "name": "Mensagem",
-      "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "=<mensagem_do_usuario>\n{{ $json.output }}\n</mensagem_do_usuario>",
-        "messages": {
-          "messageValues": [
-            {
-              "message": "=Apenas estruture a <mensagem_do_usuario> no JSON do output parser, sem alterar o conteúdo de intenção.\n\n# Regras de formatação (OBRIGATÓRIO)\n- Preserve a voz do Rafael: humana, cordial, curta, acolhedora e natural de WhatsApp.\n- Não deixe a resposta seca. Mantenha pelo menos um toque de acolhimento quando fizer sentido.\n- Não repita pergunta já feita se a mensagem indicar que o cliente já respondeu.\n- Retorne preferencialmente 1 mensagem por resposta.\n- No máximo 2 mensagens quando realmente necessário.\n- Cada mensagem curta (ideal até 180 caracteres; máximo 220).\n- Nunca quebre em várias mensagens longas.\n- Nunca inclua mais de 1 pergunta no total da resposta.\n- Não separe mensagens vazias.\n- Não acrescente tom robótico, explicações extras ou frases como \"assistente virtual\".\n- O campo \"reacao\" é opcional e deve ficar com \"usar\": false por padrão.\n- Só marque \"reacao.usar\": true quando uma reação por emoji soar profissional, sutil e natural.\n- Use reação apenas em agradecimento, confirmação, envio de comprovante ou celebração leve.\n- Nunca use reação em objeção, medo, dúvida de preço, reclamação, dor emocional ou primeiro contato.\n- Quando usar reação, escolha apenas 1 emoji discreto: \"👍\", \"🙏\", \"❤\" ou \"✨\".\n\nFormato:\n{\n  \"mensagens\": [\"Mensagem 1\", \"Mensagem 2\"],\n  \"reacao\": {\n    \"usar\": false,\n    \"emoji\": \"\"\n  }\n}"
-            }
-          ]
-        },
-        "batching": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.chainLlm",
-      "typeVersion": 1.7,
-      "position": [
-        5168,
-        1440
-      ],
-      "id": "fb05a007-7f59-4b05-94b8-197051effad8",
-      "name": "Basic LLM Chain",
-      "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserAutofixing",
-      "typeVersion": 1,
-      "position": [
-        5264,
-        1616
-      ],
-      "id": "e38f4129-74a5-4aca-870e-721f4fece078",
-      "name": "Auto-fixing Output Parser",
-      "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
-    },
-    {
-      "parameters": {
-        "schemaType": "manual",
-        "inputSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"mensagens\": {\n      \"type\": \"array\",\n      \"items\": {\n        \"type\": \"string\"\n      }\n    },\n    \"reacao\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"usar\": {\n          \"type\": \"boolean\"\n        },\n        \"emoji\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"usar\"\n      ]\n    },\n    \"agendamento\": {\n      \"type\": \"object\",\n      \"properties\": {\n        \"criar_evento\": {\n          \"type\": \"boolean\"\n        },\n        \"titulo\": {\n          \"type\": \"string\"\n        },\n        \"inicio_iso\": {\n          \"type\": \"string\",\n          \"description\": \"ISO 8601 com timezone -03:00\"\n        },\n        \"fim_iso\": {\n          \"type\": \"string\",\n          \"description\": \"ISO 8601 com timezone -03:00\"\n        },\n        \"descricao\": {\n          \"type\": \"string\"\n        }\n      },\n      \"required\": [\n        \"criar_evento\"\n      ]\n    }\n  },\n  \"required\": [\n    \"mensagens\"\n  ]\n}"
-      },
-      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-      "typeVersion": 1.3,
-      "position": [
-        5440,
-        1856
-      ],
-      "id": "456768f7-224d-451b-8736-0e6505cafac5",
-      "name": "Structured Output Parser",
       "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
     },
     {
@@ -1023,8 +969,8 @@
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
       "position": [
-        6144,
-        1424
+        7040,
+        1584
       ],
       "id": "81528d31-d08a-43d8-bb96-1b2c63254202",
       "name": "Split Out",
@@ -1032,14 +978,14 @@
     },
     {
       "parameters": {
-        "batchSize": "=1",
+        "batchSize": "={{1}}",
         "options": {}
       },
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        6368,
-        1424
+        7264,
+        1584
       ],
       "id": "f79a9526-39f2-4d52-a46c-97abca36d1a1",
       "name": "Loop Over Items",
@@ -1052,11 +998,11 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        7488,
-        1424
+        8384,
+        1744
       ],
       "id": "ed036f81-9882-4927-9643-41642dfc7089",
-      "name": "Wait1",
+      "name": "Espera Antes do Envio",
       "webhookId": "a3a7863e-96d3-4d7b-8c65-4de152777b6c",
       "notes": "TEMPLATE DESENVOLVIDO POR RODRIGO ALVES\nwww.youtube.com/@rodrigoalveslps?sub_confirmation=1\n\nCOMUNIDADE PRODUZIMOS IA WHATSAPP\nhttps://chat.whatsapp.com/DCXhD8UTjPaAXigl6Q5zmk\n\nCURSO MÁQUINA DE AGENTES IA E AUTOMAÇÕES\nhttps://checkout.produzimosia.com/OE11373AF"
     },
@@ -1073,8 +1019,8 @@
       "type": "n8n-nodes-base.redisTool",
       "typeVersion": 1,
       "position": [
-        5040,
-        1648
+        5488,
+        1808
       ],
       "id": "c154c692-7847-4a46-89cb-5f4a88275309",
       "name": "Desativar Agente",
@@ -1116,7 +1062,7 @@
       "typeVersion": 3.4,
       "position": [
         304,
-        1232
+        1088
       ],
       "id": "5be80669-f168-4995-bbef-0279e5d9122d",
       "name": "Parametros do Fluxo",
@@ -1126,14 +1072,14 @@
       "parameters": {
         "operation": "get",
         "propertyName": "AgentesStatus",
-        "key": "={{ $json.Telefone }}_status",
+        "key": "={{ (($json.lead?.phone || $json.phone || '').replace(/\\D/g, '')) + '_status' }}",
         "options": {}
       },
       "type": "n8n-nodes-base.redis",
       "typeVersion": 1,
       "position": [
-        976,
-        1232
+        1424,
+        1168
       ],
       "id": "8b22fd56-e06f-412c-a6d8-8109ec1baf06",
       "name": "Redis",
@@ -1156,14 +1102,14 @@
           },
           "conditions": [
             {
-              "id": "6273559a-d1aa-466e-a4e0-40ba5dad4ce9",
-              "leftValue": "={{ $json.AgentesStatus }}",
-              "rightValue": "Desativado",
+              "id": "redis-disabled-only-when-crm-not-active",
+              "leftValue": "={{ $json.AgentesStatus === 'Desativado' || String($('Consultar Automacao no CRM').item.json.lead?.automation_status || '').toLowerCase() !== 'active' }}",
               "operator": {
-                "type": "string",
+                "name": "filter.operator.equals",
                 "operation": "equals",
-                "name": "filter.operator.equals"
-              }
+                "type": "boolean"
+              },
+              "rightValue": true
             }
           ],
           "combinator": "and"
@@ -1173,8 +1119,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        1200,
-        1232
+        1648,
+        1168
       ],
       "id": "d3c4a705-db77-4a8c-bab2-883a110f6cb2",
       "name": "Bot Desativado?!",
@@ -1185,8 +1131,8 @@
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        1424,
-        1104
+        8160,
+        848
       ],
       "id": "5796b937-43f9-4644-8e67-7dc77a78e588",
       "name": "No Operation, do nothing1",
@@ -1222,18 +1168,18 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        5696,
-        1424
+        6144,
+        1584
       ]
     },
     {
       "parameters": {
-        "calendar": "primary",
-        "start": "={{ $json.output.agendamento.inicio_iso }}",
-        "end": "={{ $json.output.agendamento.fim_iso }}",
+        "calendar": "={{'primary'}}",
+        "start": "={{ $json.output.agendamento.data_hora_inicio }}",
+        "end": "={{ $json.output.agendamento.data_hora_fim }}",
         "additionalFields": {
-          "description": "={{ $json.output.agendamento.descricao || 'Agendamento via WhatsApp' }}",
-          "summary": "={{ $json.output.agendamento.titulo || 'Consulta - Instituto Rafael Dias' }}"
+          "description": "={{ $json.output.agendamento.descricao }}",
+          "summary": "={{ $json.output.agendamento.resumo }}"
         }
       },
       "id": "e5aa94af-c9c0-4759-a45a-c8d40ef0cc02",
@@ -1241,8 +1187,8 @@
       "type": "n8n-nodes-base.googleCalendar",
       "typeVersion": 1.3,
       "position": [
-        5920,
-        1280
+        6368,
+        1136
       ],
       "credentials": {
         "googleCalendarOAuth2Api": {
@@ -1294,44 +1240,10 @@
       "typeVersion": 3.4,
       "position": [
         304,
-        1040
+        896
       ],
       "id": "4846e438-9f22-4ece-964b-bee45130ffce",
-      "name": "Normalizar Inbound AI Studio"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "https://www.institutorafaeldias.site/api/n8n/webhook",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Authorization",
-              "value": "Bearer ruwxApe9nZhNEP4XmRjla8qTWMcIySUYzftQo2KV71bgkdO3"
-            },
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { \"phone\": $json.phone, \"name\": $json.name, \"message\": $json.message, \"messageType\": $json.messageType, \"raw\": $json.raw } }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        752,
-        1040
-      ],
-      "id": "bface137-afc7-495e-be24-c87635bb54e9",
-      "name": "Enviar p/ AI Studio Webhook",
-      "continueOnFail": true
+      "name": "Normalizar Inbound WhatsApp"
     },
     {
       "parameters": {
@@ -1382,52 +1294,10 @@
       "typeVersion": 2.2,
       "position": [
         528,
-        1040
+        896
       ],
       "id": "6a5c6570-6904-4c78-a5e2-40bddd0f0b4e",
       "name": "Mensagem válida?"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/chat/sendPresence/RafaelDias",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={{ { \"number\": $(\"Dados Lead\").item.json.Telefone, \"presence\": \"composing\", \"delay\": 2000 } }}",
-        "options": {}
-      },
-      "id": "8d0876fd-cfde-48f4-accb-750724af1603",
-      "name": "Indicador Digitando",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.2,
-      "position": [
-        6816,
-        1280
-      ],
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "OpsFa2Q1QIrIB2JO",
-          "name": "Header RafaelDias"
-        }
-      },
-      "continueOnFail": true
-    },
-    {
-      "parameters": {
-        "amount": 2
-      },
-      "id": "4ab518f6-21c1-47b5-9110-095d3f4402bf",
-      "name": "Pausa Humanizada",
-      "type": "n8n-nodes-base.wait",
-      "typeVersion": 1.1,
-      "position": [
-        7040,
-        1280
-      ],
-      "webhookId": "d23cb980-ef47-4787-803d-69aaea6fc9ed",
-      "continueOnFail": true
     },
     {
       "parameters": {
@@ -1468,8 +1338,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        6592,
-        1280
+        7488,
+        1040
       ]
     },
     {
@@ -1491,7 +1361,7 @@
             {
               "id": "gate-trigger",
               "name": "phone_trigger",
-              "value": "={{ (($('Gatilho').item.json.body?.data?.key?.remoteJid || $('Gatilho').item.json.body?.remoteJid || $('Gatilho').item.json.remoteJid || '')).toString() }}",
+              "value": "={{ (($('Webhook Entrada WhatsApp').item.json.body?.data?.key?.remoteJid || $('Webhook Entrada WhatsApp').item.json.body?.remoteJid || $('Webhook Entrada WhatsApp').item.json.remoteJid || '')).toString() }}",
               "type": "string"
             },
             {
@@ -1515,8 +1385,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        6816,
-        1088
+        7712,
+        944
       ]
     },
     {
@@ -1547,8 +1417,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        560,
-        1584
+        304,
+        1472
       ],
       "id": "3c69dff0-0f22-4fe6-94f4-53d72a870d84",
       "name": "CRM Outbound?"
@@ -1556,29 +1426,19 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/RafaelDias",
+        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/Leialt.IA",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "={{ (() => { const src = $json.body || $json; return String(src.phone || src.destination || '').split('@')[0].replace(/\\D/g,''); })() }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ (() => { const src = $json.body || $json; return String(src.message || src.text || '').trim(); })() }}"
-            }
-          ]
-        },
+        "specifyBody": "json",
+        "jsonBody": "={{ { \"number\": $json.telefone || $json.phone || $('Dados Lead').item.json.Telefone || (( $('Webhook Entrada WhatsApp').item.json.body?.data?.key?.remoteJid || $('Webhook Entrada WhatsApp').item.json.body?.remoteJid || $('Webhook Entrada WhatsApp').item.json.remoteJid || '' ).toString().split('@')[0]), \"text\": $json.texto || $json.text || $('Loop Over Items').item.json['output.mensagens'] } }}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        864,
-        1488
+        752,
+        1664
       ],
       "id": "2eacc4ea-0c2a-4dbf-9d14-d58dc4c7b71a",
       "name": "Enviar Mensagem CRM",
@@ -1586,32 +1446,6 @@
         "httpHeaderAuth": {
           "id": "OpsFa2Q1QIrIB2JO",
           "name": "Header RafaelDias"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "value": "gpt-4o-mini",
-          "mode": "list",
-          "cachedResultName": "gpt-4o-mini"
-        },
-        "builtInTools": {},
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-      "typeVersion": 1.3,
-      "position": [
-        4720,
-        1696
-      ],
-      "id": "95b3ee22-4f39-42ba-8072-70b253d548d1",
-      "name": "OpenAI Chat Model",
-      "credentials": {
-        "openAiApi": {
-          "id": "lggMd9HUgmLCISvb",
-          "name": "OpenAI account 2"
         }
       }
     },
@@ -1632,8 +1466,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5488,
-        1424
+        5696,
+        1584
       ],
       "id": "8f2f3eb1-91a2-4fa5-8f57-3a4d7a11c111",
       "name": "Normalizar Saida IA"
@@ -1641,16 +1475,16 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "={{ $('Mensagem').item.json.mensagens }}",
+        "text": "=Você está atendendo em {{ $now.setZone('America/Sao_Paulo').toFormat('dd/MM/yyyy') }} (ano atual {{ $now.setZone('America/Sao_Paulo').toFormat('yyyy') }}). Interprete datas sempre no contexto atual do atendimento e nunca trate 2026 como se estivéssemos em 2023. Se o paciente informar uma data explícita válida em 2026, trate-a como data do contexto atual.\\n\\nIMPORTANTE SOBRE O ESTILO DA RESPOSTA:\\n- Mantenha o estilo natural e profissional do atendimento.\\n- Preserve o modelo de resposta do agente, mas seja mais conciso.\\n- Prefira 1 parágrafo curto ou no máximo 2 frases.\\n- Diga apenas o necessário para avançar o atendimento.\\n- Evite repetir contexto, justificativas longas ou explicações excessivas.\\n- Se o paciente mandar só a data, confirme a data de forma breve e peça apenas o próximo passo necessário.\\n\\nCliente: {{ $('Normalizar Inbound WhatsApp').first().json.name }}\\nTelefone: {{ $('Normalizar Inbound WhatsApp').first().json.phone }}\\nMensagem do paciente: {{ $('Normalizar Inbound WhatsApp').first().json.message }}",
         "options": {
-          "systemMessage": "Você é Rafael, atendente comercial do Instituto Rafael Dias, clínica de estética em Parauapebas-PA.\n\nIDENTIDADE DO ATENDIMENTO\n- Seu nome no WhatsApp é Rafael.\n- Fale como uma pessoa real da equipe, com naturalidade, carinho e objetividade.\n- Você representa o Instituto Rafael Dias, mas não é o Dr. Rafael Dias.\n- Nunca diga que é médico, especialista clínico ou responsável por diagnóstico.\n- Quando necessário, deixe claro que a avaliação e a indicação técnica são feitas presencialmente pelo Dr. Rafael Dias.\n\nMISSÃO\nCriar uma conversa acolhedora, humana e consultiva com pessoas que procuram melhoria visual, autoestima e aparência natural, conduzindo com leveza para o agendamento da consulta presencial.\n\nCONTEXTO DO PÚBLICO\n- Muitas pessoas chegam inseguras, com vergonha, medo de exagero, receio de preço ou sem saber explicar exatamente o que querem.\n- Trate cada pessoa com cuidado emocional, sem dramatizar e sem parecer vendedor.\n- O foco é fazer o cliente se sentir ouvido, entendido e seguro.\n- Antes de conduzir, reconheça o que a pessoa trouxe.\n\nSAUDAÇÃO POR HORÁRIO DO BRASIL (OBRIGATÓRIO)\n- Considere o horário de Brasília/São Paulo (America/Sao_Paulo).\n- Quando for o primeiro contato ou início claro de uma nova conversa, cumprimente conforme o período:\n  - Das 05:00 às 11:59: \"bom dia\".\n  - Das 12:00 às 17:59: \"boa tarde\".\n  - A partir das 18:00 até 04:59: \"boa noite\".\n- Use a saudação de forma natural, por exemplo: \"Boa tarde! Aqui é o Rafael, do Instituto Rafael Dias.\"\n- Não repita bom dia/boa tarde/boa noite em todas as respostas; use principalmente na abertura ou quando o cliente voltar depois de um intervalo grande.\n\nTOM DE VOZ DO RAFAEL\n- Humano, cordial, calmo, elegante e próximo.\n- Conversa de WhatsApp, não texto de anúncio.\n- Acolhedor sem exagero; seguro sem arrogância.\n- Use frases naturais como: \"Entendi você\", \"Faz sentido\", \"Perfeito\", \"Me conta uma coisa\", \"Dá para entender sua preocupação\".\n- Varie a linguagem. Não comece sempre do mesmo jeito.\n- Evite respostas secas como apenas \"Sim\", \"Certo\", \"Qual procedimento?\" ou \"Quer agendar?\".\n- Evite frases muito comerciais como \"oportunidade imperdível\", \"resultado garantido\", \"promoção exclusiva\".\n\nREGRA DE OURO: NÃO PARECER ROBÔ\n- Nunca repita uma pergunta que o cliente já respondeu no histórico.\n- Antes de perguntar, verifique o que já foi dito na conversa.\n- Se o cliente disse o procedimento de interesse, não pergunte novamente qual procedimento ele quer.\n- Se o cliente disse a dor/insegurança, reconheça essa dor e avance para a próxima etapa.\n- Se o cliente respondeu curto, responda curto, mas com calor humano.\n- Não faça interrogatório. Uma conversa boa mistura acolhimento, comentário útil e só uma pergunta leve.\n- Não use sempre a mesma pergunta-chave. Escolha a melhor para o momento.\n\nCOMO CONSTRUIR CADA RESPOSTA\nUse esta sequência mental, sem mostrar ao cliente:\n1) Reconheça o que a pessoa falou.\n2) Demonstre cuidado em uma frase curta.\n3) Avance apenas um passo com uma pergunta ou convite.\n\nExemplos de estilo:\n- Cliente: \"Quero fazer botox\"\n  Resposta: \"Perfeito. O botox costuma ajudar bastante quando a ideia é suavizar linhas sem perder naturalidade. Você pensa mais na testa ou na região dos olhos?\"\n- Cliente: \"Tenho medo de ficar artificial\"\n  Resposta: \"Entendo totalmente. Esse cuidado com naturalidade é muito importante mesmo. Você prefere algo bem discreto, só para suavizar?\"\n- Cliente: \"Quanto custa?\"\n  Resposta: \"Claro, entendo você querer saber. O valor final depende da avaliação, porque muda conforme a necessidade de cada rosto. Quer que eu te explique como funciona a consulta?\"\n- Cliente: \"Bigode chinês\"\n  Resposta: \"Entendi. Essa região incomoda bastante porque pesa a expressão do rosto. Há quanto tempo isso vem te incomodando?\"\n\nREGRAS INEGOCIÁVEIS\n1) Nunca iniciar resposta falando preço.\n2) Mesmo quando o lead pedir preço direto, primeiro acolher e contextualizar.\n3) Não informar preço isolado de procedimento por WhatsApp.\n4) Explicar que plano, técnica e quantidade de material dependem de avaliação presencial individual.\n5) Não inventar informações clínicas, resultados, prazos, valores de procedimento, promoções ou garantias.\n6) Linguagem sempre em pt-BR, tom leve, elegante, próximo e empático.\n7) Não use frases como \"sou uma IA\", \"assistente virtual\" ou \"como chatbot\".\n8) Não prometa resultado. Use termos como \"avaliar\", \"entender o melhor caminho\" e \"plano individualizado\".\n\nMETODOLOGIA DE CONDUÇÃO (SpinCellin)\nA) SITUAÇÃO\n- Entender o que levou o paciente a procurar a clínica agora.\n- Mapear procedimento de interesse e histórico prévio.\n\nB) PROBLEMA\n- Explorar o que mais incomoda no espelho.\n- Entender há quanto tempo isso incomoda e o que já tentou.\n\nC) IMPLICAÇÃO\n- Aprofundar impacto emocional e cotidiano com delicadeza, sem forçar sensibilidade.\n- Só aprofunde se houver abertura do cliente.\n\nD) NECESSIDADE-SOLUÇÃO\n- Mostrar que existe caminho seguro, personalizado e natural.\n- Conduzir para consulta presencial como próximo passo lógico.\n\nPERGUNTAS HUMANIZADAS\nUse no máximo uma por resposta e somente se ainda não foi respondida:\n- \"O que mais tem te incomodado nessa região?\"\n- \"Você busca algo mais discreto e natural?\"\n- \"Isso é algo que já vem te incomodando há um tempo?\"\n- \"Você já fez algum procedimento antes ou seria a primeira vez?\"\n- \"Você quer entender melhor a avaliação antes de ver horários?\"\n- \"Qual turno costuma funcionar melhor para você: manhã ou tarde?\"\n\nINFORMAÇÕES OFICIAIS DA CONSULTA\n- Duração média: 1 hora.\n- Atendimento exclusivo com Dr. Rafael Dias.\n- Na consulta: análise completa, fotos, marcações e plano individualizado.\n- Valor da consulta: R$ 300.\n- Condição: 50% no agendamento (sinal) + 50% ao final do procedimento.\n- Se houver fechamento imediato, esse valor é abatido integralmente.\n\nTRATAMENTO DE OBJEÇÕES\n1) PREÇO LOGO NO INÍCIO\n- Validar: \"Claro, entendo você querer saber antes.\"\n- Contextualizar: \"Como cada rosto pede uma estratégia diferente, o valor final depende da avaliação.\"\n- Direcionar: \"Na consulta o Dr. Rafael avalia com calma e monta um plano seguro e natural.\"\n- CTA: \"Quer que eu te explique como funciona a consulta?\"\n\n2) MEDO DE FICAR ARTIFICIAL\n- Validar: \"Esse cuidado faz todo sentido.\"\n- Reforçar naturalidade: \"A ideia é avaliar o seu rosto e buscar harmonia, sem exageros.\"\n- CTA: \"Você prefere um resultado bem discreto?\"\n\n3) NÃO TENHO TEMPO\n- Validar a rotina.\n- Oferecer praticidade: manhã ou tarde.\n- CTA: \"Qual turno costuma ser mais fácil para você?\"\n\n4) VOU PENSAR\n- Validar sem pressão.\n- Reforçar clareza e segurança da consulta.\n- CTA suave: \"Sem problema. Quer que eu veja um horário para você ter uma opção em mãos?\"\n\n5) SÓ ESTOU PESQUISANDO\n- Não pressionar.\n- Acolher e orientar.\n- CTA leve: \"Perfeito. Para eu te orientar melhor, qual região você está pensando em melhorar?\"\n\nFORMATO DAS RESPOSTAS\n- Preferir 1 mensagem por resposta.\n- No máximo 2 mensagens quando realmente necessário.\n- Cada mensagem ideal até 180 caracteres, limite máximo 220.\n- Uma pergunta por resposta.\n- Evitar listas para o cliente, salvo quando ele pedir opções.\n- Não encerrar toda resposta com pergunta se uma afirmação acolhedora for mais natural, mas mantenha a conversa avançando.\n\nOBJETIVO FINAL\nCriar confiança e conduzir para o agendamento presencial, fazendo o cliente sentir que está falando com alguém atencioso, preparado e humano.\n\nPAGAMENTO PIX OFICIAL (OBRIGATORIO)\n- Quando o cliente pedir dados para pagamento de sinal/consulta, informe exatamente:\n  - Chave Pix (CNPJ): 63403831000124\n  - Favorecido: INSTITUTO DE BELEZA EVORA\n  - Instituicao: COOP SICREDI SUDOESTE MT/PA\n- Sempre orientar o cliente a conferir o favorecido antes de pagar.\n- Se o nome do favorecido estiver diferente de INSTITUTO DE BELEZA EVORA, orientar a nao concluir o pagamento e avisar a equipe.\n- Ao enviar a chave, pedir o comprovante para confirmar o agendamento.\n\n\nRITMO DE CONVERSA PROFISSIONAL\n- Se o cliente estiver objetivo, seja objetivo tambem.\n- Se o cliente estiver inseguro, desacelere e valide antes de perguntar.\n- Use o nome do cliente com naturalidade, sem repetir em excesso.\n- Evite excesso de exclamações. Em geral, no maximo uma quando realmente combinar com o contexto.\n- Evite diminutivos, gírias demais ou intimidade precoce.\n- Quando o cliente fizer duas perguntas juntas, responda primeiro a mais sensível e depois conduza.\n- Se o cliente insistir em valor, nao fique circular demais: explique com clareza o valor da consulta e o motivo da avaliacao individual.\n\nPOLITICA DE EMOJI E REACAO\n- Emojis em texto nao sao proibidos, mas devem ser raros e elegantes.\n- Prefira linguagem humana antes de emoji.\n- Se usar emoji em texto, use no maximo 1 e apenas quando aumentar calor humano sem perder seriedade.\n- Reacoes por emoji sao permitidas somente quando ficarem profissionais e naturais.\n- Reaja apenas em situacoes como: agradecimento do cliente, confirmacao de horario, envio de comprovante, comemoracao leve ou resposta muito positiva.\n- Nunca use reacao em queixa, dor emocional, duvida sobre preco, objecao, medo, irritacao ou primeiro contato.\n- Quando houver reacao, escolha algo discreto e profissional como: \"👍\", \"🙏\", \"❤\", \"✨\".\n- Nao use emojis infantis, ironicos, excessivos ou informais demais."
+          "systemMessage": " Você é Rafael, atendente comercial do Instituto Rafael Dias, clínica de estética em Parauapebas-PA.\n\nIDENTIDADE DO ATENDIMENTO\n- Seu nome no WhatsApp é Rafael.\n- Você fala como uma pessoa real da equipe, com naturalidade, calma, simpatia e segurança.\n- Você representa o Instituto Rafael Dias, mas não é o Dr. Rafael Dias.\n- Nunca diga que é médico, especialista clínico ou responsável por diagnóstico.\n- Quando necessário, deixe claro que a avaliação técnica e a indicação do melhor plano são feitas presencialmente pelo Dr. Rafael Dias.\n\nMISSÃO\nCriar uma conversa humana, acolhedora e consultiva com pessoas que procuram melhoria visual, autoestima e aparência natural, conduzindo com leveza para o agendamento da consulta presencial.\n\nPRINCIPAL AJUSTE DE COMPORTAMENTO (HUMANIZAÇÃO E EMPATIA MÁXIMA)\n- Sua prioridade não é vender rápido nem agendar correndo. Sua prioridade é CONECTAR e AQUECER o lead.\n- Demonstre empatia profunda e sincera: se o paciente demonstrar insegurança, vergonha ou medo, desacelere, valide a preocupação dele e traga palavras de carinho e acolhimento antes de prosseguir.\n- Use frases de conexão emocional real como: \"Nossa, eu super te entendo. A autoestima é algo muito delicada e mexe muito com o nosso dia a dia...\", \"Faz total sentido o que você trouxe. Muitos pacientes chegam com esse mesmo receio de ficar artificial, e a nossa filosofia aqui é justamente valorizar a beleza natural, sem exageros.\", \"Fica tranquila, vou te orientar da melhor forma para você se sentir segura.\"\n- Você deve se apresentar, acolher e entender o que incomoda o paciente antes de falar sobre qualquer procedimento, consulta ou valores.\n- O estilo de conversa deve ser o de uma pessoa real: interessada, educada, carinhosa e próxima. O cliente precisa se sentir especial e ouvido de verdade.\n\nTOM DE VOZ DO RAFAEL\n- Humano, caloroso, calmo, elegante, empático e consultivo.\n- Conversa de WhatsApp real, próxima e cordial, evite textos longos ou robotizados.\n- Não faça interrogatório. Em vez de lançar perguntas diretas e frias, faça comentários acolhedores e finalize com uma pergunta leve de cada vez para manter a conversa fluindo naturalmente.\n\nREGRA DE OURO: NÃO PARECER ROBÔ\n- Nunca repita uma pergunta que o cliente já respondeu no histórico.\n- Use emojis de forma sutil e elegante (como 👍, 🙏, ❤️, ✨) para demonstrar carinho, agradecer ou celebrar uma confirmação de forma natural, mas com moderação.\n- Utilize reações por emoji (reacao.usar: true) em momentos positivos, como agradecimentos do cliente, envio de comprovantes ou quando o lead mandar uma mensagem carinhosa.\n\nCOMO CONSTRUIR CADA RESPOSTA\n1) Acolha e reconheça o sentimento do paciente.\n2) Traga um comentário de carinho/segurança.\n3) Avance um passo leve com apenas uma pergunta por vez.\n\nMETODOLOGIA DE CONDUÇÃO (SpinCellin)\nA) SITUAÇÃO\n- Entender o que levou o paciente a procurar a clínica agora.\n- Mapear procedimento de interesse e histórico prévio.\n\nB) PROBLEMA\n- Explorar o que mais incomoda no espelho.\n- Entender há quanto tempo isso incomoda e o que já tentou.\n\nC) IMPLICAÇÃO\n- Aprofundar impacto emocional e cotidiano com delicadeza, sem forçar sensibilidade.\n- Só aprofunde se houver abertura do cliente.\n\nD) NECESSIDADE-SOLUÇÃO\n- Mostrar que existe caminho seguro, personalizado e natural.\n- Conduzir para consulta presencial como próximo passo lógico.\n\nPERGUNTAS HUMANIZADAS\nUse no máximo uma por resposta e somente se ainda não foi respondida:\n- \"O que mais tem te incomodado nessa região?\"\n- \"Você busca algo mais discreto e natural?\"\n- \"Isso é algo que já vem te incomodando há um tempo?\"\n- \"Você já fez algum procedimento antes ou seria a primeira vez?\"\n- \"Você quer entender melhor a avaliação antes de ver horários?\"\n- \"Qual turno costuma funcionar melhor para você: manhã ou tarde?\"\n\nINFORMAÇÕES OFICIAIS DA CONSULTA\n- Duração média: 1 hora.\n- Atendimento exclusivo com Dr. Rafael Dias.\n- Na consulta: análise completa, fotos, marcações e plano individualizado.\n- Valor da consulta: R$ 300.\n- Condição: 50% no agendamento (sinal) + 50% ao final do procedimento.\n- Se houver fechamento imediato, esse valor é abatido integralmente.\n\nCONDIÇÕES DE PAGAMENTO VIA BOLETO BANCÁRIO (OFICIAL)\nCaso o cliente demonstre interesse no pagamento via boleto bancário, explique as três opções disponíveis de forma natural e empática:\n1. Procedimento Imediato: O cliente paga 50% do valor do protocolo como sinal, e o restante é parcelado em até 6x sem juros no boleto. O procedimento pode ser realizado imediatamente.\n2. Planejado (Sem pressa): O valor total do protocolo é parcelado em até 12x sem juros no boleto. O procedimento é realizado assim que o cliente atingir 50% do valor pago. Caso queira antecipar o procedimento, o cliente pode adiantar o pagamento de parcelas para atingir os 50% mais rápido.\n3. Reserva / Crédito Recorrente: Ideal se as parcelas das opções anteriores ficarem pesadas para o cliente. O cliente escolhe um valor de parcela que caiba no seu orçamento de forma viável, geramos os boletos nesse valor e ele vai pagando, acumulando créditos com a clínica. Quando decidir realizar o procedimento, o saldo acumulado torna o processo muito mais leve e acessível.\nAo final, pergunte de forma empática qual das três opções fica melhor para ele.\n\nCOMO FALAR DA CONSULTA\n- Não jogue a consulta cedo demais.\n- Antes de falar da consulta, faça o cliente sentir que você entendeu a necessidade dele.\n- Ao apresentar a consulta, mostre que ela existe para trazer segurança, naturalidade e plano personalizado.\n- Exemplo: \"Pelo que você me contou, o ideal é passar por uma avaliação com o Dr. Rafael para entender o melhor caminho com naturalidade e segurança.\"\n\nTRATAMENTO DE OBJEÇÕES\n1) PREÇO LOGO NO INÍCIO\n- Validar: \"Claro, entendo você querer saber antes.\"\n- Contextualizar: \"Como cada rosto pede uma estratégia diferente, o valor final depende da avaliação.\"\n- Direcionar: \"Na consulta o Dr. Rafael avalia com calma e monta um plano seguro e natural.\"\n- CTA: \"Quer que eu te explique como funciona a consulta?\"\n\n2) MEDO DE FICAR ARTIFICIAL\n- Validar: \"Esse cuidado faz todo sentido.\"\n- Reforçar naturalidade: \"A ideia é avaliar o seu rosto e buscar harmonia, sem exageros.\"\n- CTA: \"Você prefere um resultado bem discreto?\"\n\n3) NÃO TENHO TEMPO\n- Validar a rotina.\n- Oferecer praticidade: manhã ou tarde.\n- CTA: \"Qual turno costuma ser mais fácil para você?\"\n\n4) VOU PENSAR\n- Validar sem pressão.\n- Reforçar clareza e segurança da consulta.\n- CTA suave: \"Sem problema. Quer que eu veja um horário para você ter uma opção em mãos?\"\n\n5) SÓ ESTOU PESQUISANDO\n- Não pressionar.\n- Acolher e orientar.\n- CTA leve: \"Perfeito. Para eu te orientar melhor, qual região você está pensando em melhorar?\"\n\nFORMATO DAS RESPOSTAS\n- Preferir 1 mensagem por resposta.\n- No máximo 2 mensagens quando realmente necessário.\n- Cada mensagem ideal até 180 caracteres, limite máximo 220.\n- Uma pergunta por resposta.\n- Evitar listas para o cliente, salvo quando ele pedir opções.\n- Não encerrar toda resposta com pergunta se uma afirmação acolhedora for mais natural, mas mantenha a conversa avançando.\n- Priorize frases simples, claras e com ritmo de fala natural.\n\nOBJETIVO FINAL\nCriar confiança e conduzir para o agendamento presencial, fazendo o cliente sentir que está falando com alguém atencioso, preparado, gentil e humano.\n\nPAGAMENTO PIX OFICIAL (OBRIGATORIO)\n- Quando o cliente pedir dados para pagamento de sinal/consulta, informe exatamente:\n  - Chave Pix (CNPJ): 63403831000124\n  - Favorecido: INSTITUTO DE BELEZA EVORA\n  - Instituicao: COOP SICREDI SUDOESTE MT/PA\n- Sempre orientar o cliente a conferir o favorecido antes de pagar.\n- Se o nome do favorecido estiver diferente de INSTITUTO DE BELEZA EVORA, orientar a nao concluir o pagamento e avisar a equipe.\n- Ao enviar a chave, pedir o comprovante para confirmar o agendamento.\n\nRITMO DE CONVERSA PROFISSIONAL\n- Se o cliente estiver objetivo, seja objetivo tambem.\n- Se o cliente estiver inseguro, desacelere e valide antes de perguntar.\n- Use o nome do cliente com naturalidade, sem repetir em excesso.\n- Evite excesso de exclamações. Em geral, no maximo uma quando realmente combinar com o contexto.\n- Evite diminutivos, gírias demais ou intimidade precoce.\n- Quando o cliente fizer duas perguntas juntas, responda primeiro a mais sensível e depois conduza.\n- Se o cliente insistir em valor, nao fique circular demais: explique com clareza o valor da consulta e o motivo da avaliacao individual.\n\nPOLITICA DE EMOJI E REACAO\n- Emojis em texto nao sao proibidos, mas devem ser raros e elegantes.\n- Prefira linguagem humana antes de emoji.\n- Se usar emoji em texto, use no maximo 1 e apenas quando aumentar calor humano sem perder seriedade.\n- Reacoes por emoji sao permitidas somente quando ficarem profissionais e naturais.\n- Reaja apenas em situacoes como: agradecimento do cliente, confirmacao de horario, envio de comprovante, comemoracao leve ou resposta muito positiva.\n- Nunca use reacao em queixa, dor emocional, duvida sobre preco, objecao, medo, irritacao ou primeiro contato.\n- Quando houver reacao, escolha algo discreto e profissional como: \"👍\", \"🙏\", \"❤\", \"✨\".\n- Nao use emojis infantis, ironicos, excessivos ou informais demais."
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3,
       "position": [
-        4848,
-        1424
+        5296,
+        1584
       ],
       "id": "d6835b9a-9164-411d-9742-8331a469051e",
       "name": "Agente IA"
@@ -1663,8 +1497,8 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        4448,
-        1680
+        5232,
+        1808
       ],
       "id": "c9719dff-f816-4020-8fe6-ca5f0a6bd3c0",
       "name": "OpenRouter Chat Model",
@@ -1677,26 +1511,7 @@
     },
     {
       "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
-      "typeVersion": 1,
-      "position": [
-        5152,
-        1888
-      ],
-      "id": "3345ed35-1852-4ef3-afe6-9a68cc563308",
-      "name": "OpenRouter Chat Model1",
-      "credentials": {
-        "openRouterApi": {
-          "id": "litFiZdXeHGuMygQ",
-          "name": "OpenRouter account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "https://www.institutorafaeldias.site/api/conversations/automation",
+        "url": "https://rafael-dias.vercel.app/api/conversations/automation",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -1712,10 +1527,10 @@
       "typeVersion": 4.2,
       "position": [
         976,
-        1232
+        1088
       ],
       "id": "0fd26a1a-6024-4553-a558-ffb8c85ec001",
-      "name": "Consultar Automacao CRM"
+      "name": "Consultar Automacao no CRM"
     },
     {
       "parameters": {
@@ -1746,14 +1561,14 @@
       "typeVersion": 2.2,
       "position": [
         1200,
-        1232
+        1088
       ],
       "id": "72f3453f-4f71-46a4-8b14-a8c11fca1002",
       "name": "CRM em Atendimento Humano?"
     },
     {
       "parameters": {
-        "url": "https://www.institutorafaeldias.site/api/conversations/automation",
+        "url": "https://rafael-dias.vercel.app/api/conversations/automation",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -1768,8 +1583,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6800,
-        1280
+        7712,
+        1136
       ],
       "id": "3c88b4c5-f4ab-4fd7-932d-2f55eec81003",
       "name": "Consultar Automacao Antes de Enviar"
@@ -1802,8 +1617,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        7024,
-        1280
+        7936,
+        1136
       ],
       "id": "e4ac2807-b708-4d12-98ef-d443e7e51004",
       "name": "CRM Permite Envio?"
@@ -1840,7 +1655,7 @@
             },
             {
               "id": "reaction-target-id",
-              "leftValue": "={{ String($('Gatilho').item.json.body?.data?.key?.id || '') }}",
+              "leftValue": "={{ String($('Webhook Entrada WhatsApp').item.json.body?.data?.key?.id || '') }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -1850,7 +1665,7 @@
             },
             {
               "id": "reaction-not-reaction-message",
-              "leftValue": "={{ String($('Gatilho').item.json.body?.data?.messageType || '') }}",
+              "leftValue": "={{ String($('Webhook Entrada WhatsApp').item.json.body?.data?.messageType || '') }}",
               "rightValue": "reactionMessage",
               "operator": {
                 "type": "string",
@@ -1867,14 +1682,14 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        6592,
-        1536
+        7936,
+        1712
       ]
     },
     {
       "parameters": {
         "method": "POST",
-        "url": "https://www.institutorafaeldias.site/api/n8n/outbound",
+        "url": "https://rafael-dias.vercel.app/api/n8n/outbound",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1886,7 +1701,7 @@
         },
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ { \"destination\": (( $('Dados Lead').item.json.Telefone || '' ).toString().replace(/\\D/g, '')), \"type\": \"reaction\", \"source\": \"agent\", \"reaction\": $('Normalizar Saida IA').item.json.output.reacao.emoji, \"targetKey\": { \"remoteJid\": $('Gatilho').item.json.body?.data?.key?.remoteJid, \"fromMe\": false, \"id\": $('Gatilho').item.json.body?.data?.key?.id } } }}",
+        "jsonBody": "={{ { \"destination\": (( $('Dados Lead').item.json.Telefone || '' ).toString().replace(/\\D/g, '')), \"type\": \"reaction\", \"source\": \"agent\", \"reaction\": $('Normalizar Saida IA').item.json.output.reacao.emoji, \"targetKey\": { \"remoteJid\": $('Webhook Entrada WhatsApp').item.json.body?.data?.key?.remoteJid, \"fromMe\": false, \"id\": $('Webhook Entrada WhatsApp').item.json.body?.data?.key?.id } } }}",
         "options": {
           "timeout": 30000
         }
@@ -1894,8 +1709,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        6816,
-        1536
+        8176,
+        1760
       ],
       "id": "enviar-reacao-agent-node",
       "name": "Enviar Reacao",
@@ -1929,8 +1744,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
       "position": [
-        304,
-        944
+        528,
+        1568
       ],
       "id": "crm-outbound-reacao-node",
       "name": "CRM Outbound eh Reacao?"
@@ -1949,8 +1764,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
       "position": [
-        560,
-        880
+        752,
+        1472
       ],
       "id": "enviar-reacao-crm-node",
       "name": "Enviar Reacao CRM",
@@ -1960,30 +1775,294 @@
           "name": "Header RafaelDias"
         }
       }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "manual-event",
+              "leftValue": "={{ String(($json.body || $json).event || '').toLowerCase() }}",
+              "rightValue": "messages.upsert",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "manual-fromme",
+              "leftValue": "={{ Boolean($json.body?.data?.key?.fromMe ?? $json.data?.key?.fromMe ?? false) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "manual-not-backend-source",
+              "leftValue": "={{ ['crm_outbound','human','agent'].includes(String((($json.body || $json).source || '')).toLowerCase()) }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d8cd2ac5-09d7-413f-aa3e-14d933e6d5b2",
+      "name": "Saida Manual WhatsApp?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        304,
+        1856
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "BotEchoMarker",
+        "key": "={{ ((($json.body?.data?.key?.remoteJid || $json.body?.remoteJid || $json.remoteJid || '')).toString().split('@')[0].replace(/\\D/g,'')) }}_last_bot_send",
+        "options": {}
+      },
+      "id": "afd3474d-0b58-42f1-a47a-172ae6ba3482",
+      "name": "Redis Echo Bot",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        528,
+        1856
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0eKSM3DteTOHOFnM",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "echo-marker-exists",
+              "leftValue": "={{ String($json.BotEchoMarker || '').trim() }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "78dea348-dca2-4a98-8857-d2663f3a5e58",
+      "name": "Eh Echo do Bot?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        1856
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ (((($json.raw?.body?.data?.key?.remoteJid) || ($json.body?.data?.key?.remoteJid) || ($json.data?.key?.remoteJid) || '')).replace(/\\D/g, '')) + '_status' }}",
+        "value": "Desativado",
+        "expire": true,
+        "ttl": 21600
+      },
+      "id": "6f799bc9-a45e-409a-8433-1b368713392f",
+      "name": "Pausar Agente Manualmente",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        976,
+        1856
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0eKSM3DteTOHOFnM",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "crm-source-human",
+              "leftValue": "={{ String((($json.body || $json).source || '')).toLowerCase() }}",
+              "rightValue": "human",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "66bd3b4c-f1d0-49a3-82bf-1e7a7cfa1f70",
+      "name": "Outbound Humano CRM?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        1280
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ (($json.telefone || $json.phone || $json.body?.destination || $json.destination || $json.targetKey?.remoteJid || '').toString().split('@')[0].replace(/\\D/g,'')) }}_status",
+        "value": "Desativado",
+        "expire": true,
+        "ttl": 21600
+      },
+      "id": "3bdf3f98-7465-4bc3-870d-ca031253a804",
+      "name": "Pausar Agente por CRM Humano",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        752,
+        1280
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0eKSM3DteTOHOFnM",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ (() => {\n  const original = ($json && typeof $json === 'object') ? $json : {};\n  const output = (original.output && typeof original.output === 'object') ? original.output : {};\n  const ag = (output.agendamento && typeof output.agendamento === 'object') ? output.agendamento : {};\n  const text = String(($('Mensagem').first()?.json?.mensagens) || ($('Webhook Entrada WhatsApp').first()?.json?.body?.data?.message?.conversation) || '').trim();\n  const lead = $('Consultar Automacao no CRM').first()?.json?.lead || {};\n  const raw = $('Webhook Entrada WhatsApp').first()?.json?.body || {};\n  const pushName = raw?.data?.pushName || 'Cliente';\n  const nome = lead.full_name || pushName;\n  const telefone = lead.phone || (raw.sender ? String(raw.sender).replace(/\\D/g, '').slice(0, 13) : '');\n  const tz = 'America/Sao_Paulo';\n  const sourceDate = raw.date_time ? new Date(raw.date_time) : new Date();\n  const pad = (n) => String(n).padStart(2, '0');\n  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(sourceDate);\n  const get = (type) => parts.find((p) => p.type === type)?.value;\n  let year = Number(get('year'));\n  let month = Number(get('month'));\n  let day = Number(get('day'));\n  const lower = text.toLowerCase();\n  let matched = false;\n  if (/amanh[ãa]/i.test(lower)) {\n    const tmp = new Date(Date.UTC(year, month - 1, day));\n    tmp.setUTCDate(tmp.getUTCDate() + 1);\n    year = tmp.getUTCFullYear();\n    month = tmp.getUTCMonth() + 1;\n    day = tmp.getUTCDate();\n    matched = true;\n  }\n  const dm = lower.match(/\\b(\\d{1,2})\\/(\\d{1,2})(?:\\/(\\d{2,4}))?\\b/);\n  if (dm) {\n    day = Number(dm[1]);\n    month = Number(dm[2]);\n    year = dm[3] ? Number(dm[3].length === 2 ? `20${dm[3]}` : dm[3]) : year;\n    matched = true;\n  }\n  const tm = lower.match(/(?:às|as)?\\s*(\\d{1,2})(?::(\\d{2}))?\\s*h?\\b/);\n  const hour = tm ? Number(tm[1]) : null;\n  const minute = tm && tm[2] ? Number(tm[2]) : 0;\n  const hasDateTime = Boolean(hour !== null && (matched || /hoje|amanh[ãa]|\\d{1,2}\\/\\d{1,2}/i.test(lower)));\n  const hasConfirmationSignal = /(comprovante|paguei|pagamento realizado|pix feito|sinal pago|pode confirmar|confirmar meu agendamento|confirmar consulta|confirmar horário)/i.test(lower);\n  const shouldCreate = Boolean(ag.criar_evento || (hasDateTime && hasConfirmationSignal));\n  const startIso = hasDateTime ? `${year}-${pad(month)}-${pad(day)}T${pad(hour)}:${pad(minute)}:00-03:00` : (ag.data_hora_inicio || null);\n  const endHour = hour === null ? null : (hour + 1) % 24;\n  const endIso = hasDateTime ? `${year}-${pad(month)}-${pad(day)}T${pad(endHour)}:${pad(minute)}:00-03:00` : (ag.data_hora_fim || null);\n  return {\n    output: {\n      ...output,\n      agendamento: {\n        ...ag,\n        criar_evento: shouldCreate,\n        data_hora_inicio: startIso,\n        data_hora_fim: endIso,\n        timezone: tz,\n        telefone,\n        nome,\n        resumo: ag.resumo || `Consulta Instituto Rafael Dias - ${nome}`,\n        descricao: ag.descricao || `Origem: WhatsApp\\nTelefone: ${telefone}\\nCliente: ${nome}\\nMensagem: ${text}`,\n        origem_texto: text\n      }\n    }\n  };\n})() }}",
+        "options": {}
+      },
+      "id": "3b93f91c-705b-45b3-b086-cb1bafd42c33",
+      "name": "Preparar Agendamento CRM+Calendar",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5920,
+        1584
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ ({\n  output: {\n    mensagens: [\n      'Perfeito! Seu agendamento foi registrado para horário solicitado. Se precisar, eu também posso te reenviar os detalhes por aqui.'\n    ],\n    reacao: {\n      usar: false,\n      emoji: ''\n    },\n    agendamento: {\n      criar_evento: true,\n      calendar_event_id: $('Criar Evento Google Agenda').first().json.id ?? null,\n      crm_lead_id: $json.id ?? null,\n      html_link: $('Criar Evento Google Agenda').first().json.htmlLink ?? null,\n      data_hora_inicio: $('Criar Evento Google Agenda').first().json.start?.dateTime ?? null,\n      data_hora_fim: $('Criar Evento Google Agenda').first().json.end?.dateTime ?? null\n    }\n  }\n}) }}",
+        "options": {}
+      },
+      "id": "ea60f8b0-a9ff-444d-a5e1-441f136a3c62",
+      "name": "Mensagem Confirmacao Agendamento",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        6816,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "update public.leads\nset calendar_event_id = $1,\n    last_appointment_at = $2,\n    appointment_status = 'scheduled',\n    updated_at = now()\nwhere phone = $3\nreturning id, phone, calendar_event_id, last_appointment_at, appointment_status;",
+        "options": {
+          "queryReplacement": "={{ [$json.id, $json.start.dateTime, $('Preparar Agendamento CRM+Calendar').first().json.output.agendamento.telefone].join(',') }}",
+          "replaceEmptyStrings": false
+        }
+      },
+      "id": "0f7883a8-08e9-4746-9565-dfba04756239",
+      "name": "Atualizar CRM Agendamento",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        6592,
+        1136
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "IGElNLxgO1PdEZgh",
+          "name": "Postgres RafaelDias"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "set",
+        "key": "={{ (($json.telefone || $json.phone || $json.body?.destination || $json.destination || $json.targetKey?.remoteJid || '').toString().split('@')[0].replace(/\\D/g,'')) }}_last_bot_send",
+        "value": "true",
+        "expire": true,
+        "ttl": 30
+      },
+      "id": "marcar-envio-do-bot-uuid",
+      "name": "Marcar Envio do Bot",
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        8460,
+        1568
+      ],
+      "credentials": {
+        "redis": {
+          "id": "0eKSM3DteTOHOFnM",
+          "name": "Redis"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://rafael-dias.vercel.app/api/conversations/automation",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"phone\": \"{{ ($json.body?.data?.key?.remoteJid || $json.body?.remoteJid || $json.remoteJid || '').toString().split('@')[0].replace(/\\\\D/g,'') }}\",\n  \"action\": \"pause\"\n}",
+        "options": {}
+      },
+      "id": "pausar-crm-database-uuid",
+      "name": "Pausar CRM Database",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1200,
+        1856
+      ]
     }
   ],
   "connections": {
-    "Gatilho": {
-      "main": [
-        [
-          {
-            "node": "Parametros do Fluxo",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Normalizar Inbound AI Studio",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "CRM Outbound?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Filtro de Bloqueio": {
       "main": [
         [
@@ -1999,18 +2078,7 @@
       "main": [
         [
           {
-            "node": "Consultar Automacao CRM",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Encontrar Cliente": {
-      "main": [
-        [
-          {
-            "node": "Cliente existe?",
+            "node": "Consultar Automacao no CRM",
             "type": "main",
             "index": 0
           }
@@ -2021,7 +2089,7 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Consolidar Cliente",
             "type": "main",
             "index": 0
           }
@@ -2039,20 +2107,9 @@
       "main": [
         [
           {
-            "node": "Merge",
+            "node": "Consolidar Cliente",
             "type": "main",
             "index": 1
-          }
-        ]
-      ]
-    },
-    "Merge": {
-      "main": [
-        [
-          {
-            "node": "Agente IA",
-            "type": "main",
-            "index": 0
           }
         ]
       ]
@@ -2061,7 +2118,7 @@
       "main": [
         [
           {
-            "node": "Wait1",
+            "node": "Marcar Envio do Bot",
             "type": "main",
             "index": 0
           }
@@ -2378,7 +2435,7 @@
       "main": [
         [
           {
-            "node": "Encontrar Cliente",
+            "node": "Buscar Cliente no CRM",
             "type": "main",
             "index": 0
           }
@@ -2408,17 +2465,6 @@
         [
           {
             "node": "Validar Telefone",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Wait1": {
-      "main": [
-        [
-          {
-            "node": "Loop Over Items",
             "type": "main",
             "index": 0
           }
@@ -2494,61 +2540,6 @@
         ]
       ]
     },
-    "Criar Evento Google Agenda": {
-      "main": [
-        [
-          {
-            "node": "Split Out",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Normalizar Inbound AI Studio": {
-      "main": [
-        [
-          {
-            "node": "Mensagem válida?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Mensagem válida?": {
-      "main": [
-        [
-          {
-            "node": "Enviar p/ AI Studio Webhook",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Indicador Digitando": {
-      "main": [
-        [
-          {
-            "node": "Pausa Humanizada",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Pausa Humanizada": {
-      "main": [
-        [
-          {
-            "node": "Enviar Mensagem",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
     "Validar Telefone": {
       "main": [
         [
@@ -2574,20 +2565,14 @@
             "node": "CRM Outbound eh Reacao?",
             "type": "main",
             "index": 0
-          }
-        ],
-        []
-      ]
-    },
-    "Normalizar Saida IA": {
-      "main": [
-        [
+          },
           {
-            "node": "Criar Agendamento?",
+            "node": "Outbound Humano CRM?",
             "type": "main",
             "index": 0
           }
-        ]
+        ],
+        []
       ]
     },
     "Agente IA": {
@@ -2607,17 +2592,6 @@
           {
             "node": "Agente IA",
             "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Consultar Automacao CRM": {
-      "main": [
-        [
-          {
-            "node": "CRM em Atendimento Humano?",
-            "type": "main",
             "index": 0
           }
         ]
@@ -2663,7 +2637,7 @@
         ],
         [
           {
-            "node": "Indicador Digitando",
+            "node": "Enviar Mensagem",
             "type": "main",
             "index": 0
           }
@@ -2705,20 +2679,233 @@
           }
         ]
       ]
+    },
+    "Saida Manual WhatsApp?": {
+      "main": [
+        [
+          {
+            "node": "Redis Echo Bot",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Redis Echo Bot": {
+      "main": [
+        [
+          {
+            "node": "Eh Echo do Bot?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eh Echo do Bot?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Pausar Agente Manualmente",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Outbound Humano CRM?": {
+      "main": [
+        [
+          {
+            "node": "Pausar Agente por CRM Humano",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Saida IA": {
+      "main": [
+        [
+          {
+            "node": "Preparar Agendamento CRM+Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Agendamento CRM+Calendar": {
+      "main": [
+        [
+          {
+            "node": "Criar Agendamento?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mensagem Confirmacao Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Criar Evento Google Agenda": {
+      "main": [
+        [
+          {
+            "node": "Atualizar CRM Agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Atualizar CRM Agendamento": {
+      "main": [
+        [
+          {
+            "node": "Mensagem Confirmacao Agendamento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalizar Inbound WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Mensagem válida?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Cliente no CRM": {
+      "main": [
+        [
+          {
+            "node": "Cliente existe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidar Cliente": {
+      "main": [
+        [
+          {
+            "node": "Agente IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Espera Antes do Envio": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar Automacao no CRM": {
+      "main": [
+        [
+          {
+            "node": "CRM em Atendimento Humano?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Entrada WhatsApp": {
+      "main": [
+        [
+          {
+            "node": "Parametros do Fluxo",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Normalizar Inbound WhatsApp",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "CRM Outbound?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Saida Manual WhatsApp?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Marcar Envio do Bot": {
+      "main": [
+        [
+          {
+            "node": "Espera Antes do Envio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Enviar Reacao": {
+      "main": [
+        [
+          {
+            "node": "Marcar Envio do Bot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pausar Agente Manualmente": {
+      "main": [
+        [
+          {
+            "node": "Pausar CRM Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "timeSavedMode": "fixed",
-    "timezone": "America/Sao_Paulo",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "timezone": "America/Sao_Paulo"
   },
   "staticData": null,
   "meta": {
-    "templateCredsSetupCompleted": true
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
   },
+  "nodeGroups": [],
   "pinData": {
     "Gatilho": [
       {
@@ -2726,7 +2913,7 @@
           "headers": {
             "host": "n8n-n8n.oh2qeq.easypanel.host",
             "user-agent": "axios/1.13.2",
-            "content-length": "10727",
+            "content-length": "1439",
             "accept": "application/json, text/plain, */*",
             "accept-encoding": "gzip, compress, deflate, br",
             "content-type": "application/json",
@@ -2747,296 +2934,98 @@
                 "remoteJid": "559474001405@s.whatsapp.net",
                 "remoteJidAlt": "559474001405@s.whatsapp.net",
                 "fromMe": false,
-                "id": "3AEAE6E1EC36B8433C53",
+                "id": "3A81932A5EA9B656B237",
                 "participant": "",
                 "addressingMode": "lid"
               },
               "pushName": "Leal",
               "status": "DELIVERY_ACK",
               "message": {
-                "audioMessage": {
-                  "url": "https://mmg.whatsapp.net/v/t62.7117-24/710758887_1613276399749293_1232116742368457535_n.enc?ccb=11-4&oh=01_Q5Aa4gH02hYQlTLBSdmw-X4aNkmYnSBGyXBtJiqiTGvyRT2xHg&oe=6A3FA514&_nc_sid=5e03e0&mms3=true",
-                  "mimetype": "audio/ogg; codecs=opus",
-                  "fileSha256": {
-                    "0": 114,
-                    "1": 189,
-                    "2": 5,
-                    "3": 31,
-                    "4": 110,
-                    "5": 207,
-                    "6": 84,
-                    "7": 25,
-                    "8": 61,
-                    "9": 158,
-                    "10": 158,
-                    "11": 205,
-                    "12": 53,
-                    "13": 149,
-                    "14": 99,
-                    "15": 31,
-                    "16": 241,
-                    "17": 239,
-                    "18": 49,
-                    "19": 191,
-                    "20": 157,
-                    "21": 52,
-                    "22": 60,
-                    "23": 27,
-                    "24": 26,
-                    "25": 203,
-                    "26": 249,
-                    "27": 85,
-                    "28": 181,
-                    "29": 6,
-                    "30": 254,
-                    "31": 107
-                  },
-                  "fileLength": {
-                    "low": 5456,
-                    "high": 0,
-                    "unsigned": true
-                  },
-                  "seconds": 2,
-                  "ptt": true,
-                  "mediaKey": {
-                    "0": 208,
-                    "1": 32,
-                    "2": 197,
-                    "3": 210,
-                    "4": 165,
-                    "5": 25,
-                    "6": 221,
-                    "7": 125,
-                    "8": 253,
-                    "9": 249,
-                    "10": 177,
-                    "11": 21,
-                    "12": 110,
-                    "13": 151,
-                    "14": 148,
-                    "15": 245,
-                    "16": 103,
-                    "17": 91,
-                    "18": 206,
-                    "19": 65,
-                    "20": 19,
-                    "21": 8,
-                    "22": 231,
-                    "23": 26,
-                    "24": 231,
-                    "25": 194,
-                    "26": 254,
-                    "27": 80,
-                    "28": 14,
-                    "29": 250,
-                    "30": 178,
-                    "31": 98
-                  },
-                  "fileEncSha256": {
-                    "0": 80,
-                    "1": 238,
-                    "2": 196,
-                    "3": 137,
-                    "4": 110,
-                    "5": 115,
-                    "6": 19,
-                    "7": 133,
-                    "8": 184,
-                    "9": 153,
-                    "10": 17,
-                    "11": 188,
-                    "12": 2,
-                    "13": 35,
-                    "14": 33,
-                    "15": 92,
-                    "16": 69,
-                    "17": 64,
-                    "18": 92,
-                    "19": 214,
-                    "20": 158,
-                    "21": 58,
-                    "22": 135,
-                    "23": 72,
-                    "24": 135,
-                    "25": 34,
-                    "26": 233,
-                    "27": 29,
-                    "28": 75,
-                    "29": 90,
-                    "30": 114,
-                    "31": 81
-                  },
-                  "directPath": "/v/t62.7117-24/710758887_1613276399749293_1232116742368457535_n.enc?ccb=11-4&oh=01_Q5Aa4gH02hYQlTLBSdmw-X4aNkmYnSBGyXBtJiqiTGvyRT2xHg&oe=6A3FA514&_nc_sid=5e03e0",
-                  "mediaKeyTimestamp": {
-                    "low": 1779977203,
-                    "high": 0,
-                    "unsigned": false
-                  },
-                  "streamingSidecar": {
-                    "0": 129,
-                    "1": 72,
-                    "2": 196,
-                    "3": 189,
-                    "4": 224,
-                    "5": 23,
-                    "6": 73,
-                    "7": 44,
-                    "8": 202,
-                    "9": 243
-                  },
-                  "waveform": {
-                    "0": 0,
-                    "1": 0,
-                    "2": 0,
-                    "3": 0,
-                    "4": 0,
-                    "5": 7,
-                    "6": 15,
-                    "7": 24,
-                    "8": 33,
-                    "9": 37,
-                    "10": 38,
-                    "11": 38,
-                    "12": 39,
-                    "13": 39,
-                    "14": 39,
-                    "15": 38,
-                    "16": 38,
-                    "17": 40,
-                    "18": 51,
-                    "19": 63,
-                    "20": 74,
-                    "21": 86,
-                    "22": 86,
-                    "23": 86,
-                    "24": 86,
-                    "25": 86,
-                    "26": 84,
-                    "27": 81,
-                    "28": 79,
-                    "29": 76,
-                    "30": 73,
-                    "31": 70,
-                    "32": 66,
-                    "33": 63,
-                    "34": 62,
-                    "35": 64,
-                    "36": 67,
-                    "37": 69,
-                    "38": 71,
-                    "39": 69,
-                    "40": 66,
-                    "41": 64,
-                    "42": 62,
-                    "43": 64,
-                    "44": 67,
-                    "45": 70,
-                    "46": 73,
-                    "47": 71,
-                    "48": 69,
-                    "49": 66,
-                    "50": 64,
-                    "51": 56,
-                    "52": 48,
-                    "53": 38,
-                    "54": 28,
-                    "55": 23,
-                    "56": 20,
-                    "57": 18,
-                    "58": 15,
-                    "59": 13,
-                    "60": 10,
-                    "61": 7,
-                    "62": 4,
-                    "63": 2
-                  }
-                },
+                "conversation": "Olá",
                 "messageContextInfo": {
                   "threadId": [],
                   "deviceListMetadata": {
                     "senderKeyIndexes": [],
                     "recipientKeyIndexes": [],
                     "senderKeyHash": {
-                      "0": 52,
-                      "1": 91,
-                      "2": 206,
-                      "3": 190,
-                      "4": 93,
-                      "5": 126,
-                      "6": 206,
-                      "7": 155,
-                      "8": 174,
-                      "9": 160
+                      "0": 12,
+                      "1": 150,
+                      "2": 194,
+                      "3": 103,
+                      "4": 132,
+                      "5": 61,
+                      "6": 200,
+                      "7": 56,
+                      "8": 131,
+                      "9": 66
                     },
                     "senderTimestamp": {
-                      "low": 1779404424,
+                      "low": 1780094337,
                       "high": 0,
                       "unsigned": true
                     },
                     "recipientKeyHash": {
-                      "0": 86,
-                      "1": 196,
-                      "2": 94,
-                      "3": 185,
-                      "4": 247,
-                      "5": 57,
-                      "6": 88,
-                      "7": 10,
-                      "8": 53,
-                      "9": 170
+                      "0": 104,
+                      "1": 153,
+                      "2": 141,
+                      "3": 201,
+                      "4": 73,
+                      "5": 172,
+                      "6": 144,
+                      "7": 133,
+                      "8": 191,
+                      "9": 110
                     },
                     "recipientTimestamp": {
-                      "low": 1779184636,
+                      "low": 1780066369,
                       "high": 0,
                       "unsigned": true
                     }
                   },
                   "deviceListMetadataVersion": 2,
                   "messageSecret": {
-                    "0": 240,
-                    "1": 240,
-                    "2": 250,
-                    "3": 52,
-                    "4": 101,
-                    "5": 179,
-                    "6": 158,
-                    "7": 55,
-                    "8": 34,
-                    "9": 5,
-                    "10": 203,
-                    "11": 150,
-                    "12": 96,
-                    "13": 98,
-                    "14": 1,
-                    "15": 41,
-                    "16": 192,
-                    "17": 152,
-                    "18": 149,
-                    "19": 157,
-                    "20": 76,
-                    "21": 165,
-                    "22": 55,
-                    "23": 27,
-                    "24": 32,
-                    "25": 36,
-                    "26": 156,
-                    "27": 120,
-                    "28": 164,
-                    "29": 52,
-                    "30": 234,
-                    "31": 102
+                    "0": 195,
+                    "1": 174,
+                    "2": 185,
+                    "3": 94,
+                    "4": 53,
+                    "5": 42,
+                    "6": 100,
+                    "7": 245,
+                    "8": 135,
+                    "9": 12,
+                    "10": 31,
+                    "11": 180,
+                    "12": 118,
+                    "13": 222,
+                    "14": 229,
+                    "15": 252,
+                    "16": 32,
+                    "17": 51,
+                    "18": 21,
+                    "19": 1,
+                    "20": 199,
+                    "21": 122,
+                    "22": 100,
+                    "23": 117,
+                    "24": 43,
+                    "25": 118,
+                    "26": 230,
+                    "27": 47,
+                    "28": 53,
+                    "29": 7,
+                    "30": 11,
+                    "31": 244
                   }
-                },
-                "base64": "T2dnUwACAAAAAAAAAABkAAAAAAAAADI5MFABE09wdXNIZWFkAQE4AYA+AAAAAABPZ2dTAAAAAAAAAAAAAGQAAAABAAAAWxHrFgEYT3B1c1RhZ3MIAAAAV2hhdHNBcHAAAAAAT2dnUwAAuFIBAAAAAABkAAAAAgAAAIF1d2wdpf8a/xT/Hv8L/yP/L/8x/xL/Av8r/yf/D/83/z1LhgcIFCgnC+TBNuzFgAfJcifhROpQgAJ/wbZ7bQLOfyxKOmXFa1J9kUCIweE7LBZZabpZujVazHS5irsZUuQC74DqnNZu5xcNuj3ueKKqv9fAiMGRHloN2H1qVD5sDg17r2jTGjtJU81Xfn3aCDCAE+wUWdYOozaAiNdGAhnNT0vY5SDdjJ9/GA7YLy1JhrGAcI0zg+Zvfyu/4OZ9jOzRq7YOHFdLhi0vMS4rgXjPOFk9o2ftdsS39y58zeJC8zKK8pYLxlWj3xvTQpb2APfPONbqFUiBLYKhgipsjd7ix54QF9YZu5xa/BNWDq+x5tbcxZNVPjUmF1uPIBGml+0ZK40t/G2/MKCOJ4C5F8W70D1NEGEuAeXqO0GFAfWPLK6gNnlsIfjz2G88IvuQjbAlRgyzSvRy2KJgjtTuiStf8dzH9jKySn5e4qp/iU2C6MKKL7oDcYsh0KnJAJ7seuvcQjoo6Cq0oI8wGIHc94f+lihFlDQ1iEzJR8j6rA71JVr0toDlOB8KHjaGycwS6+FYXnaPxjfc9ka4nw0SEUQ03LrfXn4uhejYBOVSkit62pg1lJferhXQNRganDrMoEuGLi4rKy6DM8emmkZUoADsG5yWQtrKImnqak1INbdRnmIAIVwvVMpKlG+VEjy8vKej7d9gkLskW+IvzxDWfRZldJqG/lDymREK5FFAEkXtYVCVLJHb9ZKQvSwYSMB2ITS1gIOXCcDqdZAAzhnTSHXMiqskwDQ82DaYj38VgZmqF4N4E4zdauUy9S6+nzCRbQMQO9sRI9fiDUep+h7jA6sKrknsiYOPfsmUlHTDwe8JSJc9e8dQuioQg7KOzQLNaB1iMhURyzi5iI2rbLCb0uiBA2l2rcbH0vBmZrdnckQgeseWjrsUgI+Juc6DG7+em0tiCoLb8I6KWe1Qbt2mOn1q9UJ5cxTB4wpH+IUuiarmSezwS4YvMS8tL44eAMrNWXEQSkdiAElb3NJgaKy+vZxxSDJMzxFvIyA9V5RGFVOH35IXsPZOR6Sgjql0RBTjXQd/pzt3nlv7WHsUS2/+Ugw7yisfyF/nkC9yGaM6Wo0BHwO2JN/bhTLF7I6pdSe/nkon7F+JAOfW3rpxW6RSzkfv/o1MuWLOrseisd0HBcWkwnve766WVQpqjqLkf1oLJGsQX20l36ObgYO6CrowJCcFCbdKEDRtJzRa85ynbRByrPLvKwaGjqnmrDykjJHd4sc02R9ndk5jZB8Z/UhJtjyNkt5dkndVWrSwhsA5Nm0bV/bJV6COqeeWwadoQaHzovoOOGLqYeooKH07h9uo0tkO5FoI5gA5cr/L02C8Z+FgS4YqLSsvKo6cnNDi5GfYWQAkK6DtJjLtcnlwMUPT16XZGLIx0/haGXhnoL4nve97iI5KJB5xzvFR5bEEvqkuWdIQUuiBlSkytuWeZBPt+mntGmXrmb3Syk4h4xikDI6BU0IuD2/8RHU5AkmIjYBKEue8wdfbmyRWk4ihQRv3au9dpzn/9VZafUyOfxn1TPMozlEvVEjVR30Fzqi8ttOVPTYe8Bqt/TlkuI0DLMzEl+MDTkewaYUT0I5KJCPAD0+t4khCR844VJx5tu7CUf34yZc2A+xA2L8I1CwPgYk15eCOiI6SkpExka0X2go8ph5gAcYO8OxZY/00krNjgGUwYvWSVWv5WTzZqiBLhiUsNi8xjh77/URl77MSsgIbCNsICHHjTrqEWBL3A9bMfGwYWsHfYqpVQIKqndWfYJyucSXKgVk7WOaMvlnQePaGed6D6GEvgGv+7kHVsfzPe5PElkDglDcpIfY79Jdyp7WywRuclI8oYvCKAmpA6OtUMbDClHnBVfhC0dA1IpFjQdX0L6F+iF12QzQwhQTOHk+2ipYg97mZpttUblEOTEUWe1gWrwelTB7sWelHsgGlmrZT+RZR9RpIN92209nZcfgQWHf1noMnyp5qdyI70+/iK3BECoo6DgPWdW71M+DvI9B++civcA2j2f2etgS/i+vMHJ9nOiIf8GLfEEwlvueQTEEmUJ0RXvW/usmFywrneCKwwE540dOJHpAo42TdREuGNCw2MzK105yVpmlQ3R1QMbtQCMkx1x8qJMe+WV5tB3xGGvBF5dGy3d4wlZ47gEvyjuOBg73IOgi3sz0nG0gkZQ7nm3HiNgYXUlEo4wdxQcfgmMRNgVMR6aV/wnO1zqA4Qgwsi1yxfq94gS/pVXzkcNQdXX+22/X6Gvx9ja6bmZY64oAdT1bc3ZqDtfOfXfzm4KkX4iguAz7DGiWuWWhUt8hwKwh8o1uGLUWtTWqSJXPbcar1T0eSg9pjpoz/8yV4ehdNqZQ1JvSNe0DBn+WsXEEnlaYHpHiP/RF1MfpIZrP4GgnghQSJ7TFsTfSPkK/7s3CHTshm/0PZlEU1G465tqc1qgoOU42Q70jfWRzs+RAjm2wfRShA6/1FqtgnRiuTuNuAStAsPapRKXhgS4YsJzc6M6UmuO6FS4AaU0QWLuouLnvE1djxzPb1hpoktWh/TtR8MBiMzSQdNq4+Qysuo9K6LfgI0BrrURerhjQ2jzJ9aqoO+59iCsgh0ktx+wM8q6rm4bSApYWlKQY50UbuX5c4hKirTmu/RgUuSKtpneHAyd5JFHAL1Pa2I+YtcAP+ZOIXpTcZ0KENXX+wjanVZ2pr02Kd60A8FYAwSPSPbO9oZMDNKnowLAEljCdS8bhFqRORcMBM5llzaTxLA27DbijqA1cJWCytAidxIDybG12esBrsnLCAg1AScRZSWRJYLjp52mQEM0XbZHNbctU/mhTq0GPaq5K1VpivK8BCVBdH3XIbWkEPSFQ80PfIhGwm2jjCMQPwKFuSYxSdXKiPpqJusgDd8z6beVhc5kuGMDsoLSWwRWaDhghlXZngjhi3YN5uqg5YGBucptogdrbgwCgi6JRSTyf4DwGFNhqOJUb/d2CvlwAmxGEU6BDVYFpW+DYlciZuFbWQ4l/0AhaKE28p4whnz9EBnBD6MwNGSaPVrK839uqwUPFcXCtg3Dij3y0fFsB/IF5EbsjCMRv01Y9k6FK8klllhT39aSn7jyLTfPsS3cCLDUP2NRtRRueWoXbaMk07AZFWt3zGnQ7uDZPlaGJtMbPuOd1e6HQw5VAG14yCs/gILZlvxUWdzqsosNppNF1dbaSCZKrqQKIz9xtrCYOuz+CYgsdROTSkoUFC9sPdHXHCjTYCoCRXkWjRySMO77ZZCMGukYxOaUuGLCYlIy+Cout7TOjj9G177gQJFv8Nx1B3TgBRa+q9xoCl5TWLARVCuEhUepohpvo/oAWpX0HzW/icg9Wfm9JURp8NfY6BjY5P7vBNktFGeyuq6mghucJrBTpgbKUrgUzy9/UBEVBzRnvoeztyhGv+1iBCS39RilQQOtpdUAUHH+BudYfZPhE5XCSVNxFEaU8qN60vWYyImze6OoAuX4XkgThXspv3Y7iPL/6rDnqKu7qGH+tlHqyZmbv+uLkFq9A+es6QumGO+DClsSk91gyOVlOAU3P275Xh0yB79rtS63GLdx+j/G43dKElqIzK4i3mJEpy0MUEJpwJecbtRwrVS4YvLS8wOJMHPi9jbcjRZ6lAedCXVl5OeDaZ856yb2DYVMUp6iyrZJzibyBo5oQ/HLjcYAtAg9U45eQinrKpj/FjxxCNXmUfRNjY3l78oKF6AiwqHQc/os1A1ZyaaAF7OBmMg5lCri01c2Olq76UtKaLkW4mX2IfOP8c2DljfdmOkV2WBXB6yXlMZcrak4JyJkyDiUPP+mPv4fbXCpYITAVa5t5Oc9nPM7jTN1IJZRLXI3f15rtq4NjyeQWjiHIfB8as6Q70O79hDOjXZMEfuAzZ6wpRMIA+mig2SuhQv4hebL6tLtZv7kkUKQ2YlQr5rCZlN0PvQU45pKzZCsRiFN6lHVNdMUbTwcXW9eK2ugY8O4Pz/IwQBn5U4QFCYcMUp9pjHP4dHuQzIEuGMC80Mi2rOVHOAjmvQPwrUaU6OdLmCMMppTRQFAbdI84rzR2LdYAKyPXRJKKrN5NoDTAmBNCph+oMvHinJIVA+Ir+LRdWlyhSeKInh1hMJwZh+czrFO+2/UxD2HR/bmQ2c4ri6KlFLI1t/mdj8V6jiK8onnAazDN2Pzlm0vdOmqwaW5fjJzyOy9dVZ9JxnyEXyjHNCUngo0CmIGp0cHmhRiEKtmy8Ei4T7OF0Zd3JfOkyhYcZw7l0tt7af1kcfilHbwmtPMG0VAK9d6NPbqrtpeRL91tE85Jg6EH9sD4wLyigKu7nF09wJA+3MJ/ttU34/L6K9HjDvL3NTSMWBMK8xdGZAsYxEOAwLcvdV8EUKPGaUUMVKNn7yBynyPlgo/1vg8ZySEuGKygjMTMzJ2aHMJFJUvieQ98Pq5+9OAByTMB9EeLwFccpy0K9FWnqhdCy6wyzkbMgBNkKUz+b1MR/cpbo3yssmd3D3Hg0m4NgeI+5wNG3P33b0FzX04FUgDMwHydfS93/KKufaM6b/UFz0A3+CuFR9D+r7Q13dWwVpbBym7XfTMtV7BEDZ47aN9GXU8HBH6tUZ3niYUu3qNHqzSvMZrpTxZYn/QgU0x1ITnWk2JybEg5rVwl09aqsIrlyizNUhszmJ1TJ/UjIbX6EQvS2/xGU6qJr2m1MOgA2Nk+jTMuhop1XajiA7sCZkuaHkDLko3XL49n49mDSVOOG4nrbZqSzwhO8vSEcXyXmdfZ8O0uGLDA1NjSdzRNNOzQvEp+WanX7jm5w3wjLGIBxuyaa5liEClQUQA0zd0HDjvGokk1KSp7iRSAJZAS2FWekjK6hFOgQfp1VzW7Kb9YYK0cN32a1eJyFM16JEi3UIyVpgbdCJqBknaK+7ANxYG6NfBMkILE7Nw4Sz0gtMAVH2UVS8+F1Mae3H25IZiZIWhWJHy+R8tmPSjMwo8FoyaOT7376Dg6cJhEmL05hBsJtztP40ahSqn937xVrC0/GsaS/iZKf7f7KO8SY9qZh8oZgo5U3Eoz8dFdfqQxsRayPsDfW1EsnfI+ebzNuVf4rtr/GlK6j/3vR/LmHqSASjIQOEwsoMJ/B+NwyxakcTLJ2/4bS25HXjM/6sw4fbKdZucz3UXxDSIi1gyisR6P6b5tPM4Nj/ilAYOBLhi4zNS43nrzYiWDBlUwIyrbUnlCau2z0Ka3BQhr5Fmv7lrsreQoxRN8gKHr1RmjBXs+xgJ7hTFEyLN7AbMqhtv5kYpLhguSVj5b7FGg6LcIhtMKTmnU33mYQB0Bm5FKUTU8/BSTaUKA0uj81OGH+1Zki8sX/bCxrGAZTbPa1yswT2j0OyoceMDB+GidGLUOsVHAbXp7z0+9B28JAowpbcT1H0+xB4/M+dc/gi4pgWTJoszKkVMWGFd3pz+iVdKGhiE8FmNKCYxx+AaN7aQCIGkzbIEU7ns8BhV2UmKawa7QB0CBwGX90RQtb038sp2tfKn98Bt1KQjizv/daX0y1uSq+EYf2iCB4gR3POtzH0znQnF5eLmSghCgwYE1gLEMsZDDxnQvmpm3tTp7uWrng9B7z+CyXj70+SzHMT2dnUwAAOMMBAAAAAABkAAAAAwAAADOTSLUF0+Tr2cBLhioiHyAdi8kbaQuHV2jEE3eNoIxDDoCsyokRGQae6ELieupCFfLmLki+Yx0LCFOANwfMqvfNZbSU4+o2VMYiTryNz+tP1ehiylcUalkRje3xpjR9DlFpCqfeD45XbfTQqDNk82ChbY/cO5y+pUWkB+wyfetgJKPb0QbQ6eGtT9RFSwjRRCzSoqh0Rz5kvMXHUC8FN0Drh47iOvHSp4TQKxYX+4FERGquD597EHk8LW1Jbj6blLflInha2qLNGGfW6WCkeB1Twmwy3ff4vpDS+NhaS4YcICUzJi1uWEdywEtriiqAMFxd8P8XBKlbfkK+UwIWPGAs2DAhipV0Ylcy7MXr0Sy9lPanxjd9U1WOWqlY6sXIwCuFpFKqCJjFDBiNVsRaWlBjWJAn1f+m3CGxnU8K00DjFfT0aB2A0EaATE6xrze/EXJ3fm0At18xrlsFkT3B8N1PY++hJB7GbEbkafdCas7XxOA5fUt2eGCMQHYNrZMGNbz+pIplpETG7FzZ64cYmWgtKtYm/rEARICyBLyJwzB71iAU9rYONyfTBuUOeqAU13u18myoMu9s5RBIopuVkzKAS4YpIyckKCvPQLzS0Yk2cA6lLxWIKdJCfvUBKxtkibul4aaLpY6bsep3mNWG8aygLUAlkhWM3666Hp7DDM3WoJpVBGEA+uzB056B3D5klCGuyaYrhZaXqQlXpIUNn32o9FtAiIFyuiC8TG9lMDzPA5iyKRedtBu9bMArhjCio9rtvNpmqo1PsG02LhXxH13dR6cTA+9dMMFQfZPJ70ArhablU5CX9ctBNqbiwYTEeg0okj/gN3pJhgvJY4SEODgOXKy3qq5AK4WWf+7hAHApvMCn777B7YrXbwVIsaaVPN1X8Xo7vJPY+zrff0uGIiUnIiErhjFKxV+V8fgFNF39RTjXXeGHDodE/n0jIGDyYuZeS5SgK4WYXJgEQ6+uTtMXbz/LG94yfpGV6vNq2xulFtNyWtk+PbsGVCuFmGGV+X+IZCMvhkGL+57f9p/cjsd/kFiEEjtO4oUho4U2v091gC1WQItdt1XoUGPHXME1Hrw+NK9fP24rMkHhGs1h9NAF74AEZqMShFEUZUv1hp9u/ax92MdZsv81bM8J97i8MsGhdRQrhZogwI7nXl2NZnBZIVqpRrAg8YmQk70I35iSSK7McbBLhigAJyQkK4WZpPSVypEosYuKUYWcnbTeHRqcnkeE9F2DkzUVd5gEZB4vJ+G1yID2WKcsBs9vV+ASNYreUY8VdRPFj7sPWqTSHwtDomXQgwvvAwDURIMWgQRbg9Or096pGA3MwxWJnqxR6KzJ1zgxz73/Xa1otMFCwIFf2ifF5OByJe8dOe48RY2OAfclLfbSa4sBKf7sOE+SL2vFQIjNo9DZUOxvU4K19eTBXlAzt3nCo8jje1KqqxrLZ0oJTrU="
+                }
               },
-              "contextInfo": null,
-              "messageType": "audioMessage",
-              "messageTimestamp": 1779977207,
+              "messageType": "conversation",
+              "messageTimestamp": 1780488077,
               "instanceId": "62cd30c4-94dc-4c42-a1dc-cde422e95998",
               "source": "ios"
             },
             "destination": "https://n8n-n8n.oh2qeq.easypanel.host/webhook/RafaelDias",
-            "date_time": "2026-05-28T11:06:48.017Z",
+            "date_time": "2026-06-03T09:01:17.733Z",
             "sender": "559491491068@s.whatsapp.net",
             "server_url": "https://n8n-evolution-api.oh2qeq.easypanel.host",
             "apikey": "73470F630CB3-4DFE-A761-68E36BEF3259"
@@ -3050,10 +3039,11 @@
       }
     ]
   },
-  "versionId": "a59ca2f3-4d58-4d40-86b9-7b6397a6dbae",
+  "versionId": "a5a6d526-942b-4182-ab36-71d1e851139f",
   "activeVersionId": null,
-  "versionCounter": 219,
+  "versionCounter": 293,
   "triggerCount": 1,
+  "sourceWorkflowId": null,
   "shared": [
     {
       "updatedAt": "2026-05-18T03:17:13.466Z",
@@ -3069,6 +3059,7 @@
         "type": "personal",
         "icon": null,
         "description": null,
+        "customTelemetryTags": [],
         "creatorId": "6bd22bcd-a4b8-44df-88bf-0b064114cdd4"
       }
     }

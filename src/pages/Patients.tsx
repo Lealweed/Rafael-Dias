@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall } from "lucide-react";
+import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall, ShieldAlert, CheckSquare, Square } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useNavigate } from "react-router-dom";
 
-export default function Leads() {
-  const [leads, setLeads] = useState<any[]>([]);
+export default function Patients() {
+  const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const supabase = useMemo(() => createClient(), []);
 
   // Slide-over Details Drawer
-  const [selectedLeadForDetails, setSelectedLeadForDetails] = useState<any | null>(null);
+  const [selectedPatientForDetails, setSelectedPatientForDetails] = useState<any | null>(null);
   const [detailTab, setDetailTab] = useState("prontuario");
   
   // Prontuário states
@@ -40,109 +40,54 @@ export default function Leads() {
   const [notifMsg, setNotifMsg] = useState("");
   const [sendingNotif, setSendingNotif] = useState(false);
 
-  // Lead/Patient Registration Modal States
+  // Registration Modal States
   const [createModalOpen, setCreateModalOpen] = useState(false);
-  const [newLeadName, setNewLeadName] = useState("");
-  const [newLeadPhone, setNewLeadPhone] = useState("");
-  const [newLeadInterest, setNewLeadInterest] = useState("");
-  const [newLeadTemp, setNewLeadTemp] = useState("cold");
-  const [newLeadStatus, setNewLeadStatus] = useState("novo");
-  const [creatingLead, setCreatingLead] = useState(false);
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const q = params.get("search");
-    if (q) setSearchTerm(q);
+  const [newPatientName, setNewPatientName] = useState("");
+  const [newPatientPhone, setNewPatientPhone] = useState("");
+  const [newPatientPassword, setNewPatientPassword] = useState("");
+  const [newPatientInterest, setNewPatientInterest] = useState("");
+  const [newPatientAllergies, setNewPatientAllergies] = useState("");
+  const [newPatientActiveAccess, setNewPatientActiveAccess] = useState(true);
+  const [newPatientWhatsappReminders, setNewPatientWhatsappReminders] = useState(true);
+  const [newPatientIsVip, setNewPatientIsVip] = useState(false);
+  const [creatingPatient, setCreatingPatient] = useState(false);
 
-    const action = params.get("action");
-    if (action === "new") {
-      setCreateModalOpen(true);
-      // Limpa a URL para não reabrir o modal em caso de refresh
-      window.history.replaceState({}, '', window.location.pathname + (q ? `?search=${q}` : ''));
-    }
-  }, []);
+  // Fetch only Patients (leads with portal password or active configs)
+  const fetchPatients = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('leads')
+      .select('*')
+      .not('portal_password', 'is', null);
 
-  // Function to register a new lead/patient
-  const handleCreateLead = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newLeadName.trim() || !newLeadPhone.trim()) {
-      alert("Por favor, preencha o nome e o telefone.");
-      return;
+    if (error) {
+      console.error('Erro ao buscar pacientes:', error);
+      setPatients([]);
+    } else if (data) {
+      const sorted = [...data].sort((a: any, b: any) => {
+        const da = new Date(a.created_at || a.updated_at || 0).getTime();
+        const db = new Date(b.created_at || b.updated_at || 0).getTime();
+        return db - da;
+      });
+      setPatients(sorted);
     }
-    setCreatingLead(true);
-    try {
-      const cleanPhone = newLeadPhone.replace(/\D/g, "");
-      const { data, error } = await supabase
-        .from("leads")
-        .insert({
-          full_name: newLeadName.trim(),
-          phone: cleanPhone,
-          interest: newLeadInterest.trim() || "Avaliação",
-          temperature: newLeadTemp,
-          conversation_status: newLeadStatus,
-          origin: "Cadastro Interno",
-          last_interaction_at: new Date().toISOString()
-        })
-        .select("*")
-        .single();
-
-      if (error) {
-        alert("Erro ao cadastrar paciente: " + error.message);
-      } else {
-        setLeads([data, ...leads]);
-        setNewLeadName("");
-        setNewLeadPhone("");
-        setNewLeadInterest("");
-        setCreateModalOpen(false);
-        alert("Paciente cadastrado com sucesso! Já pode acessar o portal com o telefone informado.");
-      }
-    } catch (err) {
-      alert("Erro ao cadastrar.");
-    } finally {
-      setCreatingLead(false);
-    }
+    setLoading(false);
   };
 
   useEffect(() => {
-    async function fetchLeads() {
-      let { data, error } = await supabase
-        .from('leads')
-        .select('*');
-
-      if (error) {
-        console.warn('Falha ao buscar leads em public.leads, tentando Usuarios:', error.message);
-        const legacy = await supabase
-          .from('Usuarios')
-          .select('*');
-        data = legacy.data;
-        error = legacy.error;
-      }
-
-      if (error) {
-        console.error('Erro ao buscar leads (leads/Usuarios):', error);
-        setLeads([]);
-      } else if (data) {
-        const sorted = [...data].sort((a: any, b: any) => {
-          const da = new Date(a.created_at || a.updated_at || 0).getTime();
-          const db = new Date(b.created_at || b.updated_at || 0).getTime();
-          return db - da;
-        });
-        setLeads(sorted);
-      }
-      setLoading(false);
-    }
-    fetchLeads();
+    fetchPatients();
   }, [supabase]);
 
   // Load patient clinical and financial data when selected
   useEffect(() => {
-    if (!selectedLeadForDetails) return;
+    if (!selectedPatientForDetails) return;
     
-    async function loadLeadDetails() {
+    async function loadPatientDetails() {
       // 1. Fetch clinical record
       const { data: rec } = await supabase
         .from('patient_records')
         .select('*')
-        .eq('lead_id', selectedLeadForDetails.id)
+        .eq('lead_id', selectedPatientForDetails.id)
         .maybeSingle();
 
       if (rec) {
@@ -161,27 +106,26 @@ export default function Leads() {
       const { data: fin } = await supabase
         .from('patient_financials')
         .select('*')
-        .eq('lead_id', selectedLeadForDetails.id);
+        .eq('lead_id', selectedPatientForDetails.id);
       setFinancials(fin || []);
     }
     
-    loadLeadDetails();
-  }, [selectedLeadForDetails, supabase]);
+    loadPatientDetails();
+  }, [selectedPatientForDetails, supabase]);
 
   // Save clinical records
   const handleSaveRecord = async () => {
-    if (!selectedLeadForDetails) return;
+    if (!selectedPatientForDetails) return;
     setSavingRecord(true);
     try {
-      // Check if record exists
       const { data: existing } = await supabase
         .from('patient_records')
         .select('id')
-        .eq('lead_id', selectedLeadForDetails.id)
+        .eq('lead_id', selectedPatientForDetails.id)
         .maybeSingle();
 
       const payload = {
-        lead_id: selectedLeadForDetails.id,
+        lead_id: selectedPatientForDetails.id,
         evolution_notes: evolutionNotes,
         post_recommendations: postRecommendations,
         facial_mapping: facialMapping,
@@ -215,7 +159,6 @@ export default function Leads() {
     }
   };
 
-  // Add Photo URL
   const handleAddPhoto = () => {
     if (newPhotoUrl.trim()) {
       setPhotos([...photos, newPhotoUrl.trim()]);
@@ -223,14 +166,12 @@ export default function Leads() {
     }
   };
 
-  // Remove Photo
   const handleRemovePhoto = (idx: number) => {
     setPhotos(photos.filter((_, i) => i !== idx));
   };
 
-  // Create Contract and Installments
   const handleCreateContract = async () => {
-    if (!selectedLeadForDetails || !newContractDesc.trim() || !newContractVal) return;
+    if (!selectedPatientForDetails || !newContractDesc.trim() || !newContractVal) return;
     setSavingFinance(true);
     try {
       const val = parseFloat(newContractVal);
@@ -253,7 +194,7 @@ export default function Leads() {
       const { data, error } = await supabase
         .from('patient_financials')
         .insert({
-          lead_id: selectedLeadForDetails.id,
+          lead_id: selectedPatientForDetails.id,
           description: newContractDesc,
           total_value: val,
           payment_method: newContractMethod,
@@ -278,7 +219,6 @@ export default function Leads() {
     }
   };
 
-  // Update Installment Payment Status (Manual Baixa)
   const handleToggleInstallmentStatus = async (contractId: string, installmentIndex: number) => {
     const contract = financials.find(f => f.id === contractId);
     if (!contract) return;
@@ -299,11 +239,9 @@ export default function Leads() {
         prev.map(f => f.id === contractId ? { ...f, installments: updatedInstallments } : f)
       );
       
-      // Auto-trigger WhatsApp notification check if paid
       if (updatedInstallments[installmentIndex].status === 'pago') {
-        // Mocking/sending alert to recipient
         await supabase.from('notifications').insert({
-          recipient_id: selectedLeadForDetails.id,
+          recipient_id: selectedPatientForDetails.id,
           title: "Confirmação de Pagamento",
           message: `Identificamos a quitação da sua ${installmentIndex + 1}ª parcela referente ao contrato "${contract.description}". Obrigado!`
         });
@@ -311,15 +249,14 @@ export default function Leads() {
     }
   };
 
-  // Send Portal Notification
   const handleSendNotification = async () => {
-    if (!selectedLeadForDetails || !notifTitle.trim() || !notifMsg.trim()) return;
+    if (!selectedPatientForDetails || !notifTitle.trim() || !notifMsg.trim()) return;
     setSendingNotif(true);
     try {
       const { error } = await supabase
         .from('notifications')
         .insert({
-          recipient_id: selectedLeadForDetails.id,
+          recipient_id: selectedPatientForDetails.id,
           title: notifTitle.trim(),
           message: notifMsg.trim(),
         });
@@ -338,92 +275,70 @@ export default function Leads() {
     }
   };
 
-  const filteredLeads = useMemo(() => {
+  // Register New Patient with Password & Checklist options
+  const handleRegisterPatient = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newPatientName.trim() || !newPatientPhone.trim()) {
+      alert("Por favor, preencha o nome e o telefone.");
+      return;
+    }
+    if (newPatientPassword.length < 4 || newPatientPassword.length > 6) {
+      alert("A senha de acesso ao portal deve ter entre 4 e 6 dígitos.");
+      return;
+    }
+
+    setCreatingPatient(true);
+    try {
+      const cleanPhone = newPatientPhone.replace(/\D/g, "");
+      const { data, error } = await supabase
+        .from("leads")
+        .insert({
+          full_name: newPatientName.trim(),
+          phone: cleanPhone,
+          interest: newPatientInterest.trim() || "Tratamento Estético",
+          portal_password: newPatientPassword,
+          portal_access_active: newPatientActiveAccess,
+          whatsapp_reminders: newPatientWhatsappReminders,
+          is_vip: newPatientIsVip,
+          allergies_restrictions: newPatientAllergies.trim() || null,
+          origin: "Cadastro Manual",
+          conversation_status: "agendado",
+          last_interaction_at: new Date().toISOString()
+        })
+        .select("*")
+        .single();
+
+      if (error) {
+        alert("Erro ao cadastrar paciente: " + error.message);
+      } else {
+        setPatients([data, ...patients]);
+        setNewPatientName("");
+        setNewPatientPhone("");
+        setNewPatientPassword("");
+        setNewPatientInterest("");
+        setNewPatientAllergies("");
+        setNewPatientActiveAccess(true);
+        setNewPatientWhatsappReminders(true);
+        setNewPatientIsVip(false);
+        setCreateModalOpen(false);
+        alert("Paciente cadastrado com sucesso! Já pode acessar o portal com o telefone e a senha de 6 dígitos.");
+      }
+    } catch (err) {
+      alert("Erro ao cadastrar.");
+    } finally {
+      setCreatingPatient(false);
+    }
+  };
+
+  const filteredPatients = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
-    if (!term) return leads;
-    return leads.filter((lead: any) => {
-      const name = String(lead.full_name || lead.nome || "").toLowerCase();
-      const phone = String(lead.phone || lead.telefone || "").toLowerCase();
-      const origin = String(lead.origin || lead.origem || "").toLowerCase();
-      const interest = String(lead.interest || lead.interesse || "").toLowerCase();
-      return name.includes(term) || phone.includes(term) || origin.includes(term) || interest.includes(term);
+    if (!term) return patients;
+    return patients.filter((patient: any) => {
+      const name = String(patient.full_name || "").toLowerCase();
+      const phone = String(patient.phone || "").toLowerCase();
+      return name.includes(term) || phone.includes(term);
     });
-  }, [leads, searchTerm]);
-
-  const getTempBadge = (temp: string) => {
-    switch(temp?.toLowerCase()) {
-      case "hot":
-      case "quente": 
-        return <span className="rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[8px] font-bold text-orange-400 uppercase tracking-wide">Quente</span>;
-      case "warm":
-      case "morno":
-        return <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[8px] font-bold text-white/60 uppercase tracking-wide">Morno</span>;
-      default: 
-        return <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[8px] font-bold text-blue-400 uppercase tracking-wide">Frio</span>;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch ((status || "novo").toLowerCase()) {
-      case "em_atendimento":
-        return <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[8px] font-bold text-amber-400 uppercase tracking-wide">Em Atendimento</span>;
-      case "aguardando_cliente":
-        return <span className="rounded-full border border-sky-500/20 bg-sky-500/10 px-2 py-0.5 text-[8px] font-bold text-sky-400 uppercase tracking-wide">Aguardando</span>;
-      case "agendado":
-        return <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold text-emerald-400 uppercase tracking-wide">Agendado</span>;
-      case "em_followup":
-        return <span className="rounded-full border border-violet-500/20 bg-violet-500/10 px-2 py-0.5 text-[8px] font-bold text-violet-400 uppercase tracking-wide">Follow-up</span>;
-      case "encerrado":
-        return <span className="rounded-full border border-white/5 bg-white/5 px-2 py-0.5 text-[8px] font-bold text-white/30 uppercase tracking-wide">Encerrado</span>;
-      default:
-        return <span className="rounded-full border border-blue-500/20 bg-blue-500/10 px-2 py-0.5 text-[8px] font-bold text-blue-400 uppercase tracking-wide">Novo</span>;
-    }
-  };
-
-  const getAppointmentBadge = (status: string) => {
-    switch ((status || "scheduled").toLowerCase()) {
-      case "pending_confirmation":
-        return <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[8px] font-bold text-amber-400 uppercase tracking-wide">Aguardando</span>;
-      case "confirmed":
-        return <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-2 py-0.5 text-[8px] font-bold text-teal-400 uppercase tracking-wide">Confirmada</span>;
-      case "completed":
-        return <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold text-emerald-400 uppercase tracking-wide">Realizada</span>;
-      case "no_show":
-        return <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[8px] font-bold text-red-400 uppercase tracking-wide">Faltou</span>;
-      case "canceled":
-        return <span className="rounded-full border border-white/5 bg-white/5 px-2 py-0.5 text-[8px] font-bold text-white/40 uppercase tracking-wide">Cancelada</span>;
-      case "rescheduled":
-        return <span className="rounded-full border border-orange-500/20 bg-orange-500/10 px-2 py-0.5 text-[8px] font-bold text-orange-400 uppercase tracking-wide">Remarcado</span>;
-      default:
-        return <span className="rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 text-[8px] font-bold text-emerald-400 uppercase tracking-wide">Agendado</span>;
-    }
-  };
-
-  const formatTimeAgo = (dateStr: string) => {
-    if (!dateStr) return "-";
-    const date = new Date(dateStr);
-    const now = new Date();
-    const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHrs = Math.floor(diffMins / 60);
-    const diffDays = Math.floor(diffHrs / 24);
-    
-    if (diffDays > 0) return `${diffDays} dias`;
-    if (diffHrs > 0) return `${diffHrs} horas`;
-    return `${diffMins} min`;
-  };
-
-  const formatDateTime = (dateStr?: string | null) => {
-    if (!dateStr) return "";
-    const date = new Date(dateStr);
-    if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleString("pt-BR", {
-      day: "2-digit",
-      month: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  }, [patients, searchTerm]);
 
   return (
     <div className="flex h-full w-full space-y-6 relative overflow-hidden">
@@ -435,10 +350,10 @@ export default function Leads() {
           <div>
             <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
               <Sparkles className="h-3 w-3" />
-              <span>Base de Leads</span>
+              <span>Portal de Clientes</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Gestão de Leads</h1>
-            <p className="text-xs text-white/40 font-light mt-1">Base de contatos, qualificação e funil de atendimento.</p>
+            <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Pacientes do Portal</h1>
+            <p className="text-xs text-white/40 font-light mt-1">Gerenciamento de credenciais de acesso, prontuários e finanças dos clientes.</p>
           </div>
           
           <button 
@@ -446,13 +361,12 @@ export default function Leads() {
             className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-2xl hover:opacity-90 shadow-md transition-opacity"
           >
             <Plus className="w-4 h-4" />
-            Novo Paciente
+            Cadastrar Paciente
           </button>
         </div>
 
         {/* Main Table Area */}
         <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-white/5 bg-[#0B0D12]/60 backdrop-blur-3xl shadow-2xl">
-          
           {/* Toolbar */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/5 px-8 py-6 gap-6 bg-white/[0.01]">
             <div className="flex flex-wrap items-center gap-4">
@@ -462,89 +376,75 @@ export default function Leads() {
                   type="text" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Buscar por nome, telefone ou interesse..." 
+                  placeholder="Buscar paciente por nome ou telefone..." 
                   className="bg-transparent outline-none w-full text-white placeholder:text-white/20 font-light tracking-wide" 
                 />
               </div>
-              <button className="flex items-center gap-2 px-5 py-2.5 border border-white/10 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] text-white/40 bg-white/5 hover:bg-white/10 hover:text-white transition-all shadow-sm">
-                <Filter className="w-3.5 h-3.5" /> Filtrar Base
-              </button>
             </div>
             <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
-              Total: <span className="text-[#E5C38C] font-mono">{filteredLeads.length}</span> registros
+              Total: <span className="text-[#E5C38C] font-mono">{filteredPatients.length}</span> ativos
             </div>
           </div>
 
-          {/* Table Container */}
+          {/* Table */}
           <div className="flex-1 overflow-auto">
             <table className="w-full text-left border-collapse">
               <thead className="bg-[#0E1118]/90 text-[9px] uppercase tracking-[0.3em] text-white/30 sticky top-0 border-b border-white/5 z-10 backdrop-blur-md">
                 <tr>
                   <th className="px-8 py-5 font-bold">Paciente / Identidade</th>
-                  <th className="px-8 py-5 font-bold">Interesse Clínico</th>
-                  <th className="px-8 py-5 font-bold">Status CRM</th>
-                  <th className="px-8 py-5 font-bold">Engajamento</th>
-                  <th className="px-8 py-5 font-bold">Interação</th>
-                  <th className="px-8 py-5 font-bold">Gestão de Agenda</th>
+                  <th className="px-8 py-5 font-bold">Credencial</th>
+                  <th className="px-8 py-5 font-bold">Status Acesso</th>
+                  <th className="px-8 py-5 font-bold">Lembretes WhatsApp</th>
+                  <th className="px-8 py-5 font-bold">Categoria</th>
                   <th className="px-8 py-5 font-bold text-right">Ações de Controle</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/5 text-[11px] text-white/60">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs animate-pulse">Sincronizando Base de Dados...</td>
+                    <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs animate-pulse">Sincronizando Base de Pacientes...</td>
                   </tr>
-                ) : filteredLeads.length === 0 ? (
+                ) : filteredPatients.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs">Nenhum registro localizado</td>
+                    <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs">Nenhum paciente cadastrado</td>
                   </tr>
-                ) : filteredLeads.map((lead) => (
-                  <tr key={lead.id} className="hover:bg-white/[0.02] transition-all group border-l-2 border-transparent hover:border-[#D4AF37]">
+                ) : filteredPatients.map((patient) => (
+                  <tr key={patient.id} className="hover:bg-white/[0.02] transition-all group border-l-2 border-transparent hover:border-[#D4AF37]">
                     <td className="px-8 py-5">
-                      <div className="font-serif font-bold text-white text-[15px] tracking-tight">{lead.full_name || lead.nome || lead.phone || lead.telefone}</div>
-                      <div className="text-[10px] text-white/20 mt-1 font-mono tracking-widest uppercase">{lead.phone || lead.telefone} • {lead.origin || lead.origem || 'WhatsApp'}</div>
+                      <div className="font-serif font-bold text-white text-[15px] tracking-tight">{patient.full_name || patient.nome}</div>
+                      <div className="text-[10px] text-white/20 mt-1 font-mono tracking-widest uppercase">{patient.phone || patient.telefone}</div>
                     </td>
                     <td className="px-8 py-5">
-                      <span className="px-3 py-1 rounded-lg bg-white/5 border border-white/5 text-white/40 font-medium tracking-wide">{lead.interest || lead.interesse || 'Pendente'}</span>
+                      <span className="px-3 py-1 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#E5C38C] font-bold font-mono tracking-widest">{patient.portal_password || "Sem senha"}</span>
                     </td>
                     <td className="px-8 py-5">
-                      {getStatusBadge(lead.conversation_status)}
-                    </td>
-                    <td className="px-8 py-5">
-                      {getTempBadge(lead.temperature || lead.temperatura)}
-                    </td>
-                    <td className="px-8 py-5 text-white/30 font-mono text-[10px] uppercase tracking-tighter">
-                      há {formatTimeAgo(lead.last_interaction_at || lead.ultima_interacao_em || lead.updated_at || lead.created_at)}
-                    </td>
-                    <td className="px-8 py-5">
-                      {lead.calendar_event_id ? (
-                        <div className="flex flex-col gap-2 items-start">
-                          {getAppointmentBadge(lead.appointment_status)}
-                          <span className="text-[9px] text-[#D4AF37] font-mono tracking-widest font-bold uppercase">{formatDateTime(lead.last_appointment_at)}</span>
-                        </div>
+                      {patient.portal_access_active ? (
+                        <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[8px] font-bold text-teal-400 uppercase tracking-widest">Ativo</span>
                       ) : (
-                        <span className="text-white/10 uppercase tracking-widest text-[9px] font-bold">Sem consulta</span>
+                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[8px] font-bold text-red-400 uppercase tracking-widest">Bloqueado</span>
+                      )}
+                    </td>
+                    <td className="px-8 py-5">
+                      {patient.whatsapp_reminders ? (
+                        <span className="text-emerald-400 font-bold font-mono tracking-widest text-[10px]">ATIVO</span>
+                      ) : (
+                        <span className="text-white/20 font-bold font-mono tracking-widest text-[10px]">DESATIVADO</span>
+                      )}
+                    </td>
+                    <td className="px-8 py-5">
+                      {patient.is_vip ? (
+                        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[8px] font-bold text-[#E5C38C] uppercase tracking-widest shadow-gold">VIP</span>
+                      ) : (
+                        <span className="text-white/30 uppercase tracking-widest text-[9px] font-bold">Padrão</span>
                       )}
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-3 opacity-40 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-3">
                          <button
-                           onClick={() => navigate(`/conversations?leadId=${encodeURIComponent(lead.id)}`)}
-                           className="px-3 py-1.5 rounded-xl border border-white/10 bg-white/5 text-[9px] font-bold text-white uppercase tracking-widest hover:bg-white/10 transition-all"
-                         >
-                           Chat
-                         </button>
-                         <button
-                           onClick={() => navigate(`/calendar?leadId=${encodeURIComponent(lead.id)}`)}
-                           className="px-3 py-1.5 rounded-xl border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-bold text-emerald-400 uppercase tracking-widest hover:bg-emerald-500/20 transition-all"
-                         >
-                           Agenda
-                         </button>
-                         <button
-                           onClick={() => setSelectedLeadForDetails(lead)}
+                           onClick={() => setSelectedPatientForDetails(patient)}
                            className="px-4 py-1.5 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[9px] font-bold text-[#E5C38C] uppercase tracking-widest hover:bg-[#D4AF37]/30 transition-all shadow-gold"
                          >
-                           Ficha
+                           Ficha Clínica & Finanças
                          </button>
                       </div>
                     </td>
@@ -556,8 +456,8 @@ export default function Leads() {
         </div>
       </div>
 
-      {/* DETALHES DRAWER (SLIDE-OVER PANEL) */}
-      {selectedLeadForDetails && (
+      {/* DETALHES DRAWER */}
+      {selectedPatientForDetails && (
         <div className="absolute inset-0 bg-black/60 backdrop-blur-sm z-50 flex justify-end">
           <div className="w-full max-w-2xl bg-[#0E1118] border-l border-white/10 h-full flex flex-col justify-between shadow-2xl relative animate-slide-in">
             
@@ -565,15 +465,15 @@ export default function Leads() {
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#07090E]/60">
               <div className="flex items-center gap-3">
                 <div className="h-10 w-10 rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-base flex items-center justify-center">
-                  {String(selectedLeadForDetails.full_name || selectedLeadForDetails.nome || "P").charAt(0).toUpperCase()}
+                  {String(selectedPatientForDetails.full_name || "P").charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white font-serif">{selectedLeadForDetails.full_name || selectedLeadForDetails.nome}</h3>
-                  <span className="text-[10px] text-white/40 font-mono">{selectedLeadForDetails.phone || selectedLeadForDetails.telefone}</span>
+                  <h3 className="text-base font-bold text-white font-serif">{selectedPatientForDetails.full_name}</h3>
+                  <span className="text-[10px] text-white/40 font-mono">{selectedPatientForDetails.phone}</span>
                 </div>
               </div>
               <button 
-                onClick={() => setSelectedLeadForDetails(null)}
+                onClick={() => setSelectedPatientForDetails(null)}
                 className="p-2 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-all"
               >
                 <X className="h-5 w-5" />
@@ -645,7 +545,7 @@ export default function Leads() {
                     />
                   </div>
 
-                  {/* Facial Mapping Annotations */}
+                  {/* Facial Mapping */}
                   <div className="space-y-3">
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40">Mapeamento Facial / Corporal</label>
                     <div className="grid grid-cols-2 gap-3">
@@ -692,7 +592,7 @@ export default function Leads() {
                     </div>
                   </div>
 
-                  {/* Before / After Photos Simulator */}
+                  {/* Before / After Photos */}
                   <div className="space-y-3">
                     <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40">Imagens de Evolução (Antes/Depois)</label>
                     <div className="flex gap-2">
@@ -701,7 +601,7 @@ export default function Leads() {
                         value={newPhotoUrl}
                         onChange={(e) => setNewPhotoUrl(e.target.value)}
                         className="flex-1 rounded-xl border border-white/5 bg-white/[0.01] px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
-                        placeholder="Link da imagem (upload real integrado via storage)"
+                        placeholder="Link da imagem"
                       />
                       <button 
                         onClick={handleAddPhoto}
@@ -763,7 +663,7 @@ export default function Leads() {
                             type="number"
                             value={newContractVal}
                             onChange={(e) => setNewContractVal(e.target.value)}
-                            className="w-full rounded-xl border border-white/5 bg-[#0D0D0F]/40 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                            className="w-full rounded-xl border border-white/5 bg-[#0D0D0F]/40 px-3.5 py-2 text-xs text-white focus:outline-none"
                             placeholder="3200"
                           />
                         </div>
@@ -830,7 +730,7 @@ export default function Leads() {
                                 <div key={idx} className="flex justify-between items-center text-[10px] py-1 border-b border-white/[0.02]">
                                   <span>{inst.number}ª Parcela ({new Date(inst.due_date).toLocaleDateString("pt-BR")})</span>
                                   <div className="flex items-center gap-3">
-                                    <span className="font-bold text-white">R$ {parseFloat(inst.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
+                                    <span className="font-bold text-white font-mono">R$ {parseFloat(inst.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                                     
                                     <button
                                       onClick={() => handleToggleInstallmentStatus(fin.id, idx)}
@@ -917,12 +817,12 @@ export default function Leads() {
         </div>
       )}
 
-      {/* NOVO PACIENTE MODAL */}
+      {/* REGISTRATION MODAL */}
       {createModalOpen && (
         <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-md bg-[#0E1118] border border-white/10 rounded-3xl p-6 md:p-8 space-y-6 shadow-2xl relative animate-fade-in">
+          <div className="w-full max-w-lg bg-[#0E1118] border border-white/10 rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl relative animate-fade-in text-white">
             <div className="flex justify-between items-center pb-3 border-b border-white/5">
-              <h3 className="font-serif text-lg font-bold text-white">Cadastrar Novo Paciente</h3>
+              <h3 className="font-serif text-lg font-bold text-[#E5C38C]">Novo Paciente (Acesso ao Portal)</h3>
               <button 
                 onClick={() => setCreateModalOpen(false)}
                 className="p-1 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-all"
@@ -931,76 +831,110 @@ export default function Leads() {
               </button>
             </div>
 
-            <form onSubmit={handleCreateLead} className="space-y-4">
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Nome Completo</label>
-                <input
-                  type="text"
-                  required
-                  value={newLeadName}
-                  onChange={(e) => setNewLeadName(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
-                  placeholder="Nome do paciente"
-                />
-              </div>
+            <form onSubmit={handleRegisterPatient} className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Nome Completo</label>
+                  <input
+                    type="text"
+                    required
+                    value={newPatientName}
+                    onChange={(e) => setNewPatientName(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="Nome do paciente"
+                  />
+                </div>
 
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Telefone de Acesso (WhatsApp)</label>
-                <input
-                  type="tel"
-                  required
-                  value={newLeadPhone}
-                  onChange={(e) => setNewLeadPhone(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
-                  placeholder="(94) 99999-9999"
-                />
-                <span className="text-[9px] text-white/30 block">Este número será usado pelo paciente para acessar o Portal do Paciente.</span>
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Procedimento / Interesse</label>
-                <input
-                  type="text"
-                  value={newLeadInterest}
-                  onChange={(e) => setNewLeadInterest(e.target.value)}
-                  className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
-                  placeholder="Ex: Toxina Botulínica, Preenchimento..."
-                />
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Telefone (WhatsApp)</label>
+                  <input
+                    type="tel"
+                    required
+                    value={newPatientPhone}
+                    onChange={(e) => setNewPatientPhone(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="(94) 99999-9999"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Temperatura</label>
-                  <select
-                    value={newLeadTemp}
-                    onChange={(e) => setNewLeadTemp(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3 py-2.5 text-xs text-white focus:outline-none"
-                  >
-                    <option value="cold">Frio (Apenas Contato)</option>
-                    <option value="warm">Morno (Interessado)</option>
-                    <option value="hot">Quente (Quer Agendar)</option>
-                  </select>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Senha do Portal (4 a 6 dígitos)</label>
+                  <input
+                    type="password"
+                    maxLength={6}
+                    required
+                    value={newPatientPassword}
+                    onChange={(e) => setNewPatientPassword(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-mono tracking-widest"
+                    placeholder="••••••"
+                  />
                 </div>
+
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Fase Inicial</label>
-                  <select
-                    value={newLeadStatus}
-                    onChange={(e) => setNewLeadStatus(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3 py-2.5 text-xs text-white focus:outline-none"
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Procedimento Principal</label>
+                  <input
+                    type="text"
+                    value={newPatientInterest}
+                    onChange={(e) => setNewPatientInterest(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="Ex: Harmonização Facial"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-red-400">Alergias / Restrições Médicas</label>
+                <input
+                  type="text"
+                  value={newPatientAllergies}
+                  onChange={(e) => setNewPatientAllergies(e.target.value)}
+                  className="w-full rounded-xl border border-red-500/20 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-red-400"
+                  placeholder="Ex: Alergia a anestésicos, grávida..."
+                />
+              </div>
+
+              {/* Checklist Options */}
+              <div className="space-y-2.5 pt-2 border-t border-white/5">
+                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40">Configurações de Acesso e Perfil</label>
+                
+                <div className="flex flex-col gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setNewPatientActiveAccess(!newPatientActiveAccess)}
+                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start"
                   >
-                    <option value="novo">Novo</option>
-                    <option value="em_atendimento">Em Atendimento</option>
-                    <option value="agendado">Agendado</option>
-                  </select>
+                    {newPatientActiveAccess ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
+                    <span>Acesso ao portal ativo para este paciente</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewPatientWhatsappReminders(!newPatientWhatsappReminders)}
+                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start"
+                  >
+                    {newPatientWhatsappReminders ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
+                    <span>Enviar lembretes e avisos automatizados via WhatsApp</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewPatientIsVip(!newPatientIsVip)}
+                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start"
+                  >
+                    {newPatientIsVip ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
+                    <span>Marcar paciente como categoria VIP</span>
+                  </button>
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={creatingLead}
+                disabled={creatingPatient}
                 className="w-full rounded-2xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md disabled:opacity-50 mt-2"
               >
-                {creatingLead ? "Cadastrando..." : "Cadastrar Paciente"}
+                {creatingPatient ? "Cadastrando Paciente..." : "Confirmar Cadastro e Gerar Acesso"}
               </button>
             </form>
           </div>

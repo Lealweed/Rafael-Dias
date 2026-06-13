@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2, Sparkles, CheckCircle2 } from "lucide-react";
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Plus, MapPin, AlignLeft, Users, Pencil, Save, X, Trash2, Sparkles, CheckCircle2, Clock } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useSearchParams } from "react-router-dom";
+import { PremiumButton } from "../components/premium/PremiumButton";
+import { motion, AnimatePresence } from "framer-motion";
 
 type CalendarEvent = {
   id: string;
@@ -56,6 +58,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date()); // Represents currently visible month
   const [selectedDate, setSelectedDate] = useState(new Date()); // Represents clicked day
   const [formOpen, setFormOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [form, setForm] = useState<EventFormState>({
     summary: "",
@@ -169,6 +172,7 @@ export default function CalendarPage() {
       end: toLocalDateTimeInput(end.toISOString()),
     });
     setFormOpen(true);
+    setDetailOpen(false);
   };
 
   const openEdit = (event: CalendarEvent) => {
@@ -183,6 +187,12 @@ export default function CalendarPage() {
       end: toLocalDateTimeInput(dt.end),
     });
     setFormOpen(true);
+    setDetailOpen(false);
+  };
+
+  const openDetail = (event: CalendarEvent) => {
+    setSelectedEvent(event);
+    setDetailOpen(true);
   };
 
   const saveEvent = async () => {
@@ -243,6 +253,7 @@ export default function CalendarPage() {
         throw new Error(data?.error || `Falha ao excluir evento (${res.status})`);
       }
 
+      setDetailOpen(false);
       setSelectedEvent(null);
       await fetchEvents(currentDate);
     } catch (err: any) {
@@ -307,78 +318,92 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-6">
+    <div className="flex flex-col h-full w-full space-y-8 pb-10">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-white/5 shrink-0">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[10px] uppercase tracking-[0.2em] font-bold text-gold mb-2">
             <Sparkles className="h-3 w-3" />
             <span>Google Calendar</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Agenda Integrada</h1>
-          <p className="text-xs text-white/40 font-light mt-1">Navegação em grade de calendário mensal e controle de horários.</p>
+          <h1 className="text-4xl font-bold tracking-tight text-white font-display">Agenda Integrada</h1>
+          <p className="text-sm text-white/40 font-light">Navegação em grade de calendário mensal e controle de horários.</p>
         </div>
-        <button onClick={openCreate} className="flex items-center justify-center gap-2 px-6 py-2.5 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-2xl hover:opacity-90 transition-opacity">
+        <PremiumButton onClick={openCreate} className="h-12 px-8">
           <Plus className="w-4 h-4" />
           Novo Agendamento
-        </button>
+        </PremiumButton>
       </div>
 
       {/* Linked Lead Info */}
       {linkedLead && (
-        <div className="rounded-3xl border border-emerald-500/20 bg-emerald-500/5 px-6 py-4 shadow-md flex items-center justify-between gap-4 backdrop-blur-xl">
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Agendamento vinculado</p>
-            <h2 className="mt-1 text-sm font-bold text-white">{linkedLead.full_name || linkedLead.phone}</h2>
-            <p className="mt-1 text-xs text-white/50">
-              {linkedLead.phone || "Sem telefone"}
-              {linkedLead.owner_name ? ` • Responsável: ${linkedLead.owner_name}` : ""}
-            </p>
+        <motion.div 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-8 shadow-premium flex items-center justify-between gap-6 backdrop-blur-xl"
+        >
+          <div className="flex items-center gap-5">
+            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <Users className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">Agendamento vinculado</p>
+              <h2 className="mt-1 text-xl font-bold text-white font-display">{linkedLead.full_name || linkedLead.phone}</h2>
+              <p className="mt-1 text-xs text-white/50 font-light">
+                {linkedLead.phone || "Sem telefone"}
+                {linkedLead.owner_name ? ` • Responsável: ${linkedLead.owner_name}` : ""}
+              </p>
+            </div>
           </div>
-          <button
+          <PremiumButton
+            variant="outline"
             onClick={() => {
               const nextParams = new URLSearchParams(searchParams);
               nextParams.delete("leadId");
               setSearchParams(nextParams);
             }}
-            className="rounded-xl border border-white/10 bg-white/5 px-3.5 py-1.5 text-xs font-semibold text-white/80 hover:bg-white/10 transition-colors"
+            className="h-10 px-6 text-[9px]"
           >
             Limpar Vínculo
-          </button>
-        </div>
+          </PremiumButton>
+        </motion.div>
       )}
 
       {error && (
-        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-3 text-xs text-red-400">{error}</div>
+        <div className="rounded-2xl border border-red-500/20 bg-red-500/10 px-6 py-4 text-xs text-red-400 animate-pulse">{error}</div>
       )}
 
       {/* Main Grid: Left Calendar / Right Daily Agenda */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0">
         
         {/* MONTHLY CALENDAR GRID (Left 2/3) */}
-        <div className="lg:col-span-2 bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 shadow-xl flex flex-col backdrop-blur-xl justify-between">
-          <div>
+        <div className="lg:col-span-2 bg-black-matte/40 border border-white/5 rounded-[2rem] p-8 shadow-premium flex flex-col backdrop-blur-xl">
+          <div className="flex-1">
             {/* Calendar Controls */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-6">
-              <h3 className="text-base font-serif font-bold text-white uppercase tracking-wider">
+            <div className="flex items-center justify-between pb-6 border-b border-white/5 mb-8">
+              <h3 className="text-2xl font-display font-bold text-white capitalize tracking-wide">
                 {currentDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
               </h3>
-              <div className="flex gap-2">
-                <button onClick={() => changeMonth(-1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all">
-                  <ChevronLeft className="h-4 w-4" />
+              <div className="flex gap-3">
+                <button onClick={() => changeMonth(-1)} className="p-3 rounded-2xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
+                  <ChevronLeft className="h-5 w-5" />
                 </button>
-                <button onClick={() => { const today = new Date(); setSelectedDate(today); setCurrentDate(today); }} className="px-3 py-1 rounded-xl border border-white/10 hover:bg-white/5 text-[10px] font-semibold uppercase tracking-wider text-[#E5C38C] transition-all">
+                <PremiumButton 
+                  variant="outline" 
+                  onClick={() => { const today = new Date(); setSelectedDate(today); setCurrentDate(today); }}
+                  className="h-11 px-6 text-[9px]"
+                >
                   Hoje
-                </button>
-                <button onClick={() => changeMonth(1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all">
-                  <ChevronRight className="h-4 w-4" />
+                </PremiumButton>
+                <button onClick={() => changeMonth(1)} className="p-3 rounded-2xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
+                  <ChevronRight className="h-5 w-5" />
                 </button>
               </div>
             </div>
 
             {/* Calendar Grid Headers */}
-            <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-wider text-white/30 mb-3">
+            <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 mb-6">
               <span>Dom</span>
               <span>Seg</span>
               <span>Ter</span>
@@ -389,191 +414,278 @@ export default function CalendarPage() {
             </div>
 
             {/* Days Grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-3">
               {calendarDays.map((day, idx) => {
-                if (!day) return <div key={`empty-${idx}`} className="aspect-square bg-transparent" />;
+                if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
                 const isSelected = day.toDateString() === selectedDate.toDateString();
                 const isToday = day.toDateString() === new Date().toDateString();
                 const hasEvents = dayHasEvents(day);
 
                 return (
-                  <button
+                  <motion.button
                     key={`day-${day.getDate()}`}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedDate(day)}
-                    className={`aspect-square rounded-2xl flex flex-col items-center justify-center relative transition-all border ${
+                    className={`aspect-square rounded-[1.25rem] flex flex-col items-center justify-center relative transition-all duration-300 border ${
                       isSelected 
-                        ? "bg-vibrant-gold-brushed text-[#0D0D0F] border-transparent font-bold shadow-md"
+                        ? "gold-gradient text-black border-transparent font-bold shadow-gold"
                         : isToday
-                          ? "border-[#D4AF37]/50 bg-[#D4AF37]/10 text-[#E5C38C] hover:bg-[#D4AF37]/20"
-                          : "border-white/5 bg-white/[0.01] hover:bg-white/5 text-white"
+                          ? "border-gold/50 bg-gold/10 text-gold hover:bg-gold/20"
+                          : "border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/80"
                     }`}
                   >
-                    <span className="text-xs font-mono">{day.getDate()}</span>
+                    <span className="text-sm font-body font-medium">{day.getDate()}</span>
                     {hasEvents && (
-                      <span className={`absolute bottom-2.5 h-1 w-1 rounded-full ${
-                        isSelected ? "bg-[#0D0D0F]" : "bg-[#D4AF37]"
+                      <span className={`absolute bottom-3 h-1.5 w-1.5 rounded-full ${
+                        isSelected ? "bg-black" : "bg-gold"
                       }`} />
                     )}
-                  </button>
+                  </motion.button>
                 );
               })}
             </div>
           </div>
-          <div className="text-[10px] text-white/30 pt-4 border-t border-white/5 mt-6">
-            * Clique em qualquer dia para ver ou criar agendamentos específicos daquele dia.
+          <div className="text-[10px] text-white/20 pt-8 border-t border-white/5 mt-8 font-light tracking-widest uppercase text-center">
+            * Selecione um dia para gerenciar agendamentos
           </div>
         </div>
 
-        {/* DAILY AGENDA & DETAILS (Right 1/3) */}
-        <div className="flex flex-col gap-6">
+        {/* DAILY AGENDA panel (Right 1/3) */}
+        <div className="flex flex-col gap-8">
           {/* Daily events list */}
-          <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 flex flex-col flex-1 min-h-[250px] overflow-hidden backdrop-blur-xl">
-            <div className="pb-3 border-b border-white/5 mb-4 flex justify-between items-center shrink-0">
+          <div className="bg-black-matte/40 border border-white/5 rounded-[2rem] p-8 flex flex-col flex-1 shadow-premium backdrop-blur-xl overflow-hidden">
+            <div className="pb-6 border-b border-white/5 mb-6 flex justify-between items-center shrink-0">
               <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-wider">Agendados do Dia</h4>
-                <p className="text-[9px] text-[#E5C38C] font-mono mt-0.5">
+                <h4 className="text-sm font-bold text-white uppercase tracking-[0.2em]">Agenda do Dia</h4>
+                <p className="text-[10px] text-gold font-bold uppercase tracking-widest mt-1.5">
                   {selectedDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
                 </p>
               </div>
               <button 
                 onClick={openCreate}
-                className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-[#E5C38C]"
-                title="Agendar novo horário para hoje"
+                className="p-2.5 rounded-xl bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all duration-300"
+                title="Novo Agendamento"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-5 w-5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-2">
+            <div className="flex-1 overflow-y-auto space-y-4 scrollbar-hide">
               {loading ? (
-                <div className="h-full flex items-center justify-center text-[10px] text-white/20 uppercase font-bold tracking-widest">Sincronizando...</div>
+                <div className="h-full flex items-center justify-center text-[10px] text-white/20 uppercase font-bold tracking-widest animate-pulse">Sincronizando...</div>
               ) : selectedDayEvents.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center py-10 text-white/20 text-center">
-                  <CalendarIcon className="h-7 w-7 text-white/10 mb-2" />
-                  <p className="text-[10px] uppercase font-bold tracking-wider">Nenhum agendamento</p>
+                <div className="h-full flex flex-col items-center justify-center py-12 text-white/10 text-center opacity-40">
+                  <CalendarIcon className="h-10 w-10 mb-4" />
+                  <p className="text-[10px] uppercase font-bold tracking-[0.3em]">Nenhum compromisso</p>
                 </div>
               ) : (
                 selectedDayEvents.map((evt) => (
-                  <button
+                  <motion.button
                     key={evt.id}
-                    onClick={() => setSelectedEvent(evt)}
-                    className={`w-full text-left p-3.5 rounded-2xl border transition-all flex justify-between items-center ${
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    onClick={() => openDetail(evt)}
+                    className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 flex flex-col gap-2 group ${
                       selectedEvent?.id === evt.id
-                        ? "bg-[#D4AF37]/15 border-[#D4AF37]/30 text-[#E5C38C]"
-                        : "bg-white/[0.01] border-white/5 hover:bg-white/5 text-white/80"
+                        ? "bg-gold/10 border-gold/30"
+                        : "bg-white/[0.02] border-white/5 hover:border-gold/20 hover:bg-white/[0.04]"
                     }`}
                   >
-                    <div>
-                      <h5 className="font-bold text-xs leading-tight line-clamp-1">{evt.summary || "Sem título"}</h5>
-                      <span className="text-[9px] text-white/40 block mt-1 font-mono">{formatEventTime(evt)}</span>
+                    <h5 className={`font-bold text-sm leading-tight transition-colors ${selectedEvent?.id === evt.id ? 'text-gold' : 'text-white/90 group-hover:text-gold'}`}>
+                      {evt.summary || "Sem título"}
+                    </h5>
+                    <div className="flex items-center gap-3 text-[10px] text-white/40 font-medium uppercase tracking-widest">
+                      <Clock className="h-3 w-3 text-gold/50" />
+                      {formatEventTime(evt)}
                     </div>
-                  </button>
+                  </motion.button>
                 ))
               )}
             </div>
-          </div>
-
-          {/* Event details */}
-          <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-5 shrink-0 backdrop-blur-xl">
-            {!selectedEvent ? (
-              <div className="py-6 text-center text-[10px] text-white/20 font-bold uppercase tracking-widest">Selecione uma consulta</div>
-            ) : (
-              <div className="space-y-4">
-                <div>
-                  <h4 className="font-serif font-bold text-white text-sm leading-tight">{selectedEvent.summary || "Sem título"}</h4>
-                  <span className="text-[9px] text-[#E5C38C] font-mono mt-1 block">{formatEventTime(selectedEvent)}</span>
-                </div>
-
-                {selectedEvent.location && (
-                  <div className="text-[11px] text-white/60 leading-relaxed font-light">
-                    <strong>Local:</strong> {selectedEvent.location}
-                  </div>
-                )}
-                
-                {selectedEvent.description && (
-                  <div className="text-[11px] text-white/60 leading-relaxed font-light border-t border-white/5 pt-2">
-                    <strong>Observações:</strong>
-                    <div className="mt-1 whitespace-pre-wrap max-h-20 overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }}></div>
-                  </div>
-                )}
-
-                <div className="flex gap-2 pt-3 border-t border-white/5">
-                  <button onClick={() => openEdit(selectedEvent)} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-white/5 py-2 text-[10px] font-bold uppercase tracking-wider text-white hover:bg-white/10 transition-colors">
-                    <Pencil className="w-3 h-3" /> Editar
-                  </button>
-                  <button onClick={deleteEvent} disabled={saving} className="flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-red-500/20 py-2 text-[10px] font-bold uppercase tracking-wider text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-60">
-                    <Trash2 className="w-3 h-3" /> Excluir
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
       </div>
 
-      {/* Modal Dialog Form */}
-      {formOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-xl rounded-3xl bg-[#0E1118] border border-white/5 shadow-2xl p-6 space-y-4 text-white">
-            <div className="flex items-center justify-between">
-              <h3 className="text-base font-bold font-serif tracking-wide">{formMode === "create" ? "Novo Agendamento" : "Editar Agendamento"}</h3>
-              <button onClick={() => setFormOpen(false)} className="text-white/40 hover:text-white transition-colors">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            {linkedLead && (
-              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-3 py-2.5 text-xs text-emerald-300">
-                Este agendamento será salvo no Google Calendar e vinculado ao lead <strong>{linkedLead.full_name || linkedLead.phone}</strong>.
+      {/* DETAIL MODAL */}
+      <AnimatePresence>
+        {detailOpen && selectedEvent && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setDetailOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-lg rounded-[2.5rem] bg-black-matte border border-white/10 shadow-premium p-10 space-y-8 text-white overflow-hidden"
+            >
+              <div className="absolute top-0 left-0 right-0 h-1 gold-gradient opacity-50" />
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[9px] uppercase tracking-[0.2em] font-bold text-gold">
+                  Detalhes do Compromisso
+                </div>
+                <button onClick={() => setDetailOpen(false)} className="p-2 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-colors">
+                  <X className="w-6 h-6" />
+                </button>
               </div>
-            )}
 
-            <div className="space-y-3">
-              <input 
-                value={form.summary} 
-                onChange={(e) => setForm((s) => ({ ...s, summary: e.target.value }))} 
-                placeholder="Título da Consulta" 
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#D4AF37] outline-none" 
-              />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <input 
-                  type="datetime-local" 
-                  value={form.start} 
-                  onChange={(e) => setForm((s) => ({ ...s, start: e.target.value }))} 
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none filter invert" 
-                />
-                <input 
-                  type="datetime-local" 
-                  value={form.end} 
-                  onChange={(e) => setForm((s) => ({ ...s, end: e.target.value }))} 
-                  className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white focus:border-[#D4AF37] outline-none filter invert" 
-                />
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <h3 className="text-3xl font-display font-bold text-white leading-tight">{selectedEvent.summary || "Sem título"}</h3>
+                  <div className="flex items-center gap-3 text-gold/70 text-xs font-bold uppercase tracking-widest">
+                    <Clock className="h-4 w-4" />
+                    {formatEventTime(selectedEvent)}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 pt-4 border-t border-white/5">
+                  {selectedEvent.location && (
+                    <div className="flex gap-4">
+                      <div className="mt-1 h-8 w-8 rounded-xl bg-white/5 flex items-center justify-center text-gold/50">
+                        <MapPin className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30">Localização</p>
+                        <p className="text-sm text-white/80 mt-1">{selectedEvent.location}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {selectedEvent.description && (
+                    <div className="flex gap-4">
+                      <div className="mt-1 h-8 w-8 rounded-xl bg-white/5 flex items-center justify-center text-gold/50">
+                        <AlignLeft className="h-4 w-4" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30">Observações Clínicas</p>
+                        <div className="mt-2 text-sm text-white/70 leading-relaxed font-light bg-white/[0.02] p-4 rounded-2xl border border-white/5 whitespace-pre-wrap max-h-40 overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }} />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-              <input 
-                value={form.location} 
-                onChange={(e) => setForm((s) => ({ ...s, location: e.target.value }))} 
-                placeholder="Local (ex: Clínica Parauapebas-PA)" 
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#D4AF37] outline-none" 
-              />
-              <textarea 
-                value={form.description} 
-                onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} 
-                placeholder="Descrição ou observações de saúde..." 
-                rows={4} 
-                className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-3.5 py-2.5 text-sm text-white placeholder-white/20 focus:border-[#D4AF37] outline-none resize-none" 
-              />
-            </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-white/5">
-              <button onClick={() => setFormOpen(false)} className="rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white/60 hover:bg-white/10 transition-colors">Cancelar</button>
-              <button onClick={saveEvent} disabled={saving} className="inline-flex items-center justify-center gap-2 px-5 py-2 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-xs font-semibold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-60">
-                <Save className="w-4 h-4" /> {saving ? "Salvando..." : "Confirmar"}
-              </button>
-            </div>
+              <div className="flex gap-4 pt-6">
+                <PremiumButton onClick={() => openEdit(selectedEvent)} variant="outline" className="flex-1 h-12">
+                  <Pencil className="w-4 h-4" /> Editar
+                </PremiumButton>
+                <PremiumButton onClick={deleteEvent} className="flex-1 h-12 bg-red-500/10 border-red-500/20 text-red-400 gold-gradient-none shadow-none hover:bg-red-500/20">
+                  <Trash2 className="w-4 h-4" /> Excluir
+                </PremiumButton>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
+
+      {/* CREATE/EDIT MODAL FORM */}
+      <AnimatePresence>
+        {formOpen && (
+          <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setFormOpen(false)}
+              className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            />
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="relative w-full max-w-xl rounded-[2.5rem] bg-black-matte border border-white/10 shadow-premium p-10 space-y-8 text-white"
+            >
+              <div className="flex items-center justify-between">
+                <h3 className="text-2xl font-display font-bold tracking-wide">{formMode === "create" ? "Novo Agendamento" : "Editar Detalhes"}</h3>
+                <button onClick={() => setFormOpen(false)} className="text-white/40 hover:text-white transition-colors">
+                  <X className="h-6 w-6" />
+                </button>
+              </div>
+
+              {linkedLead && formMode === "create" && (
+                <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 flex items-center gap-4">
+                  <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
+                    <CheckCircle2 className="h-5 w-5" />
+                  </div>
+                  <p className="text-xs text-emerald-300 font-medium">
+                    Vinculando consulta ao paciente: <span className="text-white">{linkedLead.full_name}</span>
+                  </p>
+                </div>
+              )}
+
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Título do Procedimento</label>
+                  <input 
+                    value={form.summary} 
+                    onChange={(e) => setForm((s) => ({ ...s, summary: e.target.value }))} 
+                    placeholder="Ex: Aplicação de Toxina Botulínica" 
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder-white/20 focus:border-gold outline-none transition-all" 
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Início</label>
+                    <input 
+                      type="datetime-local" 
+                      value={form.start} 
+                      onChange={(e) => setForm((s) => ({ ...s, start: e.target.value }))} 
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white focus:border-gold outline-none filter invert contrast-125" 
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Término</label>
+                    <input 
+                      type="datetime-local" 
+                      value={form.end} 
+                      onChange={(e) => setForm((s) => ({ ...s, end: e.target.value }))} 
+                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white focus:border-gold outline-none filter invert contrast-125" 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Localização</label>
+                  <input 
+                    value={form.location} 
+                    onChange={(e) => setForm((s) => ({ ...s, location: e.target.value }))} 
+                    placeholder="Ex: Clínica Sede / Online" 
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder-white/20 focus:border-gold outline-none transition-all" 
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Observações Internas</label>
+                  <textarea 
+                    value={form.description} 
+                    onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} 
+                    placeholder="Histórico clínico, alergias ou notas do procedimento..." 
+                    rows={4} 
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder-white/20 focus:border-gold outline-none resize-none transition-all" 
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-4 pt-4">
+                <PremiumButton variant="ghost" onClick={() => setFormOpen(false)} className="h-12 px-8">
+                  Cancelar
+                </PremiumButton>
+                <PremiumButton onClick={saveEvent} disabled={saving} className="h-12 px-10">
+                  <Save className="w-4 h-4" /> {saving ? "Processando..." : "Confirmar Agendamento"}
+                </PremiumButton>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

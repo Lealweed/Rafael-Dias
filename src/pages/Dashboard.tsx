@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { createClient } from "../lib/supabase/client";
 import { Users, MessageSquare, Calendar, AlertCircle, Sparkles, TrendingUp, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { PremiumButton } from "../components/premium/PremiumButton";
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -28,7 +29,6 @@ export default function Dashboard() {
         .from('leads')
         .select('*');
 
-      // Fallback para estrutura legada se necessário
       if (error) {
         const legacy = await supabase
           .from('Usuarios')
@@ -95,19 +95,19 @@ export default function Dashboard() {
       
       {/* Header Premium do Dashboard */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-white/5">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+        <div className="space-y-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[10px] uppercase tracking-[0.2em] font-bold text-gold mb-2">
             <Sparkles className="h-3 w-3" />
             <span>Métricas em Tempo Real</span>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Painel Geral de Atendimento</h1>
-          <p className="text-xs text-white/40 font-light mt-1">Supervisão de leads, automações e desempenho comercial do Instituto.</p>
+          <h1 className="text-4xl font-bold tracking-tight text-white font-display">Painel Geral de Atendimento</h1>
+          <p className="text-sm text-white/40 font-light max-w-lg">Supervisão de leads, automações e desempenho comercial do Instituto.</p>
         </div>
 
         {/* Data/Hora do Sistema */}
-        <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl px-4 py-2.5 backdrop-blur-md">
-          <div className="h-2.5 w-2.5 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-xs font-semibold text-white/70 tracking-wider">
+        <div className="flex items-center gap-3 bg-white/[0.02] border border-white/5 rounded-2xl px-5 py-3 backdrop-blur-md shadow-premium">
+          <div className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="text-xs font-semibold text-white/70 tracking-widest uppercase">
             {new Date().toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })}
           </span>
         </div>
@@ -119,26 +119,26 @@ export default function Dashboard() {
         {/* Card 1: Novos Leads */}
         <div 
           onClick={() => navigate('/leads')}
-          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg cursor-pointer"
+          className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 backdrop-blur-xl group hover:border-gold/30 transition-all duration-500 shadow-premium cursor-pointer"
         >
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-[#E5C38C] group-hover:opacity-20 transition-opacity">
-            <Users className="h-16 w-16" />
+          <div className="absolute top-0 right-0 p-6 opacity-5 text-gold group-hover:opacity-10 transition-opacity duration-500">
+            <Users className="h-20 w-20" />
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">Novos Leads (Hoje)</p>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl font-semibold text-white font-mono tracking-tight">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Novos Leads (Hoje)</p>
+          <div className="mt-6 flex items-baseline gap-3">
+            <span className="text-5xl font-semibold text-white font-display tracking-tight leading-none">
               {loading ? "..." : stats.newLeadsToday}
             </span>
             {!loading && (
-              <span className={`text-xs font-semibold flex items-center gap-0.5 ${growth >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+              <span className={`text-xs font-bold flex items-center gap-1 px-2 py-1 rounded-lg ${growth >= 0 ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
                 <TrendingUp className={`h-3.5 w-3.5 ${growth < 0 ? 'rotate-180' : ''}`} /> 
                 {growth >= 0 ? `+${growth}%` : `${growth}%`}
               </span>
             )}
           </div>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className="mt-8 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-1000" 
+              className="h-full rounded-full gold-gradient transition-all duration-1000" 
               style={{ width: `${Math.min((stats.newLeadsToday / 15) * 100, 100)}%` }}
             />
           </div>
@@ -147,21 +147,21 @@ export default function Dashboard() {
         {/* Card 2: Atendimento Humano */}
         <div 
           onClick={() => navigate('/conversations')}
-          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg cursor-pointer"
+          className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 backdrop-blur-xl group hover:border-gold/30 transition-all duration-500 shadow-premium cursor-pointer"
         >
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-[#E5C38C] group-hover:opacity-20 transition-opacity">
-            <MessageSquare className="h-16 w-16" />
+          <div className="absolute top-0 right-0 p-6 opacity-5 text-gold group-hover:opacity-10 transition-opacity duration-500">
+            <MessageSquare className="h-20 w-20" />
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">Atendimento Humano</p>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl font-semibold text-white font-mono tracking-tight">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Atendimento Humano</p>
+          <div className="mt-6 flex items-baseline gap-3">
+            <span className="text-5xl font-semibold text-white font-display tracking-tight leading-none">
               {loading ? "..." : stats.humanActive}
             </span>
             <span className="text-xs font-light text-white/40">leads ativos</span>
           </div>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className="mt-8 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-1000" 
+              className="h-full rounded-full gold-gradient transition-all duration-1000" 
               style={{ width: `${stats.totalLeads > 0 ? (stats.humanActive / stats.totalLeads) * 100 : 0}%` }}
             />
           </div>
@@ -170,21 +170,21 @@ export default function Dashboard() {
         {/* Card 3: Consultas Vinculadas */}
         <div 
           onClick={() => navigate('/calendar')}
-          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-[#E5C38C]/30 transition-all duration-300 shadow-lg cursor-pointer"
+          className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 backdrop-blur-xl group hover:border-gold/30 transition-all duration-500 shadow-premium cursor-pointer"
         >
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-[#E5C38C] group-hover:opacity-20 transition-opacity">
-            <Calendar className="h-16 w-16" />
+          <div className="absolute top-0 right-0 p-6 opacity-5 text-gold group-hover:opacity-10 transition-opacity duration-500">
+            <Calendar className="h-20 w-20" />
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">Consultas Agendadas</p>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl font-semibold text-white font-mono tracking-tight">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Consultas Agendadas</p>
+          <div className="mt-6 flex items-baseline gap-3">
+            <span className="text-5xl font-semibold text-white font-display tracking-tight leading-none">
               {loading ? "..." : stats.scheduled}
             </span>
             <span className="text-xs font-light text-white/40">no Google Agenda</span>
           </div>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className="mt-8 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
             <div 
-              className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-1000" 
+              className="h-full rounded-full gold-gradient transition-all duration-1000" 
               style={{ width: `${Math.min((stats.scheduled / 20) * 100, 100)}%` }}
             />
           </div>
@@ -193,19 +193,19 @@ export default function Dashboard() {
         {/* Card 4: Follow-ups Pendentes */}
         <div 
           onClick={() => navigate('/follow-ups')}
-          className="relative overflow-hidden rounded-3xl border border-white/5 bg-white/[0.02] p-6 backdrop-blur-xl group hover:border-orange-500/30 transition-all duration-300 shadow-lg cursor-pointer"
+          className="relative overflow-hidden rounded-[2rem] border border-white/5 bg-white/[0.02] p-8 backdrop-blur-xl group hover:border-orange-500/30 transition-all duration-500 shadow-premium cursor-pointer"
         >
-          <div className="absolute top-0 right-0 p-4 opacity-10 text-orange-400 group-hover:opacity-20 transition-opacity">
-            <AlertCircle className="h-16 w-16" />
+          <div className="absolute top-0 right-0 p-6 opacity-5 text-orange-400 group-hover:opacity-10 transition-opacity duration-500">
+            <AlertCircle className="h-20 w-20" />
           </div>
-          <p className="text-[10px] font-bold uppercase tracking-wider text-white/50">Follow-ups Críticos</p>
-          <div className="mt-4 flex items-baseline gap-2">
-            <span className="text-4xl font-semibold text-white font-mono tracking-tight">
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/50">Follow-ups Críticos</p>
+          <div className="mt-6 flex items-baseline gap-3">
+            <span className="text-5xl font-semibold text-white font-display tracking-tight leading-none">
               {loading ? "..." : stats.pendingFollowups}
             </span>
-            <span className="text-xs font-semibold text-orange-400">pendentes</span>
+            <span className="text-xs font-bold text-orange-400 bg-orange-500/10 px-2 py-1 rounded-lg">pendentes</span>
           </div>
-          <div className="mt-4 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
+          <div className="mt-8 h-1.5 w-full rounded-full bg-white/5 overflow-hidden">
             <div 
               className="h-full rounded-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-1000" 
               style={{ width: `${Math.min((stats.pendingFollowups / 10) * 100, 100)}%` }}
@@ -219,89 +219,97 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
         {/* Bloco 1: Processo de Atendimento */}
-        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden group hover:bg-[#0B0D12]/60 transition-all">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#E5C38C]/20 to-transparent" />
-          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5 group-hover:scale-110 transition-transform">
-            <MessageSquare className="h-5 w-5" />
+        <div className="relative rounded-[2rem] border border-white/5 bg-black-matte/45 p-8 md:p-10 backdrop-blur-md overflow-hidden group hover:bg-black-matte/60 transition-all duration-500 shadow-premium">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          <div className="h-12 w-12 rounded-2xl bg-gold/10 flex items-center justify-center text-gold mb-6 group-hover:scale-110 transition-transform duration-500">
+            <MessageSquare className="h-6 w-6" />
           </div>
-          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Fluxo de Atendimento</h4>
-          <p className="mt-3 text-xs text-white/60 leading-relaxed font-light">
+          <h4 className="text-xl font-bold text-gold font-display">Fluxo de Atendimento</h4>
+          <p className="mt-4 text-sm text-white/60 leading-relaxed font-light">
             Sincronia entre IA e consultores. O modo humano é ativado automaticamente ao detectar intervenção manual.
           </p>
-          <div className="mt-6 flex gap-3">
-            <button 
+          <div className="mt-8 flex gap-4">
+            <PremiumButton 
+              variant="ghost" 
               onClick={() => navigate('/config')}
-              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+              className="px-0 h-auto"
             >
-              Configurar IA <ArrowRight className="h-2 w-2" />
-            </button>
-            <button 
+              Configurar IA <ArrowRight className="h-3 w-3" />
+            </PremiumButton>
+            <PremiumButton 
+              variant="ghost" 
               onClick={() => navigate('/reports')}
-              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+              className="px-0 h-auto"
             >
-              Ver Logs <ArrowRight className="h-2 w-2" />
-            </button>
+              Ver Logs <ArrowRight className="h-3 w-3" />
+            </PremiumButton>
           </div>
         </div>
 
         {/* Bloco 2: Gestão de Agenda */}
-        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden group hover:bg-[#0B0D12]/60 transition-all">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#E5C38C]/20 to-transparent" />
-          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5 group-hover:scale-110 transition-transform">
-            <Calendar className="h-5 w-5" />
+        <div className="relative rounded-[2rem] border border-white/5 bg-black-matte/45 p-8 md:p-10 backdrop-blur-md overflow-hidden group hover:bg-black-matte/60 transition-all duration-500 shadow-premium">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          <div className="h-12 w-12 rounded-2xl bg-gold/10 flex items-center justify-center text-gold mb-6 group-hover:scale-110 transition-transform duration-500">
+            <Calendar className="h-6 w-6" />
           </div>
-          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Agendas & Diagnósticos</h4>
-          <p className="mt-3 text-xs text-white/60 leading-relaxed font-light">
+          <h4 className="text-xl font-bold text-gold font-display">Agendas & Diagnósticos</h4>
+          <p className="mt-4 text-sm text-white/60 leading-relaxed font-light">
             Integração nativa com Google Agenda. Status atualizado em tempo real no funil de vendas.
           </p>
-          <div className="mt-6 flex gap-3">
-            <button 
+          <div className="mt-8 flex gap-4">
+            <PremiumButton 
+              variant="ghost" 
               onClick={() => navigate('/calendar')}
-              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+              className="px-0 h-auto"
             >
-              Abrir Agenda <ArrowRight className="h-2 w-2" />
-            </button>
-            <button 
+              Abrir Agenda <ArrowRight className="h-3 w-3" />
+            </PremiumButton>
+            <PremiumButton 
+              variant="ghost" 
               onClick={handleSync}
-              className="text-[9px] uppercase tracking-widest font-bold text-white/40 hover:text-[#E5C38C] transition-colors flex items-center gap-1"
+              className="px-0 h-auto"
             >
-              Sincronizar <ArrowRight className="h-2 w-2" />
-            </button>
+              Sincronizar <ArrowRight className="h-3 w-3" />
+            </PremiumButton>
           </div>
         </div>
 
         {/* Bloco 3: Atalhos Rápidos */}
-        <div className="relative rounded-3xl border border-white/5 bg-[#0B0D12]/45 p-6 md:p-8 backdrop-blur-md overflow-hidden group hover:bg-[#0B0D12]/60 transition-all">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#E5C38C]/20 to-transparent" />
-          <div className="h-10 w-10 rounded-xl bg-[#D4AF37]/10 flex items-center justify-center text-[#D4AF37] mb-5 group-hover:scale-110 transition-transform">
-            <Sparkles className="h-5 w-5" />
+        <div className="relative rounded-[2rem] border border-white/5 bg-black-matte/45 p-8 md:p-10 backdrop-blur-md overflow-hidden group hover:bg-black-matte/60 transition-all duration-500 shadow-premium">
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gold/20 to-transparent" />
+          <div className="h-12 w-12 rounded-2xl bg-gold/10 flex items-center justify-center text-gold mb-6 group-hover:scale-110 transition-transform duration-500">
+            <Sparkles className="h-6 w-6" />
           </div>
-          <h4 className="text-base font-semibold text-[#E5C38C] font-serif">Ações Prioritárias</h4>
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <button 
+          <h4 className="text-xl font-bold text-gold font-display">Ações Prioritárias</h4>
+          <div className="mt-6 grid grid-cols-2 gap-3">
+            <PremiumButton 
+              variant="outline" 
               onClick={() => navigate('/leads?action=new')}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+              className="w-full py-4 text-[9px]"
             >
               + Novo Lead
-            </button>
-            <button 
+            </PremiumButton>
+            <PremiumButton 
+              variant="outline" 
               onClick={() => navigate('/reports')}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+              className="w-full py-4 text-[9px]"
             >
               Relatórios
-            </button>
-            <button 
+            </PremiumButton>
+            <PremiumButton 
+              variant="outline" 
               onClick={() => navigate('/follow-ups')}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+              className="w-full py-4 text-[9px]"
             >
               Follow-ups
-            </button>
-            <button 
+            </PremiumButton>
+            <PremiumButton 
+              variant="outline" 
               onClick={() => navigate('/portal')}
-              className="p-2.5 rounded-xl bg-white/5 border border-white/5 text-[9px] font-bold uppercase tracking-wider hover:bg-[#D4AF37]/10 hover:border-[#D4AF37]/20 transition-all"
+              className="w-full py-4 text-[9px]"
             >
               Portal
-            </button>
+            </PremiumButton>
           </div>
         </div>
 

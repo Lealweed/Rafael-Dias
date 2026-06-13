@@ -9,6 +9,7 @@ interface PremiumButtonProps {
   variant?: "primary" | "outline" | "ghost";
   href?: string;
   target?: string;
+  disabled?: boolean;
 }
 
 export function PremiumButton({
@@ -18,17 +19,19 @@ export function PremiumButton({
   variant = "primary",
   href,
   target,
+  disabled,
 }: PremiumButtonProps) {
   const isLink = !!href;
 
   const content = (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={disabled ? {} : { scale: 1.05 }}
+      whileTap={disabled ? {} : { scale: 0.95 }}
       transition={{ type: "spring", stiffness: 600, damping: 15 }}
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
       className={cn(
-        "btn-premium group flex items-center justify-center gap-2 tracking-[0.3em] font-medium",
+        "btn-premium group flex items-center justify-center gap-2 tracking-[0.3em] font-medium disabled:opacity-50 disabled:cursor-not-allowed",
         variant === "primary" && "gold-gradient text-black shadow-gold hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]",
         variant === "outline" && "border border-gold/40 text-gold hover:border-gold hover:bg-gold/5",
         variant === "ghost" && "text-white/60 hover:text-white",
@@ -36,7 +39,7 @@ export function PremiumButton({
       )}
     >
       <span className="relative z-10">{children}</span>
-      {variant === "primary" && (
+      {variant === "primary" && !disabled && (
         <motion.div
           className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           initial={false}

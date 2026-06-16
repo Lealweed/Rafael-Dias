@@ -15,7 +15,23 @@ export function normalizePhone(raw: any): string {
   if (!raw) return '';
   const base = String(raw).split('@')[0].trim();
   if (/^https?:\/\//i.test(base)) return '';
-  return base.replace(/\D/g, '');
+  const numeric = base.replace(/\D/g, '');
+  if (!numeric) return '';
+
+  if (numeric.length > 11 && numeric.startsWith('55')) {
+    return numeric.slice(-11);
+  }
+
+  if (numeric.length > 11) {
+    return numeric.slice(-11);
+  }
+
+  return numeric;
+}
+
+export function normalizePhoneSuffix(raw: any): string {
+  const normalized = normalizePhone(raw);
+  return normalized.slice(-8);
 }
 
 function normalizeLeadRecord(data: any) {
@@ -49,17 +65,36 @@ async function findLeadByPhone(phone: string) {
   const normalized = normalizePhone(phone);
   if (!normalized) return { ok: false as const, reason: 'missing_phone' };
 
-  const { data, error } = await supabase
+  const suffix = normalizePhoneSuffix(phone);
+
+  const exactMatch = await supabase
     .from('leads')
     .select('*')
-    .like('phone', `%${normalized.slice(-8)}`)
+    .eq('phone', normalized)
     .limit(1)
     .maybeSingle();
 
-  if (error) return { ok: false as const, reason: 'query_failed', error };
-  if (!data?.id) return { ok: false as const, reason: 'lead_not_found' };
+  if (exactMatch.error) return { ok: false as const, reason: 'query_failed', error: exactMatch.error };
+  if (exactMatch.data?.id) {
+    return { ok: true as const, lead: normalizeLeadRecord(exactMatch.data) };
+  }
 
-  return { ok: true as const, lead: normalizeLeadRecord(data) };
+  if (suffix) {
+    const fallback = await supabase
+      .from('leads')
+      .select('*')
+      .like('phone', `%${suffix}`)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (fallback.error) return { ok: false as const, reason: 'query_failed', error: fallback.error };
+    if (fallback.data?.id) {
+      return { ok: true as const, lead: normalizeLeadRecord(fallback.data) };
+    }
+  }
+
+  return { ok: false as const, reason: 'lead_not_found' };
 }
 
 async function createLeadFromLegacy(phone: string, name?: string | null) {
@@ -105,9 +140,32 @@ async function createLeadFromLegacy(phone: string, name?: string | null) {
   return { ok: true as const, lead: normalizeLeadRecord(data) };
 }
 
+async function updateLeadNameIfMissing(leadId: string, name?: string | null) {
+  const supabase = getServiceSupabase();
+  if (!supabase || !name) return { ok: true as const };
+
+  const normalizedName = String(name).trim();
+  if (!normalizedName) return { ok: true as const };
+
+  const { error } = await supabase
+    .from('leads')
+    .update({ full_name: normalizedName })
+    .eq('id', leadId)
+    .or('full_name.eq.,full_name.is.null');
+
+  if (error) return { ok: false as const, reason: 'update_failed', error };
+  return { ok: true as const };
+}
+
 export async function ensureLeadByPhone(params: { phone: string; name?: string | null }) {
   const found = await findLeadByPhone(params.phone);
-  if (found.ok) return found;
+  if (found.ok) {
+    if (params.name && !found.lead.full_name) {
+      await updateLeadNameIfMissing(found.lead.id, params.name);
+    }
+    return found;
+  }
+
   if (found.reason !== 'lead_not_found') return found;
   return createLeadFromLegacy(params.phone, params.name);
 }
@@ -143,6 +201,7 @@ export async function appendConversationMessage(params: {
   content: string;
   type?: string;
   source?: 'customer' | 'human' | 'agent' | 'system';
+  mediaUrl?: string | null;
   n8nMessageId?: string | null;
 }) {
   const supabase = getServiceSupabase();
@@ -157,6 +216,7 @@ export async function appendConversationMessage(params: {
     type: params.type || 'text',
     source: params.source || (params.direction === 'inbound' ? 'customer' : 'agent'),
     content: params.content,
+    media_url: params.mediaUrl || null,
     n8n_message_id: params.n8nMessageId || null,
   });
 

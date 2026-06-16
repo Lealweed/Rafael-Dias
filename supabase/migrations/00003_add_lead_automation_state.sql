@@ -54,7 +54,7 @@ ALTER TABLE public.leads
 
 ALTER TABLE public.leads
   ADD CONSTRAINT leads_automation_status_check
-  CHECK (automation_status IN ('active', 'paused_human'));
+  CHECK (automation_status IN ('active', 'paused_human', 'waiting_response', 'followup_scheduled', 'handoff_requested'));
 
 DO $$
 BEGIN

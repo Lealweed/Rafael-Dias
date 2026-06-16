@@ -1,7 +1,22 @@
 import { appendSystemMessage, ensureLeadByPhone, getServiceSupabase, normalizePhone } from './crm.js';
 
-export type AutomationStatus = 'active' | 'paused_human';
+export type AutomationStatus = 'active' | 'paused_human' | 'waiting_response' | 'followup_scheduled' | 'handoff_requested';
 export type MessageSource = 'agent' | 'human';
+
+function automationStatusSystemMessage(status: AutomationStatus) {
+  switch (status) {
+    case 'paused_human':
+      return 'Atendimento humano assumido. Automacao pausada.';
+    case 'waiting_response':
+      return 'Aguardando resposta do cliente. Automacao em espera.';
+    case 'followup_scheduled':
+      return 'Follow-up agendado para este contato.';
+    case 'handoff_requested':
+      return 'Cliente solicitou atendimento humano. Handoff pendente.';
+    default:
+      return 'Automacao ativa.';
+  }
+}
 
 export async function findLeadByIdOrPhone(params: { leadId?: string | null; phone?: string | null }) {
   const supabase = getServiceSupabase();
@@ -88,18 +103,17 @@ export async function setLeadAutomationState(params: {
   }
   const previousStatus = lead.lead.automation_status || 'active';
 
-  const patch =
-    params.status === 'paused_human'
-      ? {
-          automation_status: 'paused_human',
-          automation_paused_at: new Date().toISOString(),
-          automation_paused_by: params.pausedBy || null,
-        }
-      : {
-          automation_status: 'active',
-          automation_resumed_at: new Date().toISOString(),
-          automation_paused_by: null,
-        };
+  const patch: Record<string, any> = {
+    automation_status: params.status,
+  };
+
+  if (params.status === 'paused_human') {
+    patch.automation_paused_at = new Date().toISOString();
+    patch.automation_paused_by = params.pausedBy || null;
+  } else if (params.status === 'active') {
+    patch.automation_resumed_at = new Date().toISOString();
+    patch.automation_paused_by = null;
+  }
 
   const { data, error } = await supabase
     .from('leads')
@@ -117,10 +131,9 @@ export async function setLeadAutomationState(params: {
   }
 
   if (previousStatus !== params.status) {
-    const actionText = params.status === 'paused_human' ? 'Atendimento humano assumido. Automacao pausada.' : 'Automacao retomada para esta conversa.';
     await appendSystemMessage({
       leadId: data.id,
-      content: actionText,
+      content: automationStatusSystemMessage(params.status),
     });
   }
 

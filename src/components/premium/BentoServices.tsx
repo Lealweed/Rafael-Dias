@@ -2,38 +2,15 @@ import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "motion/react";
 import { Sparkles, Wind, Sun, Heart, Activity, ShieldCheck } from "lucide-react";
 
-const services = [
-  {
-    title: "Harmonização Facial",
-    desc: "Equilíbrio e simetria com resultados naturais e sofisticados.",
-    icon: <Sparkles className="text-gold" />,
-    size: "large",
-    image: "/assets/spa_portrait.png"
-  },
-  {
-    title: "Protocolo Lip Gloss",
-    desc: "Hidratação profunda e volume sutil para lábios perfeitos.",
-    icon: <Heart className="text-gold" />,
-    size: "small",
-    image: "/assets/facial_massage.png"
-  },
-  {
-    title: "Bioestimuladores",
-    desc: "Recupere o colágeno e a firmeza da sua pele.",
-    icon: <Activity className="text-gold" />,
-    size: "small",
-    image: "/assets/skincare_treatment.png"
-  },
-  {
-    title: "Ultraformer III",
-    desc: "Tecnologia de ponta para lifting e contorno facial.",
-    icon: <Sun className="text-gold" />,
-    size: "medium",
-    image: "/assets/clinic_interior.png"
-  }
-];
+interface ServiceItem {
+  title: string;
+  desc: string;
+  icon: React.ReactNode;
+  size: "large" | "medium" | "small";
+  image: string;
+}
 
-export function BentoServices() {
+export function BentoServices({ services }: { services: ServiceItem[] }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     target: containerRef,

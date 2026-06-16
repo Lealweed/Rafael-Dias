@@ -1,15 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { createClient } from "../lib/supabase/client";
 import { Sparkles, Mail, Lock, CheckCircle2, AlertCircle } from "lucide-react";
+import { fetchSiteSettings, mergeMediaSettings, DEFAULT_MEDIA_SETTINGS } from "../lib/siteSettings";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
 
   const supabase = createClient();
+
+  useEffect(() => {
+    fetchSiteSettings().then((result) => {
+      if (result.ok && result.settings) {
+        setSiteSettings(mergeMediaSettings(result.settings));
+      }
+    });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -32,7 +42,7 @@ export default function Login() {
       {/* Imagem de Fundo Premium com Efeito Glassmorphism e gradiente escuro */}
       <div 
         className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-all duration-1000 scale-105"
-        style={{ backgroundImage: `url('/assets/bg-premium.png')` }}
+        style={{ backgroundImage: `url('${siteSettings.login_bg_image}')` }}
       />
       <div className="absolute inset-0 bg-gradient-to-tr from-[#0B0D12] via-[#0B0D12]/90 to-transparent mix-blend-multiply" />
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#0B0D12]/80 to-[#0B0D12]" />
@@ -50,8 +60,8 @@ export default function Login() {
           
           {/* Logo Premium */}
           <div className="flex items-center gap-3 relative z-10">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] font-semibold italic text-xl shadow-[0_4px_20px_rgba(212,175,55,0.4)]">
-              RD
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] font-semibold italic text-xl shadow-[0_4px_20px_rgba(212,175,55,0.4)] overflow-hidden">
+              <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <h1 className="text-lg font-bold tracking-tight font-serif text-[#E5C38C]">Instituto Rafael Dias</h1>

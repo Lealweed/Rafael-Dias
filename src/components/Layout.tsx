@@ -78,8 +78,8 @@ export default function Layout() {
       {/* TOP NAVIGATION BAR */}
       <header className="relative z-10 flex h-20 w-full shrink-0 items-center justify-between border-b border-white/5 bg-[#0B0D12]/75 backdrop-blur-md px-6">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] font-semibold italic text-lg shadow-[0_4px_15px_rgba(212,175,55,0.35)]">
-            RD
+          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] font-semibold italic text-lg shadow-[0_4px_15px_rgba(212,175,55,0.35)] overflow-hidden">
+            <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
           </div>
           <div className="flex flex-col">
             <h1 className="text-base font-bold tracking-tight text-white font-serif">Instituto Rafael Dias</h1>

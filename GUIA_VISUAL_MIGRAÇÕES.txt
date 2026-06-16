@@ -1,0 +1,172 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                   🚀 GUIA PRÁTICO: APLICAR MIGRAÇÕES                            ║
+║                    Supabase Dashboard (Forma Manual)                             ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 1: ABRIR SQL EDITOR
+─────────────────────────────────────────────────────────────────────────────────
+
+1. Acesse: https://app.supabase.com/projects
+2. Selecione projeto: erlwnyutxrrmcdqujrzq
+3. Clique em "SQL Editor" (menu esquerdo)
+4. Clique em "+ New Query"
+
+Resultado: Você verá uma janela vazia pronta para escrever SQL
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 2: APLICAR MIGRAÇÃO 00011 (Storage Buckets)
+─────────────────────────────────────────────────────────────────────────────────
+
+✂️ COPIAR:
+   Abra o arquivo: supabase/migrations/00011_create_storage_buckets.sql
+   Copie TODO o conteúdo (Ctrl+A, Ctrl+C)
+
+📋 COLAR:
+   - Cole no SQL Editor (Ctrl+V)
+   - Clique no botão "RUN" ou pressione Ctrl+Enter
+   - Aguarde a mensagem "Query executed successfully"
+
+✅ RESULTADO ESPERADO:
+   ✅ 3 buckets criados
+   ✅ RLS Policies criadas
+   ✅ Sem erros
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 3: APLICAR MIGRAÇÃO 00012 (Storage Functions)
+─────────────────────────────────────────────────────────────────────────────────
+
+✂️ COPIAR:
+   Abra: supabase/migrations/00012_create_storage_functions.sql
+   Copie TODO o conteúdo
+
+📋 COLAR:
+   - Limpe o editor (Ctrl+A, Delete)
+   - Cole o novo SQL (Ctrl+V)
+   - Clique "RUN"
+   - Aguarde
+
+✅ RESULTADO ESPERADO:
+   ✅ 9 funções criadas
+   ✅ Indexes criados
+   ✅ Sem erros
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 4: APLICAR MIGRAÇÃO 00013 (Database Triggers)
+─────────────────────────────────────────────────────────────────────────────────
+
+✂️ COPIAR:
+   Abra: supabase/migrations/00013_create_database_triggers.sql
+   Copie TODO o conteúdo
+
+📋 COLAR e EXECUTAR:
+   - Limpe o editor
+   - Cole (Ctrl+V)
+   - RUN
+   - Aguarde
+
+✅ RESULTADO ESPERADO:
+   ✅ 8 triggers criados
+   ✅ 7 funções de query criadas
+   ✅ Sem erros
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 5: APLICAR MIGRAÇÃO 00014 (Automation Functions)
+─────────────────────────────────────────────────────────────────────────────────
+
+✂️ COPIAR:
+   Abra: supabase/migrations/00014_create_automation_functions.sql
+   Copie TODO o conteúdo
+
+📋 COLAR e EXECUTAR:
+   - Limpe o editor
+   - Cole (Ctrl+V)
+   - RUN
+   - Aguarde
+
+✅ RESULTADO ESPERADO:
+   ✅ 7 funções de automação criadas
+   ✅ Permissions concedidas
+   ✅ Sem erros
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 6: APLICAR MIGRAÇÃO 00015 (Reports & Analytics)
+─────────────────────────────────────────────────────────────────────────────────
+
+✂️ COPIAR:
+   Abra: supabase/migrations/00015_create_reports_and_analytics.sql
+   Copie TODO o conteúdo
+
+📋 COLAR e EXECUTAR:
+   - Limpe o editor
+   - Cole (Ctrl+V)
+   - RUN
+   - Aguarde
+
+✅ RESULTADO ESPERADO:
+   ✅ 8 views criadas
+   ✅ 2 funções de relatório criadas
+   ✅ Permissions concedidas
+   ✅ Sem erros
+
+─────────────────────────────────────────────────────────────────────────────────
+PASSO 7: VERIFICAÇÃO FINAL
+─────────────────────────────────────────────────────────────────────────────────
+
+1️⃣ VERIFICAR STORAGE:
+   - Vá em: "Storage" (menu esquerdo)
+   - Deve aparecer 3 buckets:
+     ✅ patient-before-after
+     ✅ patient-records
+     ✅ site-assets
+
+2️⃣ VERIFICAR FUNÇÕES:
+   - Vá em: SQL Editor → New Query
+   - Cole este SQL:
+
+     SELECT 
+       routine_name,
+       routine_type
+     FROM information_schema.routines 
+     WHERE routine_schema = 'public'
+     ORDER BY routine_name;
+
+   - Deve listar as funções criadas (upload_patient_photo, etc.)
+
+3️⃣ VERIFICAR VIEWS:
+   - Cole este SQL:
+
+     SELECT 
+       table_schema,
+       table_name
+     FROM information_schema.views 
+     WHERE table_schema = 'public'
+     ORDER BY table_name;
+
+   - Deve listar as 8 views criadas
+
+─────────────────────────────────────────────────────────────────────────────────
+❌ SE HOUVER ERRO?
+─────────────────────────────────────────────────────────────────────────────────
+
+1. Veja a mensagem na aba "Output" ou "Error"
+2. Copie a mensagem de erro
+3. Verifique se:
+   - Está usando SERVICE_ROLE_KEY (token certo)
+   - O arquivo SQL foi copiado completamente
+   - Não há caracteres especiais corrompidos
+
+4. Se persistir:
+   - Divida o arquivo em partes menores
+   - Copie e execute só a primeira metade
+   - Depois a segunda metade
+
+─────────────────────────────────────────────────────────────────────────────────
+⏱️ TEMPO ESTIMADO: 10-15 minutos
+✨ PRONTO PARA COMEÇAR!
+─────────────────────────────────────────────────────────────────────────────────
+
+URLs úteis:
+- SQL Editor: https://app.supabase.com/project/erlwnyutxrrmcdqujrzq/sql/new
+- Storage:    https://app.supabase.com/project/erlwnyutxrrmcdqujrzq/storage/buckets
+- Database:   https://app.supabase.com/project/erlwnyutxrrmcdqujrzq/editor

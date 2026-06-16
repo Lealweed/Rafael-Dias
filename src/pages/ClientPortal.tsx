@@ -143,8 +143,8 @@ export default function ClientPortal() {
 
         <div className="relative w-full max-w-md bg-[#0D0D0F]/70 backdrop-blur-2xl border border-white/5 p-8 md:p-10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
           <div className="flex flex-col items-center text-center mb-10">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-xl shadow-[0_0_20px_rgba(212,175,55,0.4)] mb-5">
-              RD
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-xl shadow-[0_0_20px_rgba(212,175,55,0.4)] mb-5 overflow-hidden">
+              <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="text-2xl font-light tracking-[0.3em] font-serif text-white uppercase">Área do Paciente</h1>
             <p className="text-[9px] text-[#D4AF37] tracking-[0.5em] uppercase font-bold mt-2">Exclusividade & Cuidado</p>
@@ -210,8 +210,8 @@ export default function ClientPortal() {
       <header className="relative z-10 w-full border-b border-white/5 bg-[#0D0D0F]/90 backdrop-blur-2xl py-4">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-sm">
-              R
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-sm overflow-hidden">
+              <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <h1 className="text-xs font-bold tracking-widest font-serif text-[#ffd700]">Portal do Paciente</h1>

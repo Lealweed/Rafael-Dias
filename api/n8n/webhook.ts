@@ -1,18 +1,9 @@
-import { appendConversationMessage, ensureLeadByPhone, logIntegrationEvent, normalizePhone } from '../_lib/crm.js';
+import { appendConversationMessage, ensureLeadByPhone, logIntegrationEvent } from '../_lib/crm.js';
+import { extractInboundPhone, extractInboundName, parseInboundMessage, isHumanHandoffRequested, getInboundEventType } from '../_lib/n8n-inbound.js';
+import { setLeadAutomationState } from '../_lib/automation.js';
 
 function pickData(payload: any) {
   return payload?.data || payload?.body?.data || payload?.raw?.data || {};
-}
-
-function mapInboundMessageType(payload: any, data: any): string {
-  const rawType = String(payload?.messageType || payload?.type || data?.messageType || '').trim();
-  if (!rawType) return 'text';
-  if (rawType === 'reactionMessage') return 'reaction';
-  if (rawType === 'audioMessage') return 'audio';
-  if (rawType === 'imageMessage') return 'image';
-  if (rawType === 'documentMessage') return 'document';
-  if (rawType === 'videoMessage') return 'video';
-  return 'text';
 }
 
 export default async function handler(req: any, res: any) {
@@ -50,10 +41,10 @@ export default async function handler(req: any, res: any) {
   }
 
   const data = pickData(payload);
-  const eventType = String(payload.event || payload.type || payload.body?.event || '').toLowerCase();
+  const eventType = getInboundEventType(payload);
   const fromMe = Boolean(data?.key?.fromMe ?? payload?.fromMe ?? payload?.body?.fromMe ?? false);
 
-  // Ignora eventos de status/eco e mensagens enviadas pelo próprio número.
+  // Ignore status/echo events and messages sent by the bot itself.
   if ((eventType && !eventType.includes('messages.')) || fromMe) {
     return res.status(200).json({ received: true, ignored: true, reason: fromMe ? 'from_me' : 'non_message_event' });
   }
@@ -84,43 +75,16 @@ export default async function handler(req: any, res: any) {
       return res.status(200).json({ received: true, status: 'already_processed', timestamp: new Date().toISOString() });
     }
 
-    let phone =
-      payload.phone ||
-      payload.from ||
-      payload.remoteJid ||
-      payload.wa_id ||
-      payload.sender ||
-      data?.key?.remoteJid ||
-      '';
-
-    phone = normalizePhone(phone);
-
-    let content = payload.message || payload.text || payload.content || '';
-    if (!content && data?.message) {
-      content = data.message.conversation || data.message.extendedTextMessage?.text || '';
-    }
-    const messageType = mapInboundMessageType(payload, data);
-    if (!String(content || '').trim()) {
-      if (messageType === 'reaction') {
-        content = data?.message?.reactionMessage?.text || '[Reacao recebida]';
-      } else if (messageType === 'audio') {
-        content = '[Audio recebido]';
-      } else if (messageType === 'image') {
-        content = data?.message?.imageMessage?.caption || '[Imagem recebida]';
-      } else if (messageType === 'document') {
-        content = data?.message?.documentMessage?.caption || '[Documento recebido]';
-      } else if (messageType === 'video') {
-        content = data?.message?.videoMessage?.caption || '[Video recebido]';
-      }
-    }
-
-    const name = payload.name || payload.contact_name || payload.pushName || data?.pushName || phone || 'Lead';
+    const phone = extractInboundPhone(payload);
+    const name = extractInboundName(payload) || payload.name || payload.contact_name || payload.pushName || phone || 'Lead';
+    const message = parseInboundMessage(payload);
+    const needsHandoff = isHumanHandoffRequested(payload);
 
     if (!phone) {
       return res.status(200).json({ received: true, ignored: true, reason: 'no_phone', timestamp: new Date().toISOString() });
     }
 
-    if (!String(content || '').trim()) {
+    if (!message.content || !String(message.content).trim()) {
       return res.status(200).json({ received: true, ignored: true, reason: 'no_content', timestamp: new Date().toISOString() });
     }
 
@@ -129,16 +93,10 @@ export default async function handler(req: any, res: any) {
       return res.status(500).json({ error: 'Lead sync failed', details: lead.reason });
     }
 
-    // Auto-Pause check
-    const textStr = String(content || '');
-    const keywords = ['humano', 'atendente', 'falar com', 'cancelar', 'reagendar', 'desmarcar', 'remarcar', 'suporte', 'atendimento', 'pessoalmente'];
-    const needsHandoff = keywords.some(kw => textStr.toLowerCase().includes(kw));
-
-    if (needsHandoff && lead.lead.automation_status !== 'paused_human') {
-      const { setLeadAutomationState } = await import('../_lib/automation.js');
+    if (needsHandoff && !['paused_human', 'handoff_requested'].includes(lead.lead.automation_status)) {
       const updated = await setLeadAutomationState({
         leadId: lead.lead.id,
-        status: 'paused_human',
+        status: 'handoff_requested',
       });
       if (updated.ok) {
         lead.lead = updated.lead;
@@ -148,9 +106,10 @@ export default async function handler(req: any, res: any) {
     const messageWrite = await appendConversationMessage({
       leadId: lead.lead.id,
       direction: 'inbound',
-      type: messageType,
+      type: message.type,
       source: 'customer',
-      content: String(content),
+      content: String(message.content),
+      mediaUrl: message.mediaUrl || null,
       n8nMessageId: eventId,
     });
 

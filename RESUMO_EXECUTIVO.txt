@@ -1,0 +1,82 @@
+🎯 RESUMO EXECUTIVO - O QUE FAZER AGORA
+
+═══════════════════════════════════════════════════════════════════════════════
+
+5 MIGRAÇÕES CRIADAS E PRONTAS PARA APLICAR:
+
+✅ 00011_create_storage_buckets.sql
+   → Cria storage para fotos (patient-before-after, patient-records, site-assets)
+
+✅ 00012_create_storage_functions.sql
+   → Funções para upload/delete de fotos, busca de leads, etc.
+
+✅ 00013_create_database_triggers.sql
+   → Auto-update de timestamps, triggers de automação
+
+✅ 00014_create_automation_functions.sql
+   → Integração N8N, gerenciamento de leads, mensagens
+
+✅ 00015_create_reports_and_analytics.sql
+   → 8 views para dashboards e relatórios
+
+═══════════════════════════════════════════════════════════════════════════════
+
+COMO APLICAR (3 OPÇÕES):
+
+📌 OPÇÃO 1: Dashboard Supabase (RECOMENDADO)
+   1. Abra: https://app.supabase.com/project/erlwnyutxrrmcdqujrzq/sql/new
+   2. Para cada arquivo .sql em supabase/migrations:
+      - Copie o conteúdo completo
+      - Cole no SQL Editor
+      - Clique RUN
+      - Aguarde até completar
+
+   ⏱️ Tempo: ~15 minutos
+
+📌 OPÇÃO 2: Script Python
+   $ cd g:\Rafael-Dias
+   $ python apply_migrations.py
+
+📌 OPÇÃO 3: Integração Git/Vercel (Automático)
+   $ git add supabase/migrations/000*.sql
+   $ git commit -m "Add storage and automation migrations"
+   $ git push
+   → Vercel aplicará automaticamente
+
+═══════════════════════════════════════════════════════════════════════════════
+
+DOCUMENTAÇÃO CRIADA:
+
+📄 GUIA_VISUAL_MIGRAÇÕES.txt
+   → Passo-a-passo detalhado com prints ASCII
+
+📄 INSTRUÇÕES_APLICAR_MIGRAÇÕES.md
+   → Instruções em Markdown com verificações
+
+🐍 apply_migrations.py
+   → Script automático em Python
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ IMPORTANTE:
+- Não há forma automática via CLI (erro de autenticação no Supabase)
+- A opção Dashboard é a mais confiável e rápida
+- Execute as migrações em ordem (00011 → 00015)
+- Cada uma demora ~2-3 minutos
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ DEPOIS DE APLICAR:
+
+Você terá:
+✅ 3 storage buckets funcionando
+✅ 28+ funções SQL criadas
+✅ 8 views para analytics
+✅ Triggers automáticos
+✅ RLS policies configuradas
+✅ Tudo pronto para upload de imagens!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 COMEÇAR AGORA:
+https://app.supabase.com/project/erlwnyutxrrmcdqujrzq/sql/new

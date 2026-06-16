@@ -1,21 +1,22 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence, useSpring } from "motion/react";
-import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook } from "lucide-react";
+import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook, Heart, Activity, Sun } from "lucide-react";
 import Lenis from "lenis";
 import { PremiumButton } from "../components/premium/PremiumButton";
 import { BeforeAfterSlider } from "../components/premium/BeforeAfterSlider";
 import { TestimonialCarousel } from "../components/premium/TestimonialCarousel";
 import { BentoServices } from "../components/premium/BentoServices";
+import { fetchSiteSettings, mergeMediaSettings, DEFAULT_MEDIA_SETTINGS } from "../lib/siteSettings";
 
-const patients = [
+const patientTemplates = [
   {
     name: "Letícia Oliveira",
     role: "Influenciadora & Advogada",
     location: "Parauapebas - PA",
     comment: "Minha rotina exige uma imagem impecável e natural. O protocolo de Harmonização Facial do Dr. Rafael trouxe frescor e rejuvenescimento, mantendo minha identidade. Um atendimento premium único.",
-    beforeImage: "/assets/spa_portrait.png",
-    afterImage: "/assets/spa_portrait.png",
+    beforeKey: "patient_before_image_0",
+    afterKey: "patient_after_image_0",
     markers: [
       { x: "50%", y: "22%", label: "Toxina Botulínica", desc: "Fronte Suavizada" },
       { x: "50%", y: "56%", label: "Ácido Hialurônico", desc: "Contorno Labial" },
@@ -28,8 +29,8 @@ const patients = [
     role: "Promotora de Justiça",
     location: "Parauapebas - PA",
     comment: "Confiança e discrição. O Dr. Rafael explica cada detalhe do planejamento antes de começar. O Botox e os bioestimuladores trouxeram firmeza com total naturalidade.",
-    beforeImage: "/assets/skincare_treatment.png",
-    afterImage: "/assets/skincare_treatment.png",
+    beforeKey: "patient_before_image_1",
+    afterKey: "patient_after_image_1",
     markers: [
       { x: "42%", y: "42%", label: "Fios PDO", desc: "Lifting Terço Médio" },
       { x: "68%", y: "52%", label: "Bioestimulador", desc: "Estímulo de Colágeno" }
@@ -40,8 +41,8 @@ const patients = [
     role: "Advogado Sócio-Sênior",
     location: "Parauapebas - PA",
     comment: "Sempre tive receio de ficar artificial. O Dr. Rafael me tranquilizou na consulta presencial. O resultado do preenchimento e colágeno ficou incrível, discreto e rejuvenescido.",
-    beforeImage: "/assets/facial_massage.png",
-    afterImage: "/assets/facial_massage.png",
+    beforeKey: "patient_before_image_2",
+    afterKey: "patient_after_image_2",
     markers: [
       { x: "50%", y: "38%", label: "Rinomodelação", desc: "Alinhamento Sutil" },
       { x: "72%", y: "70%", label: "Mandíbula & Mento", desc: "Definição de Contorno" }
@@ -53,6 +54,7 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const { scrollYProgress } = useScroll();
   const [activePatient, setActivePatient] = useState(0);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.98]);
@@ -74,11 +76,54 @@ export default function Home() {
     const handleScroll = () => setScrolled(window.scrollY > 50);
     window.addEventListener("scroll", handleScroll, { passive: true });
     
+    fetchSiteSettings().then((result) => {
+      if (result.ok && result.settings) {
+        setSiteSettings(mergeMediaSettings(result.settings));
+      }
+    });
+
     return () => {
       window.removeEventListener("scroll", handleScroll);
       lenis.destroy();
     };
   }, []);
+
+  const services = useMemo(() => [
+    {
+      title: "Harmonização Facial",
+      desc: "Equilíbrio e simetria com resultados naturais e sofisticados.",
+      icon: <Sparkles className="text-gold" />,
+      size: "large" as const,
+      image: siteSettings.bento_service_image_0,
+    },
+    {
+      title: "Protocolo Lip Gloss",
+      desc: "Hidratação profunda e volume sutil para lábios perfeitos.",
+      icon: <Heart className="text-gold" />,
+      size: "small" as const,
+      image: siteSettings.bento_service_image_1,
+    },
+    {
+      title: "Bioestimuladores",
+      desc: "Recupere o colágeno e a firmeza da sua pele.",
+      icon: <Activity className="text-gold" />,
+      size: "small" as const,
+      image: siteSettings.bento_service_image_2,
+    },
+    {
+      title: "Ultraformer III",
+      desc: "Tecnologia de ponta para lifting e contorno facial.",
+      icon: <Sun className="text-gold" />,
+      size: "medium" as const,
+      image: siteSettings.bento_service_image_3,
+    },
+  ], [siteSettings]);
+
+  const patients = useMemo(() => patientTemplates.map((patient) => ({
+    ...patient,
+    beforeImage: siteSettings[patient.beforeKey] || DEFAULT_MEDIA_SETTINGS[patient.beforeKey],
+    afterImage: siteSettings[patient.afterKey] || DEFAULT_MEDIA_SETTINGS[patient.afterKey],
+  })), [siteSettings]);
 
   return (
     <div className="relative min-h-screen bg-black-void text-[#E3D5C1] font-sans selection:bg-gold/30 selection:text-gold overflow-x-hidden">
@@ -166,7 +211,7 @@ export default function Home() {
             playsInline
             className="w-full h-full object-cover opacity-20 grayscale"
           >
-            <source src="https://videos.pexels.com/video-files/5649212/5649212-uhd_3840_2160_25fps.mp4" type="video/mp4" />
+            <source src={siteSettings.home_hero_video} type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-gradient-to-b from-black-void via-transparent to-black-void opacity-90" />
         </div>
@@ -215,7 +260,7 @@ export default function Home() {
           >
             <div className="relative rounded-[48px] overflow-hidden border border-white/5 aspect-[4/5] shadow-2xl group">
               <motion.img 
-                src="https://images.pexels.com/photos/730229/pexels-photo-730229.jpeg" 
+                src={siteSettings.home_hero_portrait_image} 
                 alt="Dr. Rafael Dias" 
                 className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000"
                 whileHover={{ scale: 1.03 }}
@@ -264,7 +309,7 @@ export default function Home() {
             </h2>
           </motion.div>
 
-          <BentoServices />
+          <BentoServices services={services} />
         </div>
       </section>
 

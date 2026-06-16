@@ -36,19 +36,19 @@ export default async function handler(req: any, res: any) {
     const automationState = contactId
       ? await getLeadAutomationState(String(contactId))
       : await findLeadByIdOrPhone({ phone: destination });
-    if (automationState.ok && automationState.lead.automation_status === 'paused_human' && source === 'agent') {
+    if (automationState.ok && ['paused_human', 'handoff_requested'].includes(automationState.lead.automation_status) && source === 'agent') {
       await logIntegrationEvent({
         eventId: `blocked_${outboundEventId}`,
         eventType: outboundType === 'reaction' ? 'agent_reaction_blocked_human_handoff' : 'agent_outbound_blocked_human_handoff',
         direction: 'outbound',
         payload: { contactId, destination, message, reaction, targetKey, type: outboundType, source, lead: automationState.lead },
         status: 'failed',
-        errorMessage: 'automation_paused_human',
+        errorMessage: automationState.lead.automation_status,
       });
 
       return res.status(409).json({
-        error: 'automation_paused_human',
-        details: 'Atendimento humano ativo. O agente nao pode enviar novas mensagens.',
+        error: automationState.lead.automation_status,
+        details: 'Atendimento humano ativo ou solicitado. O agente nao pode enviar novas mensagens.',
         lead: automationState.lead,
       });
     }

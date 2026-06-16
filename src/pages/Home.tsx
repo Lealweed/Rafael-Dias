@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence, useSpring } from "motion/react";
 import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook, Heart, Activity, Sun, X, Loader2 } from "lucide-react";
@@ -61,13 +61,23 @@ export default function Home() {
 
   // Form & Tracking States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
+  const [step, setStep] = useState(1); // 1: Info, 2: Date/Time, 3: Stripe Details
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [cpf, setCpf] = useState("");
   const [treatment, setTreatment] = useState("Avaliação Geral");
+  const [selectedDate, setSelectedDate] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split("T")[0];
+  });
+  const [selectedSlot, setSelectedSlot] = useState("09:00");
   const [notes, setNotes] = useState("");
   const [formOrigin, setFormOrigin] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const SLOTS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
 
   const trackEvent = async (eventType: string, leadId?: string) => {
     try {
@@ -82,7 +92,7 @@ export default function Home() {
 
   const openBookingModal = (origin: string) => {
     setFormOrigin(origin);
-    setIsSuccess(false);
+    setStep(1);
     setIsModalOpen(true);
     trackEvent("click_vip_button");
   };
@@ -101,59 +111,64 @@ export default function Home() {
     }
   };
 
+  const handleCpfChange = (val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (clean.length <= 11) {
+      let formatted = clean;
+      if (clean.length > 3) {
+        formatted = `${clean.slice(0, 3)}.${clean.slice(3)}`;
+      }
+      if (clean.length > 6) {
+        formatted = `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`;
+      }
+      if (clean.length > 9) {
+        formatted = `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
+      }
+      setCpf(formatted);
+    }
+  };
+
   const handleBookingSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      alert("Por favor, preencha seu nome e celular.");
+    if (step === 1) {
+      if (!name.trim() || !phone.trim() || !email.trim() || !cpf.trim()) {
+        alert("Por favor, preencha todos os campos obrigatórios.");
+        return;
+      }
+      setStep(2);
       return;
     }
+    if (step === 2) {
+      setStep(3);
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      const cleanPhone = phone.replace(/\D/g, "");
-      
-      // 1. Insert lead into Supabase
-      const { data: leadData, error: leadError } = await supabase
-        .from("leads")
-        .insert({
-          full_name: name.trim(),
-          phone: cleanPhone,
-          origin: `Landing Page - Botão ${formOrigin}`,
-          main_interest: treatment,
-          notes: notes.trim(),
-          temperature: "warm",
-        })
-        .select("id")
-        .maybeSingle();
+      const res = await fetch("/api/stripe/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          phone,
+          email,
+          cpf,
+          treatment,
+          date: selectedDate,
+          slot: selectedSlot,
+        }),
+      });
 
-      const leadId = leadData?.id || null;
-
-      // 2. Track form submission and WhatsApp events
-      await trackEvent("form_submission", leadId);
-      await trackEvent("whatsapp_redirect", leadId);
-
-      setIsSuccess(true);
-      setIsSubmitting(false);
-
-      // 3. Reset states, close modal & Open WhatsApp after delay
-      setTimeout(() => {
-        setIsModalOpen(false);
-        setIsSuccess(false);
-        setName("");
-        setPhone("");
-        setNotes("");
-
-        const text = encodeURIComponent(
-          `Olá Dr. Rafael Dias! Acabei de solicitar meu agendamento VIP no site.\n\n` +
-          `• *Nome*: ${name.trim()}\n` +
-          `• *Procedimento*: ${treatment}\n` +
-          `• *Mensagem*: ${notes.trim() || "Sem observações"}\n\n` +
-          `Gostaria de agendar minha consulta!`
-        );
-        window.open(`https://wa.me/5594999999999?text=${text}`, "_blank");
-      }, 2500);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data?.error || "Erro ao processar checkout.");
+      }
     } catch (err) {
       console.error(err);
-      alert("Erro ao enviar dados. Mas você pode falar com a nossa equipe no WhatsApp!");
+      alert("Houve uma falha ao conectar com o serviço de agendamentos.");
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -597,49 +612,27 @@ export default function Home() {
               transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
               className="relative w-full max-w-md bg-[#0B0D12]/95 border border-[#D4AF37]/35 rounded-[32px] p-6 md:p-8 shadow-[0_10px_50px_rgba(212,175,55,0.15)] backdrop-blur-xl"
             >
-              {/* Close Button */}
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors p-1"
-              >
-                <X className="w-5 h-5" />
-              </button>
-
-              {isSuccess ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center">
-                  <motion.div
-                    initial={{ scale: 0.5, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                    className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/35 text-green-400 flex items-center justify-center mb-4"
-                  >
-                    <CheckCircle2 className="w-8 h-8" />
-                  </motion.div>
-                  <h3 className="text-xl font-medium tracking-tight text-white font-serif">Solicitação Enviada!</h3>
-                  <p className="text-xs text-white/40 mt-2 font-light leading-relaxed">
-                    Seus dados de agendamento VIP foram recebidos. <br />
-                    Redirecionando para o WhatsApp em instantes...
-                  </p>
-                  <div className="w-24 h-1 bg-[#D4AF37]/20 rounded-full overflow-hidden mt-6 font-mono">
-                    <motion.div 
-                      className="h-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]"
-                      initial={{ width: 0 }}
-                      animate={{ width: "100%" }}
-                      transition={{ duration: 2.5, ease: "linear" }}
-                    />
-                  </div>
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] mb-3">
+                  <Sparkles className="w-5 h-5" />
                 </div>
-              ) : (
-                <>
-                  <div className="text-center mb-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] mb-3">
-                      <Sparkles className="w-5 h-5" />
-                    </div>
-                    <h3 className="text-xl font-medium tracking-tight text-white font-serif">Agende sua Experiência VIP</h3>
-                    <p className="text-xs text-white/40 mt-1 font-light">Insira seus dados para iniciar seu atendimento personalizado.</p>
-                  </div>
+                <h3 className="text-xl font-medium tracking-tight text-white font-serif">Agende sua Experiência VIP</h3>
+                <p className="text-xs text-white/40 mt-1 font-light">
+                  {step === 1 && "Passo 1: Identificação do Paciente"}
+                  {step === 2 && "Passo 2: Escolha o melhor Horário"}
+                  {step === 3 && "Passo 3: Regras de Pagamento & Checkout"}
+                </p>
+                {/* Visual Step Indicator */}
+                <div className="flex justify-center gap-1.5 mt-3">
+                  <span className={`w-6 h-1 rounded-full transition-all ${step >= 1 ? "bg-[#D4AF37]" : "bg-white/10"}`} />
+                  <span className={`w-6 h-1 rounded-full transition-all ${step >= 2 ? "bg-[#D4AF37]" : "bg-white/10"}`} />
+                  <span className={`w-6 h-1 rounded-full transition-all ${step >= 3 ? "bg-[#D4AF37]" : "bg-white/10"}`} />
+                </div>
+              </div>
 
-                  <form onSubmit={handleBookingSubmit} className="space-y-4">
+              <form onSubmit={handleBookingSubmit} className="space-y-4">
+                {step === 1 && (
+                  <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
                       <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Nome Completo</label>
                       <input
@@ -648,7 +641,7 @@ export default function Home() {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="Seu nome completo"
-                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] transition-all font-light"
                       />
                     </div>
 
@@ -660,59 +653,176 @@ export default function Home() {
                         value={phone}
                         onChange={(e) => handlePhoneChange(e.target.value)}
                         placeholder="(94) 99999-9999"
-                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] transition-all font-light"
                       />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Procedimento Desejado</label>
-                      <select
-                        value={treatment}
-                        onChange={(e) => setTreatment(e.target.value)}
-                        className="w-full rounded-xl border border-white/10 bg-black/80 px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light appearance-none"
-                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4AF37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 16px center', backgroundSize: '12px', backgroundRepeat: 'no-repeat' }}
-                      >
-                        <option value="Avaliação Geral" className="bg-[#0B0D12] text-white">Avaliação Estética Geral</option>
-                        <option value="Harmonização Facial" className="bg-[#0B0D12] text-white">Harmonização Facial</option>
-                        <option value="Lip Gloss / Preenchimento Labial" className="bg-[#0B0D12] text-white">Preenchimento Labial (Lip Gloss)</option>
-                        <option value="Bioestimuladores de Colágeno" className="bg-[#0B0D12] text-white">Bioestimuladores de Colágeno</option>
-                        <option value="Fios de Sustentação" className="bg-[#0B0D12] text-white">Fios de Sustentação PDO</option>
-                        <option value="Toxina Botulínica" className="bg-[#0B0D12] text-white">Toxina Botulínica (Botox)</option>
-                        <option value="Outro Procedimento" className="bg-[#0B0D12] text-white">Outros Procedimentos</option>
-                      </select>
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">E-mail</label>
+                      <input
+                        type="email"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="seu.email@exemplo.com"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] transition-all font-light"
+                      />
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Observações / Preferência de Horário</label>
-                      <textarea
-                        value={notes}
-                        onChange={(e) => setNotes(e.target.value)}
-                        placeholder="Gostaria de agendar para qual período ou dia?"
-                        rows={2}
-                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light resize-none"
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">CPF</label>
+                      <input
+                        type="text"
+                        required
+                        value={cpf}
+                        onChange={(e) => handleCpfChange(e.target.value)}
+                        placeholder="000.000.000-00"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] transition-all font-light"
                       />
                     </div>
 
                     <button
                       type="submit"
-                      disabled={isSubmitting}
-                      className="w-full flex items-center justify-center gap-2 mt-4 px-6 py-3.5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 mt-4 px-6 py-3.5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95"
                     >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          <span>Cadastrando...</span>
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="w-3.5 h-3.5" />
-                          <span>Solicitar Agendamento VIP</span>
-                        </>
-                      )}
+                      <span>Continuar para Data & Horário</span>
+                      <ArrowRight className="w-3.5 h-3.5" />
                     </button>
-                  </form>
-                </>
-              )}
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div className="space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Selecione o Procedimento</label>
+                      <select
+                        value={treatment}
+                        onChange={(e) => setTreatment(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/80 px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37] transition-all font-light appearance-none"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4AF37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 16px center', backgroundSize: '12px', backgroundRepeat: 'no-repeat' }}
+                      >
+                        <option value="Avaliação Geral">Avaliação Estética Geral</option>
+                        <option value="Harmonização Facial">Harmonização Facial</option>
+                        <option value="Lip Gloss / Preenchimento Labial">Preenchimento Labial (Lip Gloss)</option>
+                        <option value="Bioestimuladores de Colágeno">Bioestimuladores de Colágeno</option>
+                        <option value="Fios de Sustentação">Fios de Sustentação PDO</option>
+                        <option value="Toxina Botulínica">Toxina Botulínica (Botox)</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Escolha a Data</label>
+                      <input
+                        type="date"
+                        required
+                        min={new Date(Date.now() + 86400000).toISOString().split("T")[0]}
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37] transition-all [color-scheme:dark]"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Horários Disponíveis</label>
+                      <div className="grid grid-cols-3 gap-2">
+                        {SLOTS.map((slotOption) => (
+                          <button
+                            key={slotOption}
+                            type="button"
+                            onClick={() => setSelectedSlot(slotOption)}
+                            className={`py-2 px-3 rounded-lg border text-center text-xs font-mono transition-all ${
+                              selectedSlot === slotOption
+                                ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#E5C38C] font-bold"
+                                : "bg-black/20 border-white/10 text-white/50 hover:border-white/20 hover:text-white"
+                            }`}
+                          >
+                            {slotOption}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setStep(1)}
+                        className="flex-1 py-3 px-5 border border-white/10 rounded-xl text-xs font-semibold text-white/60 hover:text-white transition-all text-center"
+                      >
+                        Voltar
+                      </button>
+                      <button
+                        type="submit"
+                        className="flex-[1.5] flex items-center justify-center gap-2 py-3 px-5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95"
+                      >
+                        <span>Avançar</span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-4">
+                    <div className="bg-[#07090E] border border-white/5 p-4 rounded-2xl space-y-3">
+                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#E5C38C]">Resumo Financeiro da Consulta</h4>
+                      <div className="flex justify-between text-xs text-white/60">
+                        <span>Valor Total da Consulta</span>
+                        <span className="font-mono text-white font-semibold">R$ 300,00</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-[#E5C38C]">
+                        <span>Sinal Pago Agora (Garantia)</span>
+                        <span className="font-mono font-bold">R$ 150,00</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-white/40">
+                        <span>Valor Restante na Clínica</span>
+                        <span className="font-mono">R$ 150,00</span>
+                      </div>
+                      
+                      <div className="pt-2 border-t border-white/5 text-[9px] text-white/40 leading-relaxed">
+                        ⚠️ **Nota de Dedução**: Caso você feche qualquer procedimento após a avaliação, os R$ 300,00 inteiros serão deduzidos do preço final do procedimento!
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Observações Especiais (Opcional)</label>
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Algum detalhe relevante sobre seu agendamento?"
+                        rows={2}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] transition-all font-light resize-none"
+                      />
+                    </div>
+
+                    <div className="flex gap-3 mt-4">
+                      <button
+                        type="button"
+                        onClick={() => setStep(2)}
+                        className="flex-1 py-3 px-5 border border-white/10 rounded-xl text-xs font-semibold text-white/60 hover:text-white transition-all text-center"
+                      >
+                        Voltar
+                      </button>
+                      <button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="flex-[2] flex items-center justify-center gap-2 py-3.5 px-5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-50"
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            <span>Redirecionando...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Confirmar & Reservar</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </form>
             </motion.div>
           </div>
         )}

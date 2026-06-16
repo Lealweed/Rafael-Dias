@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall, Activity, TrendingUp, MousePointer, CheckSquare, Globe } from "lucide-react";
+import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall, Activity, TrendingUp, MousePointer, CheckSquare, Globe, Calendar } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -15,6 +15,9 @@ export default function Leads() {
   const [analyticsEvents, setAnalyticsEvents] = useState<any[]>([]);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
   const [analyticsFilter, setAnalyticsFilter] = useState("all");
+
+  const [onlineAppointments, setOnlineAppointments] = useState<any[]>([]);
+  const [appointmentsLoading, setAppointmentsLoading] = useState(false);
 
   const fetchAnalytics = async () => {
     setAnalyticsLoading(true);
@@ -45,9 +48,80 @@ export default function Leads() {
     }
   };
 
+  const fetchOnlineAppointments = async () => {
+    setAppointmentsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("appointments")
+        .select(`
+          *,
+          lead:leads (
+            id,
+            full_name,
+            phone,
+            origin
+          )
+        `)
+        .not("payment_status", "is", null)
+        .order("appointment_date", { ascending: false });
+
+      if (error) throw error;
+      setOnlineAppointments(data || []);
+    } catch (err) {
+      console.error("Error fetching online appointments:", err);
+    } finally {
+      setAppointmentsLoading(false);
+    }
+  };
+
+  const handleConfirmRemainingPayment = async (apptId: string, leadId: string, treatmentTitle: string) => {
+    try {
+      const { error: apptErr } = await supabase
+        .from("appointments")
+        .update({
+          payment_status: "fully_paid",
+          remaining_amount: 0.00,
+        })
+        .eq("id", apptId);
+
+      if (apptErr) throw apptErr;
+
+      await supabase
+        .from("patient_financials")
+        .insert({
+          lead_id: leadId,
+          description: `Quitacao presencial de consulta: ${treatmentTitle}`,
+          total_value: 150.00,
+          payment_method: "presencial",
+          installments: [
+            {
+              number: 1,
+              due_date: new Date().toISOString().split("T")[0],
+              value: 150.00,
+              status: "pago",
+            }
+          ]
+        });
+
+      await supabase.from("notifications").insert({
+        recipient_id: leadId,
+        title: "Consulta Quitada",
+        message: `Confirmamos a quitacao presencial dos R$ 150,00 restantes para sua consulta de ${treatmentTitle}.`
+      });
+
+      alert("Baixa efetuada com sucesso! Lancamento financeiro registrado.");
+      fetchOnlineAppointments();
+    } catch (err: any) {
+      console.error("Error completing payment:", err);
+      alert("Erro ao efetuar baixa: " + err.message);
+    }
+  };
+
   useEffect(() => {
     if (viewTab === "analytics") {
       fetchAnalytics();
+    } else if (viewTab === "online_bookings") {
+      fetchOnlineAppointments();
     }
   }, [viewTab, supabase]);
 
@@ -504,6 +578,19 @@ export default function Leads() {
             <User className="w-4 h-4" />
             <span>Todos os Leads / Pacientes</span>
           </button>
+          
+          <button
+            onClick={() => setViewTab("online_bookings")}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all ${
+              viewTab === "online_bookings"
+                ? "bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] shadow-inner font-bold"
+                : "text-white/40 hover:text-white/80 hover:bg-white/[0.02] border border-transparent"
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>Consultas Stripe (R$ 300)</span>
+          </button>
+
           <button
             onClick={() => setViewTab("analytics")}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all ${
@@ -622,6 +709,105 @@ export default function Leads() {
             </table>
           </div>
         </div>
+        ) : viewTab === "online_bookings" ? (
+          /* Online Bookings (Stripe) View */
+          <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-white/5 bg-[#0B0D12]/60 backdrop-blur-3xl shadow-2xl">
+            {/* Toolbar */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 px-8 py-6 gap-6 bg-white/[0.01]">
+              <div>
+                <h3 className="text-sm font-semibold tracking-wide text-white uppercase tracking-wider">Controle de Consultas (Stripe)</h3>
+                <p className="text-[10px] text-white/45 mt-0.5">Gestão de consultas agendadas via site com depósito de R$ 150,00.</p>
+              </div>
+              <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
+                Total: <span className="text-[#E5C38C] font-mono">{onlineAppointments.length}</span> agendamentos
+              </div>
+            </div>
+
+            {/* Bookings Table */}
+            <div className="flex-1 overflow-auto">
+              <table className="w-full text-left border-collapse">
+                <thead className="bg-[#0E1118]/90 text-[9px] uppercase tracking-[0.3em] text-white/30 sticky top-0 border-b border-white/5 z-10">
+                  <tr>
+                    <th className="px-8 py-5 font-bold">Paciente / Cadastro</th>
+                    <th className="px-8 py-5 font-bold">Procedimento</th>
+                    <th className="px-8 py-5 font-bold">Data & Horário</th>
+                    <th className="px-8 py-5 font-bold">Sinal Stripe</th>
+                    <th className="px-8 py-5 font-bold">Pendente (Clínica)</th>
+                    <th className="px-8 py-5 font-bold">Status do Acerto</th>
+                    <th className="px-8 py-5 font-bold text-right">Ação Financeira</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-[11px] text-white/60">
+                  {appointmentsLoading ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-20 text-white/20 uppercase tracking-[0.4em] font-bold text-xs animate-pulse">Buscando Agendamentos...</td>
+                    </tr>
+                  ) : onlineAppointments.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="text-center py-20 text-white/20 uppercase tracking-[0.4em] font-bold text-xs">Nenhuma consulta vendida registrada</td>
+                    </tr>
+                  ) : (
+                    onlineAppointments.map((appt) => {
+                      const dateLabel = formatDateTime(appt.appointment_date);
+                      const isPaidFull = appt.payment_status === "fully_paid";
+                      
+                      return (
+                        <tr key={appt.id} className="hover:bg-white/[0.01] transition-all">
+                          <td className="px-8 py-4">
+                            <div className="font-serif font-bold text-white text-[14px]">
+                              {appt.lead?.full_name || "Visitante Web"}
+                            </div>
+                            <div className="text-[9px] text-white/30 mt-0.5 font-mono">
+                              Cel: {appt.lead?.phone || "-"} | CPF: {appt.cpf || "-"}
+                            </div>
+                          </td>
+                          <td className="px-8 py-4">
+                            <span className="px-2.5 py-0.5 rounded bg-white/5 border border-white/5 text-white/50 text-[10px] font-semibold">
+                              {appt.title}
+                            </span>
+                          </td>
+                          <td className="px-8 py-4 font-mono text-[10px] text-[#E5C38C] font-semibold">
+                            {dateLabel}
+                          </td>
+                          <td className="px-8 py-4 text-green-400 font-mono font-bold">
+                            R$ {appt.deposit_amount || "150.00"}
+                          </td>
+                          <td className="px-8 py-4 font-mono text-white/40">
+                            R$ {appt.remaining_amount || "150.00"}
+                          </td>
+                          <td className="px-8 py-4">
+                            {isPaidFull ? (
+                              <span className="rounded-full border border-green-500/20 bg-green-500/10 px-2 py-0.5 text-[8px] font-bold text-green-400 uppercase tracking-wide">
+                                Quitada (R$ 300)
+                              </span>
+                            ) : (
+                              <span className="rounded-full border border-amber-500/20 bg-amber-500/10 px-2 py-0.5 text-[8px] font-bold text-amber-400 uppercase tracking-wide">
+                                Pago Sinal (R$ 150)
+                              </span>
+                            )}
+                          </td>
+                          <td className="px-8 py-4 text-right">
+                            {!isPaidFull ? (
+                              <button
+                                onClick={() => handleConfirmRemainingPayment(appt.id, appt.lead_id, appt.title)}
+                                className="px-3.5 py-1.5 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[9px] font-bold text-[#E5C38C] uppercase tracking-widest hover:bg-[#D4AF37]/30 transition-all shadow-gold"
+                              >
+                                Baixa Presencial (R$ 150)
+                              </button>
+                            ) : (
+                              <span className="text-[9px] text-white/20 font-bold uppercase tracking-widest">
+                                Pago no Dia
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         ) : (
           /* Analytics Dashboard View */
           <div className="flex-1 flex flex-col overflow-y-auto space-y-6">

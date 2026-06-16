@@ -584,7 +584,7 @@ export default function Conversations() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-6">
+    <div className="flex-1 overflow-hidden p-8 h-full w-full space-y-6 flex flex-col bg-transparent">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
@@ -599,7 +599,7 @@ export default function Conversations() {
       </div>
 
       {/* Main Container */}
-      <div className="flex-1 flex overflow-hidden rounded-3xl border border-white/5 bg-[#0B0D12]/60 backdrop-blur-xl min-h-[500px] h-[calc(100vh-220px)] shadow-2xl">
+      <div className="flex-1 flex overflow-hidden rounded-3xl border border-white/5 bg-[#0B0D12]/60 backdrop-blur-xl min-h-[500px] h-full shadow-2xl">
         
         {/* Left Pane: Chat List */}
         <div className="w-80 flex flex-col border-r border-white/5 shrink-0 bg-[#0E1118]/80">

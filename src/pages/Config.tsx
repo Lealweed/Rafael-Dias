@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -80,7 +80,68 @@ export default function ConfigPage() {
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<keyof typeof CATEGORIES>("hero");
 
+  // Metas states
+  const [goalAppointments, setGoalAppointments] = useState(600);
+  const [goalLeads, setGoalLeads] = useState(1000);
+  const [goalRevenue, setGoalRevenue] = useState(150000);
+  const [goalsLoading, setGoalsLoading] = useState(false);
+  const [updatingGoals, setUpdatingGoals] = useState(false);
+
   const supabase = createClient();
+
+  const fetchGoals = async () => {
+    setGoalsLoading(true);
+    try {
+      const now = new Date();
+      const { data, error } = await supabase
+        .from('crm_goals')
+        .select('*')
+        .eq('month', now.getMonth() + 1)
+        .eq('year', now.getFullYear());
+
+      if (data) {
+        data.forEach((g: any) => {
+          if (g.goal_type === 'appointments') setGoalAppointments(Number(g.target_value));
+          if (g.goal_type === 'leads') setGoalLeads(Number(g.target_value));
+          if (g.goal_type === 'revenue') setGoalRevenue(Number(g.target_value));
+        });
+      }
+    } catch (err) {
+      console.error("Error fetching goals:", err);
+    } finally {
+      setGoalsLoading(false);
+    }
+  };
+
+  const handleUpdateGoals = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdatingGoals(true);
+    try {
+      const now = new Date();
+      const month = now.getMonth() + 1;
+      const year = now.getFullYear();
+
+      const goalPayloads = [
+        { goal_type: 'appointments', target_value: goalAppointments, month, year },
+        { goal_type: 'leads', target_value: goalLeads, month, year },
+        { goal_type: 'revenue', target_value: goalRevenue, month, year }
+      ];
+
+      for (const payload of goalPayloads) {
+        const { error } = await supabase
+          .from('crm_goals')
+          .upsert(payload, { onConflict: 'goal_type,month,year' });
+        if (error) throw error;
+      }
+
+      setStatusMessage({ type: "success", text: "Metas comerciais atualizadas com sucesso para o mês atual!" });
+    } catch (err: any) {
+      console.error("Failed to update goals:", err);
+      setStatusMessage({ type: "error", text: "Erro ao atualizar metas: " + err.message });
+    } finally {
+      setUpdatingGoals(false);
+    }
+  };
 
   const fetchHealth = async () => {
     setLoading(true);
@@ -110,6 +171,7 @@ export default function ConfigPage() {
   useEffect(() => {
     fetchHealth();
     fetchSettings();
+    fetchGoals();
   }, []);
 
   const handleFieldChange = (key: string, value: string) => {
@@ -194,7 +256,7 @@ export default function ConfigPage() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full max-w-6xl gap-8 font-sans bg-[#07090E] p-4 md:p-6 selection:bg-[#D4AF37]/20 selection:text-[#E5C38C]">
+    <div className="flex-1 overflow-y-auto p-8 h-full w-full font-sans bg-[#07090E] selection:bg-[#D4AF37]/20 selection:text-[#E5C38C] pb-12">
       {/* HEADER SECTION */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-white/10 pb-6">
         <div>
@@ -500,6 +562,64 @@ export default function ConfigPage() {
                   </div>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* GOALS CONFIGURATION WIDGET */}
+          <div className="bg-[#0B0D12]/70 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl p-6 md:p-8 flex flex-col gap-6">
+            <div>
+              <h2 className="text-lg font-medium text-white font-serif">Definição de Metas</h2>
+              <p className="text-xs text-white/40 mt-1">Configurar objetivos de conversão e faturamento para o mês.</p>
+            </div>
+
+            {goalsLoading ? (
+              <div className="flex items-center justify-center py-6">
+                <Loader2 className="w-6 h-6 text-[#D4AF37] animate-spin" />
+              </div>
+            ) : (
+              <form onSubmit={handleUpdateGoals} className="space-y-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Meta de Agendados (Mensal)</label>
+                  <input
+                    type="number"
+                    value={goalAppointments}
+                    onChange={(e) => setGoalAppointments(Number(e.target.value))}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-[#D4AF37] transition-all font-mono"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Meta de Novos Leads (Mensal)</label>
+                  <input
+                    type="number"
+                    value={goalLeads}
+                    onChange={(e) => setGoalLeads(Number(e.target.value))}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-[#D4AF37] transition-all font-mono"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Meta de Faturamento R$ (Mensal)</label>
+                  <input
+                    type="number"
+                    value={goalRevenue}
+                    onChange={(e) => setGoalRevenue(Number(e.target.value))}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-2.5 text-xs text-white outline-none focus:border-[#D4AF37] transition-all font-mono"
+                    required
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={updatingGoals}
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {updatingGoals ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+                  <span>Salvar Metas</span>
+                </button>
+              </form>
             )}
           </div>
         </div>

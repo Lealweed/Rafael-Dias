@@ -63,7 +63,7 @@ export default function Pipeline() {
   }, [supabase]);
 
   return (
-    <div className="flex flex-col h-full w-full space-y-6">
+    <div className="flex-1 overflow-hidden p-8 h-full w-full space-y-6 flex flex-col bg-transparent">
       
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">

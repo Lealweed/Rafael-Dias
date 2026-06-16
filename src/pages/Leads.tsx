@@ -541,10 +541,10 @@ export default function Leads() {
   };
 
   return (
-    <div className="flex h-full w-full space-y-6 relative overflow-hidden">
+    <div className="flex-1 overflow-hidden p-8 h-full w-full space-y-6 relative flex flex-col">
       
       {/* Container Principal */}
-      <div className="flex flex-col h-full w-full space-y-6 flex-1">
+      <div className="flex flex-col h-full w-full space-y-6 flex-1 overflow-hidden">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
           <div>

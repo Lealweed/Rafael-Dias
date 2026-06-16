@@ -318,7 +318,7 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-8 pb-10">
+    <div className="flex-1 overflow-y-auto p-8 h-full w-full space-y-8 pb-10">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-white/5 shrink-0">

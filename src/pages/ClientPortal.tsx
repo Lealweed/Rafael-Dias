@@ -208,14 +208,14 @@ export default function ClientPortal() {
 
       {/* HEADER */}
       <header className="relative z-10 w-full border-b border-white/5 bg-[#0D0D0F]/90 backdrop-blur-2xl py-4">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-6">
+        <div className="max-w-7xl mx-auto px-6 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-sm overflow-hidden">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] font-semibold italic text-lg shadow-[0_4px_15px_rgba(212,175,55,0.35)] overflow-hidden flex items-center justify-center">
               <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <div>
               <h1 className="text-xs font-bold tracking-widest font-serif text-[#ffd700]">Portal do Paciente</h1>
-              <p className="text-[8px] text-white/30 tracking-widest uppercase font-mono">RD Estética</p>
+              <p className="text-[8px] text-white/30 tracking-widest uppercase font-mono">Instituto Rafael Dias</p>
             </div>
           </div>
 
@@ -280,6 +280,32 @@ export default function ClientPortal() {
                 </button>
               ))}
             </nav>
+          </div>
+
+          {/* Ficha Médica / Cadastral do Cliente */}
+          <div className="rounded-3xl border border-white/5 bg-[#0E1118]/60 p-6 flex flex-col gap-4 backdrop-blur-3xl shadow-2xl text-left">
+            <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E5C38C]">Ficha do Paciente</h4>
+            
+            <div className="space-y-3">
+              <div>
+                <p className="text-[9px] text-white/30 uppercase font-mono">Procedimento de Interesse</p>
+                <p className="text-xs font-semibold text-white/70">{patientData.interest || "Harmonização Facial"}</p>
+              </div>
+
+              <div>
+                <p className="text-[9px] text-white/30 uppercase font-mono">Restrições & Alergias</p>
+                <p className={`text-xs font-semibold ${patientData.allergies_restrictions ? "text-amber-400" : "text-white/70"}`}>
+                  {patientData.allergies_restrictions || "Nenhuma restrição informada"}
+                </p>
+              </div>
+
+              <div>
+                <p className="text-[9px] text-white/30 uppercase font-mono">Tipo de Cadastro</p>
+                <span className="inline-block px-2.5 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[8px] font-bold text-[#E5C38C] uppercase tracking-widest mt-1">
+                  {patientData.is_vip ? "Paciente VIP" : "Paciente Standard"}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 

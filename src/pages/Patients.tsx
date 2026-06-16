@@ -48,6 +48,24 @@ export default function Patients() {
   const [newPatientInterest, setNewPatientInterest] = useState("");
   const [newPatientAllergies, setNewPatientAllergies] = useState("");
   const [newPatientActiveAccess, setNewPatientActiveAccess] = useState(true);
+  const [newPatientCpf, setNewPatientCpf] = useState("");
+
+  const handleCpfChange = (val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (clean.length <= 11) {
+      let formatted = clean;
+      if (clean.length > 3) {
+        formatted = `${clean.slice(0, 3)}.${clean.slice(3)}`;
+      }
+      if (clean.length > 6) {
+        formatted = `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`;
+      }
+      if (clean.length > 9) {
+        formatted = `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
+      }
+      setNewPatientCpf(formatted);
+    }
+  };
   const [newPatientWhatsappReminders, setNewPatientWhatsappReminders] = useState(true);
   const [newPatientIsVip, setNewPatientIsVip] = useState(false);
   const [creatingPatient, setCreatingPatient] = useState(false);
@@ -295,6 +313,7 @@ export default function Patients() {
         .insert({
           full_name: newPatientName.trim(),
           phone: cleanPhone,
+          cpf: newPatientCpf.replace(/\D/g, "") || null,
           interest: newPatientInterest.trim() || "Tratamento Estético",
           portal_password: newPatientPassword,
           portal_access_active: newPatientActiveAccess,
@@ -314,6 +333,7 @@ export default function Patients() {
         setPatients([data, ...patients]);
         setNewPatientName("");
         setNewPatientPhone("");
+        setNewPatientCpf("");
         setNewPatientPassword("");
         setNewPatientInterest("");
         setNewPatientAllergies("");
@@ -341,10 +361,10 @@ export default function Patients() {
   }, [patients, searchTerm]);
 
   return (
-    <div className="flex h-full w-full space-y-6 relative overflow-hidden">
+    <div className="flex-1 overflow-hidden p-8 h-full w-full space-y-6 relative flex flex-col">
       
       {/* Container Principal */}
-      <div className="flex flex-col h-full w-full space-y-6 flex-1">
+      <div className="flex flex-col h-full w-full space-y-6 flex-1 overflow-hidden">
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
           <div>
@@ -884,15 +904,28 @@ export default function Patients() {
                 </div>
               </div>
 
-              <div className="space-y-1">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-red-400">Alergias / Restrições Médicas</label>
-                <input
-                  type="text"
-                  value={newPatientAllergies}
-                  onChange={(e) => setNewPatientAllergies(e.target.value)}
-                  className="w-full rounded-xl border border-red-500/20 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-red-400"
-                  placeholder="Ex: Alergia a anestésicos, grávida..."
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">CPF (Opcional)</label>
+                  <input
+                    type="text"
+                    value={newPatientCpf}
+                    onChange={(e) => handleCpfChange(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-mono"
+                    placeholder="000.000.000-00"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-red-400">Alergias / Restrições Médicas</label>
+                  <input
+                    type="text"
+                    value={newPatientAllergies}
+                    onChange={(e) => setNewPatientAllergies(e.target.value)}
+                    className="w-full rounded-xl border border-red-500/20 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-red-400"
+                    placeholder="Ex: Alergia a anestésicos, grávida..."
+                  />
+                </div>
               </div>
 
               {/* Checklist Options */}

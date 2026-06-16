@@ -12,6 +12,12 @@ export default function Layout() {
     followUps: 0
   });
 
+  const [goalStats, setGoalStats] = useState({
+    target: 600,
+    current: 0,
+    percent: 0
+  });
+
   useEffect(() => {
     async function fetchCounters() {
       // Fonte principal no schema atual
@@ -47,6 +53,34 @@ export default function Layout() {
         conversations: convCount || 0,
         followUps: followUpCount || 0
       });
+
+      // Fetch current month goals progress
+      try {
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999).toISOString();
+
+        const { count: apptCount } = await supabase
+          .from('appointments')
+          .select('*', { count: 'exact', head: true })
+          .gte('appointment_date', firstDayOfMonth)
+          .lte('appointment_date', lastDayOfMonth);
+
+        const { data: goalData } = await supabase
+          .from('crm_goals')
+          .select('*')
+          .eq('goal_type', 'appointments')
+          .eq('month', now.getMonth() + 1)
+          .eq('year', now.getFullYear())
+          .maybeSingle();
+
+        const target = goalData?.target_value ? Number(goalData.target_value) : 600;
+        const current = apptCount || 0;
+        const percent = Math.min(Math.round((current / target) * 100), 100);
+
+        setGoalStats({ target, current, percent });
+      } catch (err) {
+        console.error('Error fetching monthly goals:', err);
+      }
     }
 
     fetchCounters();
@@ -218,9 +252,14 @@ export default function Layout() {
             <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-4">
               <h4 className="text-[10px] font-bold text-white/50 uppercase tracking-widest">Meta de Agendados</h4>
               <div className="mt-3.5 h-2 w-full rounded-full bg-white/5 overflow-hidden">
-                <div className="h-full w-3/4 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]"></div>
+                <div 
+                  className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] transition-all duration-500"
+                  style={{ width: `${goalStats.percent}%` }}
+                ></div>
               </div>
-              <p className="mt-2 text-xs font-semibold text-[#E5C38C]">75% <span className="text-white/40 font-light font-mono ml-1">(450 de 600)</span></p>
+              <p className="mt-2 text-xs font-semibold text-[#E5C38C]">
+                {goalStats.percent}% <span className="text-white/40 font-light font-mono ml-1">({goalStats.current} de {goalStats.target})</span>
+              </p>
             </div>
             
             <button
@@ -234,7 +273,7 @@ export default function Layout() {
         </aside>
 
         {/* MAIN CONTENT AREA */}
-        <main className="flex-1 overflow-auto p-8 bg-transparent">
+        <main className="flex-1 flex flex-col overflow-hidden bg-transparent">
           <Outlet />
         </main>
       </div>

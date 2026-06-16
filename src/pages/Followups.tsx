@@ -84,7 +84,7 @@ export default function Followups() {
   }, [supabase]);
 
   return (
-    <div className="flex flex-col h-full w-full space-y-6 animate-fade-in">
+    <div className="flex-1 overflow-y-auto p-8 h-full w-full space-y-6 animate-fade-in pb-10">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">

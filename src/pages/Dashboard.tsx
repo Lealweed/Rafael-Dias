@@ -91,7 +91,7 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="flex flex-col h-full w-full space-y-8 animate-fade-in pb-10">
+    <div className="flex-1 overflow-y-auto p-8 w-full h-full flex flex-col space-y-8 animate-fade-in pb-10">
       
       {/* Header Premium do Dashboard */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-6 border-b border-white/5">

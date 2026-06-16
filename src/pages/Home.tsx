@@ -61,6 +61,7 @@ export default function Home() {
 
   // Form & Tracking States
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [treatment, setTreatment] = useState("Avaliação Geral");
@@ -81,6 +82,7 @@ export default function Home() {
 
   const openBookingModal = (origin: string) => {
     setFormOrigin(origin);
+    setIsSuccess(false);
     setIsModalOpen(true);
     trackEvent("click_vip_button");
   };
@@ -129,25 +131,29 @@ export default function Home() {
       await trackEvent("form_submission", leadId);
       await trackEvent("whatsapp_redirect", leadId);
 
-      // 3. Reset states & close modal
-      setIsModalOpen(false);
-      setName("");
-      setPhone("");
-      setNotes("");
+      setIsSuccess(true);
+      setIsSubmitting(false);
 
-      // 4. Open WhatsApp
-      const text = encodeURIComponent(
-        `Olá Dr. Rafael Dias! Acabei de solicitar meu agendamento VIP no site.\n\n` +
-        `• *Nome*: ${name.trim()}\n` +
-        `• *Procedimento*: ${treatment}\n` +
-        `• *Mensagem*: ${notes.trim() || "Sem observações"}\n\n` +
-        `Gostaria de agendar minha consulta!`
-      );
-      window.open(`https://wa.me/5594999999999?text=${text}`, "_blank");
+      // 3. Reset states, close modal & Open WhatsApp after delay
+      setTimeout(() => {
+        setIsModalOpen(false);
+        setIsSuccess(false);
+        setName("");
+        setPhone("");
+        setNotes("");
+
+        const text = encodeURIComponent(
+          `Olá Dr. Rafael Dias! Acabei de solicitar meu agendamento VIP no site.\n\n` +
+          `• *Nome*: ${name.trim()}\n` +
+          `• *Procedimento*: ${treatment}\n` +
+          `• *Mensagem*: ${notes.trim() || "Sem observações"}\n\n` +
+          `Gostaria de agendar minha consulta!`
+        );
+        window.open(`https://wa.me/5594999999999?text=${text}`, "_blank");
+      }, 2500);
     } catch (err) {
       console.error(err);
       alert("Erro ao enviar dados. Mas você pode falar com a nossa equipe no WhatsApp!");
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -599,86 +605,114 @@ export default function Home() {
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="text-center mb-6">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] mb-3">
-                  <Sparkles className="w-5 h-5" />
-                </div>
-                <h3 className="text-xl font-medium tracking-tight text-white font-serif">Agende sua Experiência VIP</h3>
-                <p className="text-xs text-white/40 mt-1 font-light">Insira seus dados para iniciar seu atendimento personalizado.</p>
-              </div>
-
-              <form onSubmit={handleBookingSubmit} className="space-y-4">
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Nome Completo</label>
-                  <input
-                    type="text"
-                    required
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Seu nome completo"
-                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">WhatsApp / Celular</label>
-                  <input
-                    type="tel"
-                    required
-                    value={phone}
-                    onChange={(e) => handlePhoneChange(e.target.value)}
-                    placeholder="(94) 99999-9999"
-                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
-                  />
-                </div>
-
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Procedimento Desejado</label>
-                  <select
-                    value={treatment}
-                    onChange={(e) => setTreatment(e.target.value)}
-                    className="w-full rounded-xl border border-white/10 bg-black/80 px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light appearance-none"
-                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4AF37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 16px center', backgroundSize: '12px', backgroundRepeat: 'no-repeat' }}
+              {isSuccess ? (
+                <div className="flex flex-col items-center justify-center py-8 text-center">
+                  <motion.div
+                    initial={{ scale: 0.5, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ type: "spring", stiffness: 200, damping: 15 }}
+                    className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/35 text-green-400 flex items-center justify-center mb-4"
                   >
-                    <option value="Avaliação Geral" className="bg-[#0B0D12] text-white">Avaliação Estética Geral</option>
-                    <option value="Harmonização Facial" className="bg-[#0B0D12] text-white">Harmonização Facial</option>
-                    <option value="Lip Gloss / Preenchimento Labial" className="bg-[#0B0D12] text-white">Preenchimento Labial (Lip Gloss)</option>
-                    <option value="Bioestimuladores de Colágeno" className="bg-[#0B0D12] text-white">Bioestimuladores de Colágeno</option>
-                    <option value="Fios de Sustentação" className="bg-[#0B0D12] text-white">Fios de Sustentação PDO</option>
-                    <option value="Toxina Botulínica" className="bg-[#0B0D12] text-white">Toxina Botulínica (Botox)</option>
-                    <option value="Outro Procedimento" className="bg-[#0B0D12] text-white">Outros Procedimentos</option>
-                  </select>
+                    <CheckCircle2 className="w-8 h-8" />
+                  </motion.div>
+                  <h3 className="text-xl font-medium tracking-tight text-white font-serif">Solicitação Enviada!</h3>
+                  <p className="text-xs text-white/40 mt-2 font-light leading-relaxed">
+                    Seus dados de agendamento VIP foram recebidos. <br />
+                    Redirecionando para o WhatsApp em instantes...
+                  </p>
+                  <div className="w-24 h-1 bg-[#D4AF37]/20 rounded-full overflow-hidden mt-6 font-mono">
+                    <motion.div 
+                      className="h-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C]"
+                      initial={{ width: 0 }}
+                      animate={{ width: "100%" }}
+                      transition={{ duration: 2.5, ease: "linear" }}
+                    />
+                  </div>
                 </div>
+              ) : (
+                <>
+                  <div className="text-center mb-6">
+                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] mb-3">
+                      <Sparkles className="w-5 h-5" />
+                    </div>
+                    <h3 className="text-xl font-medium tracking-tight text-white font-serif">Agende sua Experiência VIP</h3>
+                    <p className="text-xs text-white/40 mt-1 font-light">Insira seus dados para iniciar seu atendimento personalizado.</p>
+                  </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Observações / Preferência de Horário</label>
-                  <textarea
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Gostaria de agendar para qual período ou dia?"
-                    rows={2}
-                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light resize-none"
-                  />
-                </div>
+                  <form onSubmit={handleBookingSubmit} className="space-y-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Nome Completo</label>
+                      <input
+                        type="text"
+                        required
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        placeholder="Seu nome completo"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
+                      />
+                    </div>
 
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full flex items-center justify-center gap-2 mt-4 px-6 py-3.5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-50"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Cadastrando...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="w-3.5 h-3.5" />
-                      <span>Solicitar Agendamento VIP</span>
-                    </>
-                  )}
-                </button>
-              </form>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">WhatsApp / Celular</label>
+                      <input
+                        type="tel"
+                        required
+                        value={phone}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        placeholder="(94) 99999-9999"
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
+                      />
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Procedimento Desejado</label>
+                      <select
+                        value={treatment}
+                        onChange={(e) => setTreatment(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-black/80 px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light appearance-none"
+                        style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4AF37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 16px center', backgroundSize: '12px', backgroundRepeat: 'no-repeat' }}
+                      >
+                        <option value="Avaliação Geral" className="bg-[#0B0D12] text-white">Avaliação Estética Geral</option>
+                        <option value="Harmonização Facial" className="bg-[#0B0D12] text-white">Harmonização Facial</option>
+                        <option value="Lip Gloss / Preenchimento Labial" className="bg-[#0B0D12] text-white">Preenchimento Labial (Lip Gloss)</option>
+                        <option value="Bioestimuladores de Colágeno" className="bg-[#0B0D12] text-white">Bioestimuladores de Colágeno</option>
+                        <option value="Fios de Sustentação" className="bg-[#0B0D12] text-white">Fios de Sustentação PDO</option>
+                        <option value="Toxina Botulínica" className="bg-[#0B0D12] text-white">Toxina Botulínica (Botox)</option>
+                        <option value="Outro Procedimento" className="bg-[#0B0D12] text-white">Outros Procedimentos</option>
+                      </select>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Observações / Preferência de Horário</label>
+                      <textarea
+                        value={notes}
+                        onChange={(e) => setNotes(e.target.value)}
+                        placeholder="Gostaria de agendar para qual período ou dia?"
+                        rows={2}
+                        className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light resize-none"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full flex items-center justify-center gap-2 mt-4 px-6 py-3.5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-50"
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          <span>Cadastrando...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Sparkles className="w-3.5 h-3.5" />
+                          <span>Solicitar Agendamento VIP</span>
+                        </>
+                      )}
+                    </button>
+                  </form>
+                </>
+              )}
             </motion.div>
           </div>
         )}

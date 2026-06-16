@@ -1,13 +1,14 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence, useSpring } from "motion/react";
-import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook, Heart, Activity, Sun } from "lucide-react";
+import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook, Heart, Activity, Sun, X, Loader2 } from "lucide-react";
 import Lenis from "lenis";
 import { PremiumButton } from "../components/premium/PremiumButton";
 import { BeforeAfterSlider } from "../components/premium/BeforeAfterSlider";
 import { TestimonialCarousel } from "../components/premium/TestimonialCarousel";
 import { BentoServices } from "../components/premium/BentoServices";
 import { fetchSiteSettings, mergeMediaSettings, DEFAULT_MEDIA_SETTINGS } from "../lib/siteSettings";
+import { createClient } from "../lib/supabase/client";
 
 const patientTemplates = [
   {
@@ -56,6 +57,100 @@ export default function Home() {
   const [activePatient, setActivePatient] = useState(0);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const supabase = useMemo(() => createClient(), []);
+
+  // Form & Tracking States
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [treatment, setTreatment] = useState("Avaliação Geral");
+  const [notes, setNotes] = useState("");
+  const [formOrigin, setFormOrigin] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const trackEvent = async (eventType: string, leadId?: string) => {
+    try {
+      await supabase.from("landing_analytics").insert({
+        event_type: eventType,
+        lead_id: leadId || null,
+      });
+    } catch (e) {
+      console.warn("Failed to track event:", e);
+    }
+  };
+
+  const openBookingModal = (origin: string) => {
+    setFormOrigin(origin);
+    setIsModalOpen(true);
+    trackEvent("click_vip_button");
+  };
+
+  const handlePhoneChange = (val: string) => {
+    const clean = val.replace(/\D/g, "");
+    if (clean.length <= 11) {
+      let formatted = clean;
+      if (clean.length > 2) {
+        formatted = `(${clean.slice(0, 2)}) ${clean.slice(2)}`;
+      }
+      if (clean.length > 7) {
+        formatted = `(${clean.slice(0, 2)}) ${clean.slice(2, 7)}-${clean.slice(7)}`;
+      }
+      setPhone(formatted);
+    }
+  };
+
+  const handleBookingSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim()) {
+      alert("Por favor, preencha seu nome e celular.");
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      const cleanPhone = phone.replace(/\D/g, "");
+      
+      // 1. Insert lead into Supabase
+      const { data: leadData, error: leadError } = await supabase
+        .from("leads")
+        .insert({
+          full_name: name.trim(),
+          phone: cleanPhone,
+          origin: `Landing Page - Botão ${formOrigin}`,
+          main_interest: treatment,
+          notes: notes.trim(),
+          temperature: "warm",
+        })
+        .select("id")
+        .maybeSingle();
+
+      const leadId = leadData?.id || null;
+
+      // 2. Track form submission and WhatsApp events
+      await trackEvent("form_submission", leadId);
+      await trackEvent("whatsapp_redirect", leadId);
+
+      // 3. Reset states & close modal
+      setIsModalOpen(false);
+      setName("");
+      setPhone("");
+      setNotes("");
+
+      // 4. Open WhatsApp
+      const text = encodeURIComponent(
+        `Olá Dr. Rafael Dias! Acabei de solicitar meu agendamento VIP no site.\n\n` +
+        `• *Nome*: ${name.trim()}\n` +
+        `• *Procedimento*: ${treatment}\n` +
+        `• *Mensagem*: ${notes.trim() || "Sem observações"}\n\n` +
+        `Gostaria de agendar minha consulta!`
+      );
+      window.open(`https://wa.me/5594999999999?text=${text}`, "_blank");
+    } catch (err) {
+      console.error(err);
+      alert("Erro ao enviar dados. Mas você pode falar com a nossa equipe no WhatsApp!");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.98]);
@@ -208,7 +303,7 @@ export default function Home() {
             <PremiumButton variant="ghost" href="/login" className="hidden sm:flex opacity-50 hover:opacity-100">
               Equipe
             </PremiumButton>
-            <PremiumButton href="https://wa.me/5594999999999">
+            <PremiumButton onClick={() => openBookingModal("Navbar")}>
               Agendar
             </PremiumButton>
           </motion.div>
@@ -260,7 +355,7 @@ export default function Home() {
             </p>
 
             <div className="flex flex-wrap gap-10 pt-6">
-              <PremiumButton className="px-14 py-6 text-[10px]">
+              <PremiumButton onClick={() => openBookingModal("Hero")} className="px-14 py-6 text-[10px]">
                 Agendar Consulta VIP
               </PremiumButton>
             </div>
@@ -418,7 +513,7 @@ export default function Home() {
             >
               Pronta para revelar <br /> sua <span className="italic text-gold text-glow-gold">radiância?</span>
             </motion.h2>
-            <PremiumButton href="https://wa.me/5594999999999" className="px-24 py-8 text-[11px] shadow-gold">
+            <PremiumButton onClick={() => openBookingModal("Footer CTA")} className="px-24 py-8 text-[11px] shadow-gold">
               Agendar Avaliação VIP
             </PremiumButton>
           </div>
@@ -484,6 +579,110 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      {/* LUXURY VIP BOOKING MODAL */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+              className="relative w-full max-w-md bg-[#0B0D12]/95 border border-[#D4AF37]/35 rounded-[32px] p-6 md:p-8 shadow-[0_10px_50px_rgba(212,175,55,0.15)] backdrop-blur-xl"
+            >
+              {/* Close Button */}
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="absolute top-6 right-6 text-white/40 hover:text-white transition-colors p-1"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="text-center mb-6">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] mb-3">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <h3 className="text-xl font-medium tracking-tight text-white font-serif">Agende sua Experiência VIP</h3>
+                <p className="text-xs text-white/40 mt-1 font-light">Insira seus dados para iniciar seu atendimento personalizado.</p>
+              </div>
+
+              <form onSubmit={handleBookingSubmit} className="space-y-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Nome Completo</label>
+                  <input
+                    type="text"
+                    required
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Seu nome completo"
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">WhatsApp / Celular</label>
+                  <input
+                    type="tel"
+                    required
+                    value={phone}
+                    onChange={(e) => handlePhoneChange(e.target.value)}
+                    placeholder="(94) 99999-9999"
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light"
+                  />
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Procedimento Desejado</label>
+                  <select
+                    value={treatment}
+                    onChange={(e) => setTreatment(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-black/80 px-4 py-3 text-xs text-white outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light appearance-none"
+                    style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23D4AF37'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`, backgroundPosition: 'right 16px center', backgroundSize: '12px', backgroundRepeat: 'no-repeat' }}
+                  >
+                    <option value="Avaliação Geral" className="bg-[#0B0D12] text-white">Avaliação Estética Geral</option>
+                    <option value="Harmonização Facial" className="bg-[#0B0D12] text-white">Harmonização Facial</option>
+                    <option value="Lip Gloss / Preenchimento Labial" className="bg-[#0B0D12] text-white">Preenchimento Labial (Lip Gloss)</option>
+                    <option value="Bioestimuladores de Colágeno" className="bg-[#0B0D12] text-white">Bioestimuladores de Colágeno</option>
+                    <option value="Fios de Sustentação" className="bg-[#0B0D12] text-white">Fios de Sustentação PDO</option>
+                    <option value="Toxina Botulínica" className="bg-[#0B0D12] text-white">Toxina Botulínica (Botox)</option>
+                    <option value="Outro Procedimento" className="bg-[#0B0D12] text-white">Outros Procedimentos</option>
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Observações / Preferência de Horário</label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Gostaria de agendar para qual período ou dia?"
+                    rows={2}
+                    className="w-full rounded-xl border border-white/10 bg-black/40 px-4 py-3 text-xs text-white placeholder-white/20 outline-none focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 transition-all font-light resize-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center gap-2 mt-4 px-6 py-3.5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-50"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Cadastrando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Solicitar Agendamento VIP</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

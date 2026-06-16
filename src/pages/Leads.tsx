@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall } from "lucide-react";
+import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall, Activity, TrendingUp, MousePointer, CheckSquare, Globe } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -9,6 +9,47 @@ export default function Leads() {
   const [searchTerm, setSearchTerm] = useState("");
   const navigate = useNavigate();
   const supabase = useMemo(() => createClient(), []);
+
+  // Tabs for CRM Views
+  const [viewTab, setViewTab] = useState("leads");
+  const [analyticsEvents, setAnalyticsEvents] = useState<any[]>([]);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
+  const [analyticsFilter, setAnalyticsFilter] = useState("all");
+
+  const fetchAnalytics = async () => {
+    setAnalyticsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("landing_analytics")
+        .select(`
+          id,
+          event_type,
+          lead_id,
+          created_at,
+          lead:leads (
+            full_name,
+            phone,
+            origin,
+            main_interest,
+            notes
+          )
+        `)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setAnalyticsEvents(data || []);
+    } catch (err) {
+      console.error("Error fetching analytics:", err);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (viewTab === "analytics") {
+      fetchAnalytics();
+    }
+  }, [viewTab, supabase]);
 
   // Slide-over Details Drawer
   const [selectedLeadForDetails, setSelectedLeadForDetails] = useState<any | null>(null);
@@ -450,8 +491,35 @@ export default function Leads() {
           </button>
         </div>
 
-        {/* Main Table Area */}
-        <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-white/5 bg-[#0B0D12]/60 backdrop-blur-3xl shadow-2xl">
+        {/* Tab Selection */}
+        <div className="flex gap-2 border-b border-white/5 pb-2 shrink-0">
+          <button
+            onClick={() => setViewTab("leads")}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all ${
+              viewTab === "leads"
+                ? "bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] shadow-inner font-bold"
+                : "text-white/40 hover:text-white/80 hover:bg-white/[0.02] border border-transparent"
+            }`}
+          >
+            <User className="w-4 h-4" />
+            <span>Todos os Leads / Pacientes</span>
+          </button>
+          <button
+            onClick={() => setViewTab("analytics")}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold tracking-wider transition-all ${
+              viewTab === "analytics"
+                ? "bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#E5C38C] shadow-inner font-bold"
+                : "text-white/40 hover:text-white/80 hover:bg-white/[0.02] border border-transparent"
+            }`}
+          >
+            <Activity className="w-4 h-4" />
+            <span>Métricas da Landing Page</span>
+          </button>
+        </div>
+
+        {viewTab === "leads" ? (
+          /* Main Table Area */
+          <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-white/5 bg-[#0B0D12]/60 backdrop-blur-3xl shadow-2xl">
           
           {/* Toolbar */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-white/5 px-8 py-6 gap-6 bg-white/[0.01]">
@@ -554,6 +622,152 @@ export default function Leads() {
             </table>
           </div>
         </div>
+        ) : (
+          /* Analytics Dashboard View */
+          <div className="flex-1 flex flex-col overflow-y-auto space-y-6">
+            
+            {/* KPI Cards */}
+            {(() => {
+              const totalClicks = analyticsEvents.filter(e => e.event_type === "click_vip_button").length;
+              const totalSubmissions = analyticsEvents.filter(e => e.event_type === "form_submission").length;
+              const totalWhatsApp = analyticsEvents.filter(e => e.event_type === "whatsapp_redirect").length;
+              const convRate = totalClicks > 0 ? ((totalSubmissions / totalClicks) * 100).toFixed(1) : "0";
+
+              return (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 shrink-0">
+                  <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-xl">
+                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                      <MousePointer className="w-16 h-16 text-[#D4AF37]" />
+                    </div>
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Cliques VIP (Botão)</span>
+                    <h4 className="text-3xl font-bold font-serif text-white mt-2 font-mono">{totalClicks}</h4>
+                    <p className="text-[10px] text-white/20 mt-1">Cliques no botão de Agendamento</p>
+                  </div>
+
+                  <div className="bg-[#0B0D12]/60 border border-[#D4AF37]/20 rounded-3xl p-6 relative overflow-hidden backdrop-blur-xl">
+                    <div className="absolute top-0 right-0 p-4 opacity-10">
+                      <CheckSquare className="w-16 h-16 text-[#D4AF37]" />
+                    </div>
+                    <span className="text-[10px] text-[#E5C38C] uppercase tracking-widest font-semibold">Formulários Preenchidos</span>
+                    <h4 className="text-3xl font-bold font-serif text-[#E5C38C] mt-2 font-mono">{totalSubmissions}</h4>
+                    <p className="text-[10px] text-white/20 mt-1">Leads capturados na Landing Page</p>
+                  </div>
+
+                  <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-xl">
+                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                      <TrendingUp className="w-16 h-16 text-[#D4AF37]" />
+                    </div>
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Taxa de Conversão</span>
+                    <h4 className="text-3xl font-bold font-serif text-white mt-2 font-mono">{convRate}%</h4>
+                    <p className="text-[10px] text-white/20 mt-1">Conversão de Cliques em Formulários</p>
+                  </div>
+
+                  <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 relative overflow-hidden backdrop-blur-xl">
+                    <div className="absolute top-0 right-0 p-4 opacity-5">
+                      <Globe className="w-16 h-16 text-[#D4AF37]" />
+                    </div>
+                    <span className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Redirecionados WhatsApp</span>
+                    <h4 className="text-3xl font-bold font-serif text-white mt-2 font-mono">{totalWhatsApp}</h4>
+                    <p className="text-[10px] text-white/20 mt-1">Direcionados ao WhatsApp Oficial</p>
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* Conversions Log Table */}
+            <div className="flex-1 flex flex-col overflow-hidden rounded-[32px] border border-white/5 bg-[#0B0D12]/60 backdrop-blur-3xl shadow-2xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 px-8 py-6 gap-6 bg-white/[0.01]">
+                <div>
+                  <h3 className="text-sm font-semibold tracking-wide text-white uppercase tracking-wider">Histórico de Eventos & Captações</h3>
+                  <p className="text-[10px] text-white/45 mt-0.5">Histórico em tempo real de cliques e preenchimentos na Landing Page.</p>
+                </div>
+
+                <div className="flex items-center gap-3">
+                  <label className="text-[9px] text-white/30 font-bold uppercase tracking-wider">Filtrar por Evento:</label>
+                  <select
+                    value={analyticsFilter}
+                    onChange={(e) => setAnalyticsFilter(e.target.value)}
+                    className="rounded-xl border border-white/10 bg-[#07090E] px-3 py-1.5 text-[10px] text-white font-semibold uppercase tracking-wider outline-none focus:border-[#D4AF37] transition-all"
+                  >
+                    <option value="all">Todos os Eventos</option>
+                    <option value="click_vip_button">Cliques no Botão VIP</option>
+                    <option value="form_submission">Formulários Preenchidos</option>
+                    <option value="whatsapp_redirect">Redirecionados p/ WhatsApp</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead className="bg-[#0E1118]/90 text-[9px] uppercase tracking-[0.3em] text-white/30 sticky top-0 border-b border-white/5 z-10">
+                    <tr>
+                      <th className="px-8 py-5 font-bold">Tipo de Evento</th>
+                      <th className="px-8 py-5 font-bold">Identidade / Lead</th>
+                      <th className="px-8 py-5 font-bold">Telefone</th>
+                      <th className="px-8 py-5 font-bold">Interesse Informado</th>
+                      <th className="px-8 py-5 font-bold">Data/Hora</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5 text-[11px] text-white/60">
+                    {analyticsLoading ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-20 text-white/20 uppercase tracking-[0.4em] font-bold text-xs animate-pulse">Sincronizando Métricas...</td>
+                      </tr>
+                    ) : analyticsEvents.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="text-center py-20 text-white/20 uppercase tracking-[0.4em] font-bold text-xs">Nenhum evento registrado ainda</td>
+                      </tr>
+                    ) : (
+                      analyticsEvents
+                        .filter(evt => analyticsFilter === "all" || evt.event_type === analyticsFilter)
+                        .map((evt) => {
+                          const eventLabels: Record<string, string> = {
+                            click_vip_button: "Clique no Botão VIP",
+                            form_submission: "Formulário Preenchido",
+                            whatsapp_redirect: "Direcionado ao WhatsApp"
+                          };
+                          
+                          const eventColors: Record<string, string> = {
+                            click_vip_button: "border-blue-500/20 bg-blue-500/10 text-blue-400",
+                            form_submission: "border-orange-500/25 bg-orange-500/15 text-[#E5C38C]",
+                            whatsapp_redirect: "border-green-500/20 bg-green-500/10 text-green-400"
+                          };
+
+                          return (
+                            <tr key={evt.id} className="hover:bg-white/[0.01] transition-all">
+                              <td className="px-8 py-4">
+                                <span className={`rounded-full border px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wide ${eventColors[evt.event_type] || "border-white/5 bg-white/5 text-white/40"}`}>
+                                  {eventLabels[evt.event_type] || evt.event_type}
+                                </span>
+                              </td>
+                              <td className="px-8 py-4 font-serif font-bold text-white text-[13px]">
+                                {evt.lead?.full_name || "Visitante Anônimo"}
+                              </td>
+                              <td className="px-8 py-4 font-mono text-[10px] text-white/40">
+                                {evt.lead?.phone || "-"}
+                              </td>
+                              <td className="px-8 py-4">
+                                {evt.lead?.main_interest ? (
+                                  <span className="text-[10px] text-white/50 bg-white/5 px-2 py-0.5 rounded border border-white/5 font-semibold">
+                                    {evt.lead.main_interest}
+                                  </span>
+                                ) : (
+                                  <span className="text-white/10 uppercase tracking-widest text-[9px] font-bold">N/A</span>
+                                )}
+                              </td>
+                              <td className="px-8 py-4 font-mono text-white/30 text-[10px]">
+                                {formatDateTime(evt.created_at)}
+                              </td>
+                            </tr>
+                          );
+                        })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* DETALHES DRAWER (SLIDE-OVER PANEL) */}

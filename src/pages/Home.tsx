@@ -55,6 +55,7 @@ export default function Home() {
   const { scrollYProgress } = useScroll();
   const [activePatient, setActivePatient] = useState(0);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
+  const videoRef = useRef<HTMLVideoElement>(null);
   
   const heroOpacity = useTransform(scrollYProgress, [0, 0.2], [1, 0]);
   const heroScale = useTransform(scrollYProgress, [0, 0.2], [1, 0.98]);
@@ -87,6 +88,19 @@ export default function Home() {
       lenis.destroy();
     };
   }, []);
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.defaultMuted = true;
+      videoRef.current.muted = true;
+      const playPromise = videoRef.current.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(error => {
+          console.log("Autoplay was prevented on mount:", error);
+        });
+      }
+    }
+  }, [siteSettings.home_hero_video]);
 
   const services = useMemo(() => [
     {
@@ -159,9 +173,10 @@ export default function Home() {
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 group cursor-pointer"
+            onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
           >
-            <div className="h-10 w-10 glass-gold flex items-center justify-center rounded-full font-display font-bold text-gold group-hover:scale-110 transition-transform duration-500">
-              RD
+            <div className="h-10 w-10 glass-gold overflow-hidden flex items-center justify-center rounded-full group-hover:scale-110 transition-transform duration-500">
+              <img src="/assets/logo.jpg" alt="Dr. Rafael Dias Logo" className="w-full h-full object-cover" />
             </div>
             <div className="hidden sm:block">
               <h1 className="text-xs font-bold tracking-[0.5em] uppercase text-gold font-display leading-none mb-1">Instituto</h1>
@@ -205,14 +220,14 @@ export default function Home() {
         {/* Cinematic Video/Motion Background */}
         <div className="absolute inset-0 z-0">
           <video 
+            ref={videoRef}
+            src={siteSettings.home_hero_video}
             autoPlay 
             loop 
             muted 
             playsInline
             className="w-full h-full object-cover opacity-20 grayscale"
-          >
-            <source src={siteSettings.home_hero_video} type="video/mp4" />
-          </video>
+          />
           <div className="absolute inset-0 bg-gradient-to-b from-black-void via-transparent to-black-void opacity-90" />
         </div>
 

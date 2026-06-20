@@ -222,7 +222,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/Leialt.IA",
+        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/leialt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -241,11 +241,11 @@
       "credentials": {
         "httpBasicAuth": {
           "id": "OSPVU6W3usC59BYJ",
-          "name": "Leialt.IA"
+          "name": "leialt"
         },
         "httpHeaderAuth": {
           "id": "X0vJTNm6VoKYeRru",
-          "name": "Leialt.IA"
+          "name": "leialt"
         }
       },
       "continueOnFail": true
@@ -1426,7 +1426,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/Leialt.IA",
+        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendText/leialt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -1511,7 +1511,7 @@
     },
     {
       "parameters": {
-        "url": "https://rafael-dias.vercel.app/api/conversations/automation",
+        "url": "https://www.institutorafaeldias.site/api/conversations/automation",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -1568,7 +1568,7 @@
     },
     {
       "parameters": {
-        "url": "https://rafael-dias.vercel.app/api/conversations/automation",
+        "url": "https://www.institutorafaeldias.site/api/conversations/automation",
         "sendQuery": true,
         "queryParameters": {
           "parameters": [
@@ -1689,7 +1689,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://rafael-dias.vercel.app/api/n8n/outbound",
+        "url": "https://www.institutorafaeldias.site/api/n8n/outbound",
         "sendHeaders": true,
         "headerParameters": {
           "parameters": [
@@ -1753,7 +1753,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendReaction/RafaelDias",
+        "url": "=https://n8n-evolution-api.oh2qeq.easypanel.host/message/sendReaction/leialt",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -2046,7 +2046,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://rafael-dias.vercel.app/api/conversations/automation",
+        "url": "https://www.institutorafaeldias.site/api/conversations/automation",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={\n  \"phone\": \"{{ ($json.body?.data?.key?.remoteJid || $json.body?.remoteJid || $json.remoteJid || '').toString().split('@')[0].replace(/\\\\D/g,'') }}\",\n  \"action\": \"pause\"\n}",

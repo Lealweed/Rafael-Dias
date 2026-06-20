@@ -1,3 +1,4 @@
+import "dotenv/config";
 import express from "express";
 import path from "path";
 import { createServer as createViteServer } from "vite";
@@ -5,7 +6,11 @@ import fs from "fs";
 import { findLeadByIdOrPhone, getLeadAutomationState, setLeadAutomationState } from "./api/_lib/automation.js";
 import n8nInboundHandler from "./api/n8n/webhook.js";
 import outboundHandler from "./api/n8n/outbound";
+import calendarHandler from "./api/n8n/calendar.js";
+import proposalDocHandler from "./api/n8n/proposal-doc.js";
 import siteSettingsRouter from "./api/site-settings";
+import leadsOpsHandler from "./api/leads/ops.js";
+import appointmentsHandler from "./api/automation/appointments.js";
 
 async function startServer() {
   const app = express();
@@ -72,7 +77,12 @@ async function startServer() {
   app.post("/api/webhook/inbound", n8nInboundHandler);
 
   app.post("/api/n8n/outbound", outboundHandler);
+  app.post("/api/n8n/calendar", calendarHandler);
+  app.get("/api/n8n/calendar", calendarHandler);
+  app.post("/api/n8n/proposal-doc", proposalDocHandler);
   app.use("/api/site-settings", siteSettingsRouter);
+  app.all("/api/leads/ops", leadsOpsHandler);
+  app.all("/api/automation/appointments", appointmentsHandler);
 
   // Vite middleware
   if (process.env.NODE_ENV !== "production") {

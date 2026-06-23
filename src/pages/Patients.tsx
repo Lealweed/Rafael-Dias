@@ -578,7 +578,7 @@ export default function Patients() {
             {/* Header Drawer */}
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#07090E]/60">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] overflow-hidden flex items-center justify-center border border-gold/20 shrink-0">
+                <div className="h-10 w-10 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] overflow-hidden flex items-center justify-center border border-gold/20 shrink-0">
                   {selectedPatientForDetails.avatar_url ? (
                     <img src={selectedPatientForDetails.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
@@ -828,7 +828,7 @@ export default function Patients() {
                   <button
                     onClick={handleSaveProfile}
                     disabled={savingProfile}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 mt-4 cursor-pointer"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 mt-4 cursor-pointer"
                   >
                     <Save className="h-4 w-4" />
                     <span>{savingProfile ? "Salvando perfil..." : "Salvar Dados do Perfil"}</span>
@@ -946,7 +946,7 @@ export default function Patients() {
                   <button
                     onClick={handleSaveRecord}
                     disabled={savingRecord}
-                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md disabled:opacity-50"
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 mt-4 cursor-pointer"
                   >
                     <Save className="h-4 w-4" />
                     <span>{savingRecord ? "Salvando prontuário..." : "Salvar Prontuário Clínico"}</span>
@@ -1104,7 +1104,7 @@ export default function Patients() {
                     <button
                       onClick={handleSendNotification}
                       disabled={sendingNotif}
-                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-wider text-xs py-2.5 shadow-md disabled:opacity-50"
+                      className="w-full flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-bold uppercase tracking-wider text-xs py-2.5 shadow-md disabled:opacity-50"
                     >
                       <Send className="h-4 w-4" />
                       <span>{sendingNotif ? "Enviando..." : "Publicar Notificação no Portal"}</span>
@@ -1309,7 +1309,7 @@ export default function Patients() {
               <button
                 type="submit"
                 disabled={creatingPatient}
-                className="w-full rounded-2xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md disabled:opacity-50 mt-2"
+                className="w-full rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md disabled:opacity-50 mt-2"
               >
                 {creatingPatient ? "Cadastrando Paciente..." : "Confirmar Cadastro e Gerar Acesso"}
               </button>

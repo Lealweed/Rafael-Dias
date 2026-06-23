@@ -114,7 +114,7 @@ export default function ClientPortal() {
 
         <div className="relative w-full max-w-md bg-[#0D0D0F]/70 backdrop-blur-2xl border border-white/5 p-8 md:p-10 rounded-3xl shadow-[0_24px_80px_rgba(0,0,0,0.8)]">
           <div className="flex flex-col items-center text-center mb-10">
-            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-xl shadow-[0_0_20px_rgba(212,175,55,0.4)] mb-5 overflow-hidden">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-serif font-bold text-xl shadow-[0_0_20px_rgba(212,175,55,0.4)] mb-5 overflow-hidden">
               <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="text-2xl font-light tracking-[0.3em] font-serif text-white uppercase">Área do Paciente</h1>
@@ -162,7 +162,7 @@ export default function ClientPortal() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full relative group overflow-hidden rounded-2xl bg-vibrant-gold-brushed py-3.5 text-xs font-bold uppercase tracking-widest text-[#0D0D0F] shadow-[0_0_15px_rgba(244,180,26,0.25)] hover:shadow-[0_0_25px_rgba(244,180,26,0.4)] transition-all duration-300 disabled:opacity-50"
+              className="w-full relative group overflow-hidden rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] py-3.5 text-xs font-bold uppercase tracking-widest text-[#0D0D0F] shadow-[0_0_15px_rgba(244,180,26,0.25)] hover:shadow-[0_0_25px_rgba(244,180,26,0.4)] transition-all duration-300 disabled:opacity-50"
             >
               {loading ? "Verificando..." : "Entrar no Portal"}
             </button>
@@ -213,7 +213,7 @@ export default function ClientPortal() {
         <div className="md:col-span-1 flex flex-col gap-4">
           <div className="rounded-3xl border border-white/5 bg-[#0E1118]/60 p-8 flex flex-col gap-6 backdrop-blur-3xl shadow-2xl">
             <div className="flex flex-col items-center text-center pb-6 border-b border-white/5">
-              <div className="h-20 w-20 rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] text-2xl font-bold flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)] mb-4">
+              <div className="h-20 w-20 rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] text-2xl font-bold flex items-center justify-center shadow-[0_0_30px_rgba(212,175,55,0.2)] mb-4">
                 {String(patientData.full_name || patientData.nome || "P").charAt(0).toUpperCase()}
               </div>
               <h3 className="font-serif text-lg font-bold text-white leading-tight tracking-wide">{patientData.full_name || patientData.nome}</h3>
@@ -233,7 +233,7 @@ export default function ClientPortal() {
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center justify-between px-5 py-4 rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 group ${
                     activeTab === tab.id
-                      ? "bg-vibrant-gold-brushed text-[#0D0D0F] shadow-lg scale-[1.02]"
+                      ? "bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] shadow-lg scale-[1.02]"
                       : "text-white/40 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/5"
                   }`}
                 >
@@ -313,7 +313,7 @@ export default function ClientPortal() {
                       href={`https://wa.me/5594999999999?text=Olá,%20gostaria%20de%20reconfirmar%20ou%20ajustar%20meu%20agendamento%20do%20dia%20${encodeURIComponent(new Date(patientData.last_appointment_at).toLocaleDateString())}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-700"
+                      className="rounded-full bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] px-8 py-4 text-[10px] font-bold uppercase tracking-[0.3em] transition-all duration-700"
                     >
                       Ajustar via Concierge
                     </a>

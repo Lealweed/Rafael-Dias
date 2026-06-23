@@ -25,6 +25,24 @@ export const DEFAULT_MEDIA_SETTINGS: SiteMediaSettings = {
   case_avatar_1: "https://images.pexels.com/photos/762020/pexels-photo-762020.jpeg",
   case_avatar_2: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
 
+  // Depilação - Mídias e Textos
+  depilacao_image_0: "/assets/depilacao_1.png",
+  depilacao_image_1: "/assets/depilacao_2.png",
+  depilacao_image_2: "/assets/depilacao_3.png",
+  depilacao_video: "https://videos.pexels.com/video-files/5649212/5649212-uhd_3840_2160_25fps.mp4",
+  depilacao_service_name_0: "Depilação a Laser Axilas",
+  depilacao_service_price_0: "R$ 89,90",
+  depilacao_service_desc_0: "Sessão individual com tecnologia laser de última geração, segura e indolor.",
+  depilacao_service_name_1: "Depilação a Laser Pernas Inteiras",
+  depilacao_service_price_1: "R$ 199,90",
+  depilacao_service_desc_1: "Pele lisa e macia por muito mais tempo. Procedimento rápido e eficaz.",
+  depilacao_service_name_2: "Depilação a Laser Virilha Completa",
+  depilacao_service_price_2: "R$ 149,90",
+  depilacao_service_desc_2: "Máximo conforto e higiene com resultados visíveis desde a primeira sessão.",
+  depilacao_service_name_3: "Pacote Depilação Corporal",
+  depilacao_service_price_3: "R$ 399,90",
+  depilacao_service_desc_3: "Combo completo com axilas, virilha e pernas. O melhor custo-benefício.",
+
   // Textos da página principal
   home_hero_title_first: "Dr. Rafael",
   home_hero_title_last: "Dias",

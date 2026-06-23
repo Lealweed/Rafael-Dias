@@ -299,11 +299,12 @@ export default function Conversations() {
       if (res.ok) {
         setAutomationState((p: any) => ({ ...p, automation_status: 'paused_human' }));
       } else {
-        throw new Error();
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData?.details || errData?.error || `Status ${res.status}`);
       }
-    } catch {
+    } catch (err: any) {
       setMessages(prev => prev.filter(m => m.id !== newMsg.id));
-      setSendError("Falha no envio. Verifique a conexão com o n8n.");
+      setSendError(`Falha no envio. Verifique a conexão com o n8n. (${err.message || "Erro desconhecido"})`);
     } finally { setIsSending(false); }
   };
 

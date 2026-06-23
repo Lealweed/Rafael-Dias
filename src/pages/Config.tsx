@@ -18,7 +18,8 @@ import {
   TrendingUp,
   ExternalLink,
   FileText,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import {
@@ -75,6 +76,24 @@ const MEDIA_LABELS: Record<string, string> = {
   case_location_2: "Caso 3: Cidade / UF",
   case_comment_2: "Caso 3: Comentário / Relato",
   case_avatar_2: "Caso 3: Imagem de Perfil (Avatar)",
+
+  // Depilação
+  depilacao_image_0: "Depilação: Imagem 1",
+  depilacao_image_1: "Depilação: Imagem 2",
+  depilacao_image_2: "Depilação: Imagem 3",
+  depilacao_video: "Depilação: Vídeo Promocional",
+  depilacao_service_name_0: "Serviço 1: Nome",
+  depilacao_service_price_0: "Serviço 1: Preço",
+  depilacao_service_desc_0: "Serviço 1: Descrição",
+  depilacao_service_name_1: "Serviço 2: Nome",
+  depilacao_service_price_1: "Serviço 2: Preço",
+  depilacao_service_desc_1: "Serviço 2: Descrição",
+  depilacao_service_name_2: "Serviço 3: Nome",
+  depilacao_service_price_2: "Serviço 3: Preço",
+  depilacao_service_desc_2: "Serviço 3: Descrição",
+  depilacao_service_name_3: "Serviço 4: Nome",
+  depilacao_service_price_3: "Serviço 4: Preço",
+  depilacao_service_desc_3: "Serviço 4: Descrição",
 };
 
 const CATEGORIES = {
@@ -87,6 +106,28 @@ const CATEGORIES = {
     label: "Painel de Serviços",
     icon: LayoutGrid,
     keys: ["bento_service_image_0", "bento_service_image_1", "bento_service_image_2", "bento_service_image_3"],
+  },
+  depilacao: {
+    label: "Depilação",
+    icon: Sparkles,
+    keys: [
+      "depilacao_image_0",
+      "depilacao_image_1",
+      "depilacao_image_2",
+      "depilacao_video",
+      "depilacao_service_name_0",
+      "depilacao_service_price_0",
+      "depilacao_service_desc_0",
+      "depilacao_service_name_1",
+      "depilacao_service_price_1",
+      "depilacao_service_desc_1",
+      "depilacao_service_name_2",
+      "depilacao_service_price_2",
+      "depilacao_service_desc_2",
+      "depilacao_service_name_3",
+      "depilacao_service_price_3",
+      "depilacao_service_desc_3",
+    ],
   },
   cases: {
     label: "Antes & Depois",
@@ -166,10 +207,14 @@ const MEDIA_KEYS = [
   "case_avatar_0",
   "case_avatar_1",
   "case_avatar_2",
+  "depilacao_image_0",
+  "depilacao_image_1",
+  "depilacao_image_2",
+  "depilacao_video",
 ];
 
 const isTextAreaKey = (key: string) => {
-  return key === "home_hero_desc" || key.endsWith("_comment") || key === "home_footer_address" || key === "laser_info_text";
+  return key === "home_hero_desc" || key.endsWith("_comment") || key === "home_footer_address" || key === "laser_info_text" || key.endsWith("_desc") || key.includes("_desc_");
 };
 
 export default function ConfigPage() {
@@ -425,7 +470,7 @@ export default function ConfigPage() {
           </div>
 
           {/* Elegant Category Navigation (Anchor scroll) */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 bg-[#07090E]/80 p-1.5 rounded-2xl border border-white/5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2 bg-[#07090E]/80 p-1.5 rounded-2xl border border-white/5">
             {Object.entries(CATEGORIES).map(([catKey, cat]) => {
               const Icon = cat.icon;
               return (

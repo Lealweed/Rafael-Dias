@@ -589,7 +589,7 @@ export default function Patients() {
               </div>
               <button 
                 onClick={() => setSelectedPatientForDetails(null)}
-                className="p-2 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-all"
+                className="p-2 rounded-full hover:bg-white/20 text-white hover:text-white transition-all"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1138,7 +1138,7 @@ export default function Patients() {
               <h3 className="font-serif text-lg font-bold text-[#E5C38C]">Novo Paciente (Acesso ao Portal)</h3>
               <button 
                 onClick={() => setCreateModalOpen(false)}
-                className="p-1 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-all"
+                className="p-1 rounded-full hover:bg-white/20 text-white hover:text-white transition-all cursor-pointer"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -1277,7 +1277,7 @@ export default function Patients() {
                   <button
                     type="button"
                     onClick={() => setNewPatientActiveAccess(!newPatientActiveAccess)}
-                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start"
+                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start cursor-pointer"
                   >
                     {newPatientActiveAccess ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
                     <span>Acesso ao portal ativo para este paciente</span>
@@ -1286,7 +1286,7 @@ export default function Patients() {
                   <button
                     type="button"
                     onClick={() => setNewPatientWhatsappReminders(!newPatientWhatsappReminders)}
-                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start"
+                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start cursor-pointer"
                   >
                     {newPatientWhatsappReminders ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
                     <span>Enviar lembretes e avisos automatizados via WhatsApp</span>
@@ -1295,7 +1295,7 @@ export default function Patients() {
                   <button
                     type="button"
                     onClick={() => setNewPatientIsVip(!newPatientIsVip)}
-                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start"
+                    className="flex items-center gap-2.5 text-xs text-white/80 hover:text-white text-left self-start cursor-pointer"
                   >
                     {newPatientIsVip ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
                     <span>Marcar paciente como categoria VIP</span>

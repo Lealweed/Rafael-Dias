@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall, ShieldAlert, CheckSquare, Square } from "lucide-react";
+import { Search, Plus, Filter, MoreHorizontal, User, Sparkles, X, Save, FileText, DollarSign, Bell, PlusCircle, Trash2, Check, Send, PhoneCall, ShieldAlert, CheckSquare, Square, Instagram } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { useNavigate } from "react-router-dom";
 
@@ -12,7 +12,7 @@ export default function Patients() {
 
   // Slide-over Details Drawer
   const [selectedPatientForDetails, setSelectedPatientForDetails] = useState<any | null>(null);
-  const [detailTab, setDetailTab] = useState("prontuario");
+  const [detailTab, setDetailTab] = useState("perfil");
   
   // Prontuário states
   const [evolutionNotes, setEvolutionNotes] = useState("");
@@ -49,6 +49,26 @@ export default function Patients() {
   const [newPatientAllergies, setNewPatientAllergies] = useState("");
   const [newPatientActiveAccess, setNewPatientActiveAccess] = useState(true);
   const [newPatientCpf, setNewPatientCpf] = useState("");
+  const [newPatientAvatarUrl, setNewPatientAvatarUrl] = useState("");
+  const [newPatientAddress, setNewPatientAddress] = useState("");
+  const [newPatientTrustPhone, setNewPatientTrustPhone] = useState("");
+  const [newPatientInstagram, setNewPatientInstagram] = useState("");
+
+  // Edit Patient Profile States
+  const [editPatientName, setEditPatientName] = useState("");
+  const [editPatientPhone, setEditPatientPhone] = useState("");
+  const [editPatientCpf, setEditPatientCpf] = useState("");
+  const [editPatientPassword, setEditPatientPassword] = useState("");
+  const [editPatientInterest, setEditPatientInterest] = useState("");
+  const [editPatientAllergies, setEditPatientAllergies] = useState("");
+  const [editPatientActiveAccess, setEditPatientActiveAccess] = useState(true);
+  const [editPatientWhatsappReminders, setEditPatientWhatsappReminders] = useState(true);
+  const [editPatientIsVip, setEditPatientIsVip] = useState(false);
+  const [editPatientAvatarUrl, setEditPatientAvatarUrl] = useState("");
+  const [editPatientAddress, setEditPatientAddress] = useState("");
+  const [editPatientTrustPhone, setEditPatientTrustPhone] = useState("");
+  const [editPatientInstagram, setEditPatientInstagram] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
 
   const handleCpfChange = (val: string) => {
     const clean = val.replace(/\D/g, "");
@@ -105,6 +125,21 @@ export default function Patients() {
   // Load patient clinical and financial data when selected
   useEffect(() => {
     if (!selectedPatientForDetails) return;
+    
+    // Set edit profile states from selected patient
+    setEditPatientName(selectedPatientForDetails.full_name || selectedPatientForDetails.nome || "");
+    setEditPatientPhone(selectedPatientForDetails.phone || selectedPatientForDetails.telefone || "");
+    setEditPatientCpf(selectedPatientForDetails.cpf ? selectedPatientForDetails.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "");
+    setEditPatientPassword(selectedPatientForDetails.portal_password || "");
+    setEditPatientInterest(selectedPatientForDetails.interest || selectedPatientForDetails.interesse || "");
+    setEditPatientAllergies(selectedPatientForDetails.allergies_restrictions || "");
+    setEditPatientActiveAccess(selectedPatientForDetails.portal_access_active ?? true);
+    setEditPatientWhatsappReminders(selectedPatientForDetails.whatsapp_reminders ?? true);
+    setEditPatientIsVip(selectedPatientForDetails.is_vip ?? false);
+    setEditPatientAvatarUrl(selectedPatientForDetails.avatar_url || "");
+    setEditPatientAddress(selectedPatientForDetails.address || "");
+    setEditPatientTrustPhone(selectedPatientForDetails.trust_phone || "");
+    setEditPatientInstagram(selectedPatientForDetails.instagram || "");
     
     async function loadPatientDetails() {
       // 1. Fetch clinical record
@@ -299,6 +334,51 @@ export default function Patients() {
     }
   };
 
+  const handleSaveProfile = async () => {
+    if (!selectedPatientForDetails) return;
+    setSavingProfile(true);
+    try {
+      const cleanPhone = editPatientPhone.replace(/\D/g, "");
+      const cleanCpf = editPatientCpf.replace(/\D/g, "");
+      
+      const payload = {
+        full_name: editPatientName.trim(),
+        phone: cleanPhone,
+        cpf: cleanCpf || null,
+        portal_password: editPatientPassword,
+        interest: editPatientInterest.trim() || "Tratamento Estético",
+        allergies_restrictions: editPatientAllergies.trim() || null,
+        portal_access_active: editPatientActiveAccess,
+        whatsapp_reminders: editPatientWhatsappReminders,
+        is_vip: editPatientIsVip,
+        avatar_url: editPatientAvatarUrl.trim() || null,
+        address: editPatientAddress.trim() || null,
+        trust_phone: editPatientTrustPhone.trim() || null,
+        instagram: editPatientInstagram.trim() || null,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('leads')
+        .update(payload)
+        .eq('id', selectedPatientForDetails.id);
+
+      if (error) {
+        alert("Erro ao salvar perfil: " + error.message);
+      } else {
+        setPatients(prev => 
+          prev.map(p => p.id === selectedPatientForDetails.id ? { ...p, ...payload } : p)
+        );
+        setSelectedPatientForDetails((prev: any) => ({ ...prev, ...payload }));
+        alert("Perfil atualizado com sucesso!");
+      }
+    } catch (err: any) {
+      alert("Erro ao salvar: " + err.message);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   // Register New Patient with Password & Checklist options
   const handleRegisterPatient = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,6 +406,10 @@ export default function Patients() {
           whatsapp_reminders: newPatientWhatsappReminders,
           is_vip: newPatientIsVip,
           allergies_restrictions: newPatientAllergies.trim() || null,
+          avatar_url: newPatientAvatarUrl.trim() || null,
+          address: newPatientAddress.trim() || null,
+          trust_phone: newPatientTrustPhone.trim() || null,
+          instagram: newPatientInstagram.trim() || null,
           origin: "Cadastro Manual",
           conversation_status: "agendado",
           last_interaction_at: new Date().toISOString()
@@ -343,6 +427,10 @@ export default function Patients() {
         setNewPatientPassword("");
         setNewPatientInterest("");
         setNewPatientAllergies("");
+        setNewPatientAvatarUrl("");
+        setNewPatientAddress("");
+        setNewPatientTrustPhone("");
+        setNewPatientInstagram("");
         setNewPatientActiveAccess(true);
         setNewPatientWhatsappReminders(true);
         setNewPatientIsVip(false);
@@ -490,8 +578,12 @@ export default function Patients() {
             {/* Header Drawer */}
             <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#07090E]/60">
               <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] font-serif font-bold text-base flex items-center justify-center">
-                  {String(selectedPatientForDetails.full_name || "P").charAt(0).toUpperCase()}
+                <div className="h-10 w-10 rounded-full bg-vibrant-gold-brushed text-[#0D0D0F] overflow-hidden flex items-center justify-center border border-gold/20 shrink-0">
+                  {selectedPatientForDetails.avatar_url ? (
+                    <img src={selectedPatientForDetails.avatar_url} alt="Profile" className="h-full w-full object-cover" />
+                  ) : (
+                    <span className="font-serif font-bold text-base">{String(selectedPatientForDetails.full_name || "P").charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white font-serif">{selectedPatientForDetails.full_name}</h3>
@@ -508,6 +600,17 @@ export default function Patients() {
 
             {/* Tab Links */}
             <div className="flex border-b border-white/5 text-xs font-bold uppercase tracking-wider bg-[#07090E]/30 px-4">
+              <button
+                onClick={() => setDetailTab("perfil")}
+                className={`flex items-center gap-2 px-4 py-3.5 border-b-2 transition-all ${
+                  detailTab === "perfil"
+                    ? "border-[#ffd700] text-[#ffd700]"
+                    : "border-transparent text-white/40 hover:text-white/60"
+                }`}
+              >
+                <User className="h-4 w-4" />
+                <span>Perfil</span>
+              </button>
               <button
                 onClick={() => setDetailTab("prontuario")}
                 className={`flex items-center gap-2 px-4 py-3.5 border-b-2 transition-all ${
@@ -546,6 +649,193 @@ export default function Patients() {
             {/* Tab Contents */}
             <div className="flex-1 overflow-y-auto p-6 space-y-6">
               
+              {/* TAB: PERFIL */}
+              {detailTab === "perfil" && (
+                <div className="space-y-4">
+                  {/* Photo Preview / URL */}
+                  <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.01] border border-white/5">
+                    <div className="h-16 w-16 rounded-full border border-gold/30 overflow-hidden flex items-center justify-center bg-black-void shrink-0">
+                      {editPatientAvatarUrl ? (
+                        <img src={editPatientAvatarUrl} alt="Avatar" className="h-full w-full object-cover" />
+                      ) : (
+                        <User className="h-8 w-8 text-white/20" />
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Foto de Perfil (URL)</label>
+                      <input
+                        type="text"
+                        value={editPatientAvatarUrl}
+                        onChange={(e) => setEditPatientAvatarUrl(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3 py-1.5 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                        placeholder="Link da imagem de perfil"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Nome Completo</label>
+                      <input
+                        type="text"
+                        value={editPatientName}
+                        onChange={(e) => setEditPatientName(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">CPF</label>
+                      <input
+                        type="text"
+                        value={editPatientCpf}
+                        onChange={(e) => {
+                          const clean = e.target.value.replace(/\D/g, "");
+                          if (clean.length <= 11) {
+                            let formatted = clean;
+                            if (clean.length > 3) formatted = `${clean.slice(0, 3)}.${clean.slice(3)}`;
+                            if (clean.length > 6) formatted = `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6)}`;
+                            if (clean.length > 9) formatted = `${clean.slice(0, 3)}.${clean.slice(3, 6)}.${clean.slice(6, 9)}-${clean.slice(9)}`;
+                            setEditPatientCpf(formatted);
+                          }
+                        }}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-mono"
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">WhatsApp</label>
+                      <div className="flex gap-2">
+                        <input
+                          type="tel"
+                          value={editPatientPhone}
+                          onChange={(e) => setEditPatientPhone(e.target.value)}
+                          className="flex-1 rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => navigate(`/conversations?leadId=${selectedPatientForDetails.id}`)}
+                          className="px-4 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold border border-gold/20 text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1 shrink-0 transition-all active:scale-95 cursor-pointer"
+                        >
+                          <Send className="h-3 w-3" />
+                          <span>Chat</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700] flex items-center gap-1"><Instagram className="h-3 w-3 text-gold" /> Instagram</label>
+                      <input
+                        type="text"
+                        value={editPatientInstagram}
+                        onChange={(e) => setEditPatientInstagram(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                        placeholder="@perfil"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Número de Confiança</label>
+                      <input
+                        type="tel"
+                        value={editPatientTrustPhone}
+                        onChange={(e) => setEditPatientTrustPhone(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                        placeholder="Contato de emergência"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Senha do Portal (4 a 6 dígitos)</label>
+                      <input
+                        type="password"
+                        maxLength={6}
+                        value={editPatientPassword}
+                        onChange={(e) => setEditPatientPassword(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-mono tracking-widest"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Endereço</label>
+                    <input
+                      type="text"
+                      value={editPatientAddress}
+                      onChange={(e) => setEditPatientAddress(e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                      placeholder="Endereço do paciente"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Procedimento Principal</label>
+                      <input
+                        type="text"
+                        value={editPatientInterest}
+                        onChange={(e) => setEditPatientInterest(e.target.value)}
+                        className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-red-400">Alergias / Restrições Médicas</label>
+                      <input
+                        type="text"
+                        value={editPatientAllergies}
+                        onChange={(e) => setEditPatientAllergies(e.target.value)}
+                        className="w-full rounded-xl border border-red-500/20 bg-[#0D0D0F]/50 px-3.5 py-2 text-xs text-white focus:outline-none focus:border-red-400"
+                        placeholder="Ex: Alergias, gravidez..."
+                      />
+                    </div>
+                  </div>
+
+                  {/* Checklist Options */}
+                  <div className="space-y-2 pt-2 border-t border-white/5">
+                    <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-white/30">Configurações de Acesso e Perfil</label>
+                    <div className="flex flex-col gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setEditPatientActiveAccess(!editPatientActiveAccess)}
+                        className="flex items-center gap-2.5 text-xs text-white/70 hover:text-white text-left self-start"
+                      >
+                        {editPatientActiveAccess ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
+                        <span>Acesso ao portal ativo</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEditPatientWhatsappReminders(!editPatientWhatsappReminders)}
+                        className="flex items-center gap-2.5 text-xs text-white/70 hover:text-white text-left self-start"
+                      >
+                        {editPatientWhatsappReminders ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
+                        <span>Enviar lembretes automatizados via WhatsApp</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setEditPatientIsVip(!editPatientIsVip)}
+                        className="flex items-center gap-2.5 text-xs text-white/70 hover:text-white text-left self-start"
+                      >
+                        {editPatientIsVip ? <CheckSquare className="h-4 w-4 text-[#ffd700]" /> : <Square className="h-4 w-4 text-white/20" />}
+                        <span>Paciente VIP</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <button
+                    onClick={handleSaveProfile}
+                    disabled={savingProfile}
+                    className="w-full flex items-center justify-center gap-2 rounded-2xl bg-vibrant-gold-brushed text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md hover:opacity-90 transition-opacity disabled:opacity-50 mt-4 cursor-pointer"
+                  >
+                    <Save className="h-4 w-4" />
+                    <span>{savingProfile ? "Salvando perfil..." : "Salvar Dados do Perfil"}</span>
+                  </button>
+                </div>
+              )}
+
               {/* TAB: PRONTUARIO */}
               {detailTab === "prontuario" && (
                 <div className="space-y-5">
@@ -930,6 +1220,54 @@ export default function Patients() {
                     onChange={(e) => setNewPatientAllergies(e.target.value)}
                     className="w-full rounded-xl border border-red-500/20 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-red-400"
                     placeholder="Ex: Alergia a anestésicos, grávida..."
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Foto de Perfil (URL)</label>
+                  <input
+                    type="text"
+                    value={newPatientAvatarUrl}
+                    onChange={(e) => setNewPatientAvatarUrl(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="https://exemplo.com/foto.jpg"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700] flex items-center gap-1"><Instagram className="h-3 w-3 text-gold" /> Instagram</label>
+                  <input
+                    type="text"
+                    value={newPatientInstagram}
+                    onChange={(e) => setNewPatientInstagram(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="@perfil"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Número de Confiança</label>
+                  <input
+                    type="tel"
+                    value={newPatientTrustPhone}
+                    onChange={(e) => setNewPatientTrustPhone(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="(94) 99999-9999"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Endereço</label>
+                  <input
+                    type="text"
+                    value={newPatientAddress}
+                    onChange={(e) => setNewPatientAddress(e.target.value)}
+                    className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                    placeholder="Cidade, UF, Bairro..."
                   />
                 </div>
               </div>

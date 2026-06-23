@@ -43,6 +43,11 @@ const MEDIA_LABELS: Record<string, string> = {
   patient_after_image_1: "Caso 2: Imagem Depois",
   patient_before_image_2: "Caso 3: Imagem Antes",
   patient_after_image_2: "Caso 3: Imagem Depois",
+  laser_hero_image_1: "Depilação: Foto Principal",
+  laser_hero_image_2: "Depilação: Foto Secundária",
+  laser_demo_video: "Depilação: Vídeo Demonstrativo",
+  laser_deposit_text: "Depilação: Texto do Sinal",
+  laser_info_text: "Depilação: Texto de Apoio do Sinal",
 
   // Textos da página principal
   home_hero_title_first: "Hero: Primeiro Nome",
@@ -95,6 +100,17 @@ const CATEGORIES = {
       "patient_after_image_2",
     ],
   },
+  laser: {
+    label: "Página Depilação",
+    icon: FileImage,
+    keys: [
+      "laser_hero_image_1",
+      "laser_hero_image_2",
+      "laser_demo_video",
+      "laser_deposit_text",
+      "laser_info_text",
+    ],
+  },
   texts: {
     label: "Textos Principais",
     icon: FileText,
@@ -144,13 +160,16 @@ const MEDIA_KEYS = [
   "patient_after_image_1",
   "patient_before_image_2",
   "patient_after_image_2",
+  "laser_hero_image_1",
+  "laser_hero_image_2",
+  "laser_demo_video",
   "case_avatar_0",
   "case_avatar_1",
   "case_avatar_2",
 ];
 
 const isTextAreaKey = (key: string) => {
-  return key === "home_hero_desc" || key.endsWith("_comment") || key === "home_footer_address";
+  return key === "home_hero_desc" || key.endsWith("_comment") || key === "home_footer_address" || key === "laser_info_text";
 };
 
 export default function ConfigPage() {

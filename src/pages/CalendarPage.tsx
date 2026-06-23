@@ -318,19 +318,19 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto p-8 h-full w-full space-y-8 pb-10">
+    <div className="flex-1 overflow-y-auto p-5 lg:p-6 h-full w-full space-y-5 pb-8">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 pb-6 border-b border-white/5 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[10px] uppercase tracking-[0.2em] font-bold text-gold mb-2">
             <Sparkles className="h-3 w-3" />
             <span>Google Calendar</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white font-display">Agenda Integrada</h1>
-          <p className="text-sm text-white/40 font-light">Navegação em grade de calendário mensal e controle de horários.</p>
+          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white font-display">Agenda Integrada</h1>
+          <p className="text-xs text-white/40 font-light">Navegação em grade de calendário mensal e controle de horários.</p>
         </div>
-        <PremiumButton onClick={openCreate} className="h-12 px-8">
+        <PremiumButton onClick={openCreate} className="h-10 px-5 text-[10px]">
           <Plus className="w-4 h-4" />
           Novo Agendamento
         </PremiumButton>
@@ -341,15 +341,15 @@ export default function CalendarPage() {
         <motion.div 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-8 shadow-premium flex items-center justify-between gap-6 backdrop-blur-xl"
+          className="rounded-2xl border border-emerald-500/20 bg-emerald-500/5 p-5 shadow-premium flex items-center justify-between gap-6 backdrop-blur-xl"
         >
           <div className="flex items-center gap-5">
-            <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
-              <Users className="h-6 w-6" />
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+              <Users className="h-4 w-4" />
             </div>
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">Agendamento vinculado</p>
-              <h2 className="mt-1 text-xl font-bold text-white font-display">{linkedLead.full_name || linkedLead.phone}</h2>
+              <h2 className="mt-1 text-lg font-bold text-white font-display">{linkedLead.full_name || linkedLead.phone}</h2>
               <p className="mt-1 text-xs text-white/50 font-light">
                 {linkedLead.phone || "Sem telefone"}
                 {linkedLead.owner_name ? ` • Responsável: ${linkedLead.owner_name}` : ""}
@@ -375,35 +375,35 @@ export default function CalendarPage() {
       )}
 
       {/* Main Grid: Left Calendar / Right Daily Agenda */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1 min-h-0">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 flex-1 min-h-0">
         
         {/* MONTHLY CALENDAR GRID (Left 2/3) */}
-        <div className="lg:col-span-2 bg-black-matte/40 border border-white/5 rounded-[2rem] p-8 shadow-premium flex flex-col backdrop-blur-xl">
+        <div className="lg:col-span-2 bg-black-matte/40 border border-white/5 rounded-2xl p-5 shadow-premium flex flex-col backdrop-blur-xl">
           <div className="flex-1">
             {/* Calendar Controls */}
-            <div className="flex items-center justify-between pb-6 border-b border-white/5 mb-8">
-              <h3 className="text-2xl font-display font-bold text-white capitalize tracking-wide">
+            <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-5">
+              <h3 className="text-xl font-display font-bold text-white capitalize tracking-wide">
                 {currentDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
               </h3>
-              <div className="flex gap-3">
-                <button onClick={() => changeMonth(-1)} className="p-3 rounded-2xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
-                  <ChevronLeft className="h-5 w-5" />
+              <div className="flex gap-2">
+                <button onClick={() => changeMonth(-1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
                 <PremiumButton 
                   variant="outline" 
                   onClick={() => { const today = new Date(); setSelectedDate(today); setCurrentDate(today); }}
-                  className="h-11 px-6 text-[9px]"
+                  className="h-9 px-4 text-[9px]"
                 >
                   Hoje
                 </PremiumButton>
-                <button onClick={() => changeMonth(1)} className="p-3 rounded-2xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
-                  <ChevronRight className="h-5 w-5" />
+                <button onClick={() => changeMonth(1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
+                  <ChevronRight className="h-4 w-4" />
                 </button>
               </div>
             </div>
 
             {/* Calendar Grid Headers */}
-            <div className="grid grid-cols-7 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-white/30 mb-6">
+            <div className="grid grid-cols-7 text-center text-[9px] font-bold uppercase tracking-[0.22em] text-white/30 mb-3">
               <span>Dom</span>
               <span>Seg</span>
               <span>Ter</span>
@@ -414,7 +414,7 @@ export default function CalendarPage() {
             </div>
 
             {/* Days Grid */}
-            <div className="grid grid-cols-7 gap-3">
+            <div className="grid grid-cols-7 gap-2">
               {calendarDays.map((day, idx) => {
                 if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
                 const isSelected = day.toDateString() === selectedDate.toDateString();
@@ -427,7 +427,7 @@ export default function CalendarPage() {
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => setSelectedDate(day)}
-                    className={`aspect-square rounded-[1.25rem] flex flex-col items-center justify-center relative transition-all duration-300 border ${
+                    className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all duration-300 border ${
                       isSelected 
                         ? "gold-gradient text-black border-transparent font-bold shadow-gold"
                         : isToday
@@ -435,9 +435,9 @@ export default function CalendarPage() {
                           : "border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/80"
                     }`}
                   >
-                    <span className="text-sm font-body font-medium">{day.getDate()}</span>
+                    <span className="text-xs font-body font-medium">{day.getDate()}</span>
                     {hasEvents && (
-                      <span className={`absolute bottom-3 h-1.5 w-1.5 rounded-full ${
+                      <span className={`absolute bottom-2 h-1 w-1 rounded-full ${
                         isSelected ? "bg-black" : "bg-gold"
                       }`} />
                     )}
@@ -446,37 +446,37 @@ export default function CalendarPage() {
               })}
             </div>
           </div>
-          <div className="text-[10px] text-white/20 pt-8 border-t border-white/5 mt-8 font-light tracking-widest uppercase text-center">
+          <div className="text-[9px] text-white/20 pt-5 border-t border-white/5 mt-5 font-light tracking-widest uppercase text-center">
             * Selecione um dia para gerenciar agendamentos
           </div>
         </div>
 
         {/* DAILY AGENDA panel (Right 1/3) */}
-        <div className="flex flex-col gap-8">
+        <div className="flex flex-col gap-5">
           {/* Daily events list */}
-          <div className="bg-black-matte/40 border border-white/5 rounded-[2rem] p-8 flex flex-col flex-1 shadow-premium backdrop-blur-xl overflow-hidden">
-            <div className="pb-6 border-b border-white/5 mb-6 flex justify-between items-center shrink-0">
+          <div className="bg-black-matte/40 border border-white/5 rounded-2xl p-5 flex flex-col flex-1 shadow-premium backdrop-blur-xl overflow-hidden">
+            <div className="pb-4 border-b border-white/5 mb-4 flex justify-between items-center shrink-0">
               <div>
-                <h4 className="text-sm font-bold text-white uppercase tracking-[0.2em]">Agenda do Dia</h4>
+                <h4 className="text-xs font-bold text-white uppercase tracking-[0.2em]">Agenda do Dia</h4>
                 <p className="text-[10px] text-gold font-bold uppercase tracking-widest mt-1.5">
                   {selectedDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
                 </p>
               </div>
               <button 
                 onClick={openCreate}
-                className="p-2.5 rounded-xl bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all duration-300"
+                className="p-2 rounded-xl bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all duration-300"
                 title="Novo Agendamento"
               >
-                <Plus className="h-5 w-5" />
+                <Plus className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-4 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
               {loading ? (
                 <div className="h-full flex items-center justify-center text-[10px] text-white/20 uppercase font-bold tracking-widest animate-pulse">Sincronizando...</div>
               ) : selectedDayEvents.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center py-12 text-white/10 text-center opacity-40">
-                  <CalendarIcon className="h-10 w-10 mb-4" />
+                <div className="h-full flex flex-col items-center justify-center py-8 text-white/10 text-center opacity-40">
+                  <CalendarIcon className="h-8 w-8 mb-3" />
                   <p className="text-[10px] uppercase font-bold tracking-[0.3em]">Nenhum compromisso</p>
                 </div>
               ) : (
@@ -486,16 +486,16 @@ export default function CalendarPage() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={{ opacity: 1, x: 0 }}
                     onClick={() => openDetail(evt)}
-                    className={`w-full text-left p-5 rounded-2xl border transition-all duration-300 flex flex-col gap-2 group ${
+                    className={`w-full text-left p-4 rounded-xl border transition-all duration-300 flex flex-col gap-2 group ${
                       selectedEvent?.id === evt.id
                         ? "bg-gold/10 border-gold/30"
                         : "bg-white/[0.02] border-white/5 hover:border-gold/20 hover:bg-white/[0.04]"
                     }`}
                   >
-                    <h5 className={`font-bold text-sm leading-tight transition-colors ${selectedEvent?.id === evt.id ? 'text-gold' : 'text-white/90 group-hover:text-gold'}`}>
+                    <h5 className={`font-bold text-xs leading-tight transition-colors ${selectedEvent?.id === evt.id ? 'text-gold' : 'text-white/90 group-hover:text-gold'}`}>
                       {evt.summary || "Sem título"}
                     </h5>
-                    <div className="flex items-center gap-3 text-[10px] text-white/40 font-medium uppercase tracking-widest">
+                    <div className="flex items-center gap-2 text-[9px] text-white/40 font-medium uppercase tracking-widest">
                       <Clock className="h-3 w-3 text-gold/50" />
                       {formatEventTime(evt)}
                     </div>
@@ -523,7 +523,7 @@ export default function CalendarPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-lg rounded-[2.5rem] bg-black-matte border border-white/10 shadow-premium p-10 space-y-8 text-white overflow-hidden"
+              className="relative w-full max-w-lg rounded-3xl bg-black-matte border border-white/10 shadow-premium p-7 space-y-5 text-white overflow-hidden"
             >
               <div className="absolute top-0 left-0 right-0 h-1 gold-gradient opacity-50" />
               
@@ -538,14 +538,14 @@ export default function CalendarPage() {
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <h3 className="text-3xl font-display font-bold text-white leading-tight">{selectedEvent.summary || "Sem título"}</h3>
+                  <h3 className="text-xl font-display font-bold text-white leading-tight">{selectedEvent.summary || "Sem título"}</h3>
                   <div className="flex items-center gap-3 text-gold/70 text-xs font-bold uppercase tracking-widest">
                     <Clock className="h-4 w-4" />
                     {formatEventTime(selectedEvent)}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 gap-6 pt-4 border-t border-white/5">
+                <div className="grid grid-cols-1 gap-4 pt-3 border-t border-white/5">
                   {selectedEvent.location && (
                     <div className="flex gap-4">
                       <div className="mt-1 h-8 w-8 rounded-xl bg-white/5 flex items-center justify-center text-gold/50">
@@ -565,18 +565,18 @@ export default function CalendarPage() {
                       </div>
                       <div className="flex-1">
                         <p className="text-[10px] uppercase font-bold tracking-[0.2em] text-white/30">Observações Clínicas</p>
-                        <div className="mt-2 text-sm text-white/70 leading-relaxed font-light bg-white/[0.02] p-4 rounded-2xl border border-white/5 whitespace-pre-wrap max-h-40 overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }} />
+                        <div className="mt-2 text-sm text-white/70 leading-relaxed font-light bg-white/[0.02] p-3 rounded-xl border border-white/5 whitespace-pre-wrap max-h-40 overflow-y-auto" dangerouslySetInnerHTML={{ __html: selectedEvent.description || "" }} />
                       </div>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex gap-4 pt-6">
-                <PremiumButton onClick={() => openEdit(selectedEvent)} variant="outline" className="flex-1 h-12">
+              <div className="flex gap-3 pt-4">
+                <PremiumButton onClick={() => openEdit(selectedEvent)} variant="outline" className="flex-1 h-10">
                   <Pencil className="w-4 h-4" /> Editar
                 </PremiumButton>
-                <PremiumButton onClick={deleteEvent} className="flex-1 h-12 bg-red-500/10 border-red-500/20 text-red-400 gold-gradient-none shadow-none hover:bg-red-500/20">
+                <PremiumButton onClick={deleteEvent} className="flex-1 h-10 bg-red-500/10 border-red-500/20 text-red-400 gold-gradient-none shadow-none hover:bg-red-500/20">
                   <Trash2 className="w-4 h-4" /> Excluir
                 </PremiumButton>
               </div>
@@ -600,19 +600,19 @@ export default function CalendarPage() {
               initial={{ opacity: 0, scale: 0.9, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              className="relative w-full max-w-xl rounded-[2.5rem] bg-black-matte border border-white/10 shadow-premium p-10 space-y-8 text-white"
+              className="relative w-full max-w-xl rounded-3xl bg-black-matte border border-white/10 shadow-premium p-7 space-y-5 text-white"
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-2xl font-display font-bold tracking-wide">{formMode === "create" ? "Novo Agendamento" : "Editar Detalhes"}</h3>
+                <h3 className="text-xl font-display font-bold tracking-wide">{formMode === "create" ? "Novo Agendamento" : "Editar Detalhes"}</h3>
                 <button onClick={() => setFormOpen(false)} className="text-white/40 hover:text-white transition-colors">
-                  <X className="h-6 w-6" />
+                  <X className="h-4 w-4" />
                 </button>
               </div>
 
               {linkedLead && formMode === "create" && (
                 <div className="rounded-2xl border border-emerald-500/20 bg-emerald-500/10 px-5 py-4 flex items-center gap-4">
                   <div className="h-10 w-10 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400">
-                    <CheckCircle2 className="h-5 w-5" />
+                    <CheckCircle2 className="h-4 w-4" />
                   </div>
                   <p className="text-xs text-emerald-300 font-medium">
                     Vinculando consulta ao paciente: <span className="text-white">{linkedLead.full_name}</span>
@@ -675,7 +675,7 @@ export default function CalendarPage() {
               </div>
 
               <div className="flex items-center justify-end gap-4 pt-4">
-                <PremiumButton variant="ghost" onClick={() => setFormOpen(false)} className="h-12 px-8">
+                <PremiumButton variant="ghost" onClick={() => setFormOpen(false)} className="h-10 px-5 text-[10px]">
                   Cancelar
                 </PremiumButton>
                 <PremiumButton onClick={saveEvent} disabled={saving} className="h-12 px-10">

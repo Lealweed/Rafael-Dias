@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "motion/react";
 import { ArrowRight, CalendarDays, CheckCircle2, Clock, CreditCard, Loader2, Play, ShieldCheck, Sparkles, Zap } from "lucide-react";
+import { fetchSiteSettings, mergeMediaSettings, DEFAULT_MEDIA_SETTINGS } from "../lib/siteSettings";
 
 const FRIDAY_SLOTS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
 
@@ -54,6 +55,7 @@ function onlyDigits(value: string) {
 
 export default function LaserHairRemoval() {
   const availableFridays = useMemo(() => nextFridays(10), []);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -64,6 +66,14 @@ export default function LaserHairRemoval() {
   const [notes, setNotes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetchSiteSettings().then((result) => {
+      if (result.ok && result.settings) {
+        setSiteSettings(mergeMediaSettings(result.settings));
+      }
+    });
+  }, []);
 
   const handlePhoneChange = (value: string) => {
     const clean = onlyDigits(value).slice(0, 11);
@@ -176,15 +186,19 @@ export default function LaserHairRemoval() {
 
           <motion.div initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.9 }} className="grid gap-4 sm:grid-cols-2">
             <div className="overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.03] sm:translate-y-10">
-              <img src="/assets/skincare_treatment.png" alt="Tratamento estético com tecnologia" className="h-72 w-full object-cover opacity-80 grayscale-[15%]" />
+              <img src={siteSettings.laser_hero_image_1 || "/assets/skincare_treatment.png"} alt="Tratamento estético com tecnologia" className="h-72 w-full object-cover opacity-80 grayscale-[15%]" />
             </div>
             <div className="overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.03]">
-              <img src="/assets/spa_portrait.png" alt="Ambiente premium Instituto Rafael Dias" className="h-72 w-full object-cover opacity-80 grayscale-[10%]" />
+              <img src={siteSettings.laser_hero_image_2 || "/assets/spa_portrait.png"} alt="Ambiente premium Instituto Rafael Dias" className="h-72 w-full object-cover opacity-80 grayscale-[10%]" />
             </div>
             <div className="relative overflow-hidden rounded-[36px] border border-gold/20 bg-gold/10 p-8 sm:col-span-2">
-              <div className="absolute right-8 top-8 flex h-16 w-16 items-center justify-center rounded-full border border-gold/30 bg-black/30 text-gold">
-                <Play className="h-7 w-7 fill-current" />
-              </div>
+              {siteSettings.laser_demo_video ? (
+                <video src={siteSettings.laser_demo_video} controls className="mb-6 h-64 w-full rounded-[28px] border border-white/10 object-cover" />
+              ) : (
+                <div className="absolute right-8 top-8 flex h-16 w-16 items-center justify-center rounded-full border border-gold/30 bg-black/30 text-gold">
+                  <Play className="h-7 w-7 fill-current" />
+                </div>
+              )}
               <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-gold">Vídeo explicativo</p>
               <h3 className="mt-5 max-w-lg font-display text-3xl text-white">Entenda como funciona o laser e os cuidados antes da sessão.</h3>
               <p className="mt-4 max-w-xl text-sm leading-7 text-white/45">Área pronta para receber vídeos demonstrativos, depoimentos e bastidores clínicos do protocolo de depilação.</p>
@@ -220,9 +234,9 @@ export default function LaserHairRemoval() {
             <div className="rounded-[28px] border border-gold/20 bg-gold/10 p-6">
               <div className="flex items-center gap-3 text-gold">
                 <CreditCard className="h-5 w-5" />
-                <span className="text-xs font-bold uppercase tracking-[0.2em]">Sinal de reserva: R$ 150,00</span>
+                <span className="text-xs font-bold uppercase tracking-[0.2em]">{siteSettings.laser_deposit_text || "Sinal de reserva: R$ 150,00"}</span>
               </div>
-              <p className="mt-3 text-xs leading-6 text-white/45">Valor e política de abatimento podem ser ajustados no backend/env sem mudar a página.</p>
+              <p className="mt-3 text-xs leading-6 text-white/45">{siteSettings.laser_info_text || "Valor e política de abatimento podem ser ajustados no backend/env sem mudar a página."}</p>
             </div>
           </div>
 

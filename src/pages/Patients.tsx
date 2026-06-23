@@ -1135,9 +1135,9 @@ export default function Patients() {
 
       {/* REGISTRATION MODAL */}
       {createModalOpen && (
-        <div className="absolute inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg bg-[#0E1118] border border-white/10 rounded-3xl p-6 md:p-8 space-y-5 shadow-2xl relative animate-fade-in text-white">
-            <div className="flex justify-between items-center pb-3 border-b border-white/5">
+        <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="w-full max-w-2xl max-h-[calc(100vh-2rem)] bg-[#0E1118] border border-white/10 rounded-3xl shadow-2xl relative animate-fade-in text-white flex flex-col overflow-hidden">
+            <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 shrink-0">
               <h3 className="font-serif text-lg font-bold text-[#E5C38C]">Novo Paciente (Acesso ao Portal)</h3>
               <button 
                 onClick={() => setCreateModalOpen(false)}
@@ -1147,7 +1147,7 @@ export default function Patients() {
               </button>
             </div>
 
-            <form onSubmit={handleRegisterPatient} className="space-y-4">
+            <form onSubmit={handleRegisterPatient} className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Nome Completo</label>
@@ -1306,13 +1306,22 @@ export default function Patients() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={creatingPatient}
-                className="w-full rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3.5 shadow-md disabled:opacity-50 mt-2"
-              >
-                {creatingPatient ? "Cadastrando Paciente..." : "Confirmar Cadastro e Gerar Acesso"}
-              </button>
+              <div className="sticky bottom-0 -mx-6 -mb-5 mt-4 flex gap-3 border-t border-white/10 bg-[#0E1118]/95 px-6 py-4 backdrop-blur-xl">
+                <button
+                  type="button"
+                  onClick={() => setCreateModalOpen(false)}
+                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.03] py-3 text-xs font-bold uppercase tracking-widest text-white/70 hover:bg-white/10 hover:text-white"
+                >
+                  Fechar
+                </button>
+                <button
+                  type="submit"
+                  disabled={creatingPatient}
+                  className="flex-[1.4] rounded-2xl bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] font-bold uppercase tracking-widest text-xs py-3 shadow-md disabled:opacity-50"
+                >
+                  {creatingPatient ? "Cadastrando Paciente..." : "Salvar e Gerar Acesso"}
+                </button>
+              </div>
             </form>
           </div>
         </div>

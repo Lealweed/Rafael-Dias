@@ -1,6 +1,6 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
-import { getServiceSupabase } from "../_lib/crm";
+import { getServiceSupabase } from "../_lib/crm.js";
 
 export const config = {
   api: {
@@ -9,6 +9,10 @@ export const config = {
 };
 
 const buffer = async (readable: any) => {
+  if (Buffer.isBuffer(readable?.body)) {
+    return readable.body;
+  }
+
   const chunks = [];
   for await (const chunk of readable) {
     chunks.push(typeof chunk === "string" ? Buffer.from(chunk) : chunk);
@@ -153,7 +157,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
               if (gcalRes.ok) {
                 const gcalEvent = await gcalRes.json();
-                const { updateLeadOps } = await import("../_lib/crm");
+                const { updateLeadOps } = await import("../_lib/crm.js");
                 await updateLeadOps({
                   leadId,
                   calendarEventId: gcalEvent.id,

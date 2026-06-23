@@ -23,6 +23,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import TermsOfService from "./pages/TermsOfService";
 import Home from "./pages/Home";
 import ClientPortal from "./pages/ClientPortal";
+import LaserHairRemoval from "./pages/LaserHairRemoval";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeContext";
 
@@ -60,6 +61,7 @@ export default function App() {
         <ScrollToTop />
         <Routes>
           <Route path="/" element={<Home />} />
+          <Route path="/depilacao-a-laser" element={<LaserHairRemoval />} />
           <Route path="/portal" element={<ClientPortal />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />

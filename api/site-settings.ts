@@ -1,4 +1,5 @@
 import { getAllSiteSettings, setSiteSettings } from "./_lib/site-settings.js";
+import { isAuthorizedAdmin } from "./_lib/crm.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method === "GET") {
@@ -10,6 +11,11 @@ export default async function handler(req: any, res: any) {
   }
 
   if (req.method === "POST") {
+    const allowed = await isAuthorizedAdmin(req);
+    if (!allowed) {
+      return res.status(403).json({ ok: false, error: "Forbidden: Admin role required" });
+    }
+
     const settings = req.body?.settings;
     if (!settings || typeof settings !== "object") {
       return res.status(400).json({ ok: false, error: "invalid_settings_payload" });

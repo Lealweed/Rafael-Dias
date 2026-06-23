@@ -68,6 +68,7 @@ export default async function handler(req: any, res: any) {
         ownerId: ownerId === undefined ? undefined : ownerId ? String(ownerId) : null,
         ownerName: ownerName === undefined ? undefined : ownerName ? String(ownerName) : null,
         nextFollowupAt: nextFollowupAt === undefined ? undefined : nextFollowupAt ? new Date(String(nextFollowupAt)).toISOString() : null,
+        lastHumanInteractionAt: new Date().toISOString(),
       });
     }
 

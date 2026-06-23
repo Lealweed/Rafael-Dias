@@ -1,5 +1,5 @@
 import { findLeadByIdOrPhone } from '../_lib/automation.js';
-import { updateLeadOps } from '../_lib/crm.js';
+import { updateLeadOps, isAuthorizedRequest } from '../_lib/crm.js';
 
 const ALLOWED_STATUS = new Set([
   'novo',
@@ -15,6 +15,11 @@ function json(res: any, status: number, payload: any) {
 }
 
 export default async function handler(req: any, res: any) {
+  const allowed = await isAuthorizedRequest(req);
+  if (!allowed) {
+    return json(res, 401, { ok: false, error: 'Unauthorized' });
+  }
+
   const leadId = String(req.query?.leadId || req.body?.leadId || '').trim();
   const phone = String(req.query?.phone || req.body?.phone || '').trim();
 

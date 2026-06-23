@@ -61,7 +61,7 @@ export function TestimonialCarousel({ testimonials }: TestimonialCarouselProps) 
                 <div className="mt-8 flex items-center gap-4">
                   <div className="h-10 w-10 rounded-full bg-gold/20 border border-gold/30 flex items-center justify-center overflow-hidden">
                     <img 
-                      src={`https://i.pravatar.cc/100?u=${t.name}`} 
+                      src={t.avatar || `https://i.pravatar.cc/100?u=${t.name}`} 
                       alt={t.name}
                       className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
                     />

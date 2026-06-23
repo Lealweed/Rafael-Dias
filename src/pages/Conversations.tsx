@@ -1,8 +1,14 @@
 import { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Send, Paperclip, MoreVertical, CheckCircle2, AlertCircle, Sparkles, MessageSquare, ShieldCheck, Zap } from "lucide-react";
+import { 
+  Search, Send, Paperclip, MessageSquare, Zap, Loader2, User
+} from "lucide-react";
 import { createClient } from "../lib/supabase/client";
+import { motion } from "motion/react";
+import { PremiumButton } from "../components/premium/PremiumButton";
+import { cn } from "../lib/utils";
 
+// --- Utilities ---
 function normalizePhone(raw: any): string {
   if (!raw) return "";
   const base = String(raw).split("@")[0].trim();
@@ -12,35 +18,24 @@ function normalizePhone(raw: any): string {
 function extractMessageText(payload: any): string {
   if (!payload) return "";
   return String(
-    payload.message ||
-    payload.text ||
-    payload.content ||
+    payload.message || payload.text || payload.content ||
     payload?.data?.message?.conversation ||
-    payload?.data?.message?.extendedTextMessage?.text ||
-    ""
+    payload?.data?.message?.extendedTextMessage?.text || ""
   ).trim();
 }
 
 function extractPhone(payload: any): string {
   if (!payload) return "";
   return normalizePhone(
-    payload.phone ||
-    payload.from ||
-    payload.remoteJid ||
-    payload.wa_id ||
-    payload.sender ||
-    payload.destination ||
-    payload?.data?.key?.remoteJid ||
-    ""
+    payload.phone || payload.from || payload.remoteJid ||
+    payload.wa_id || payload.sender || payload.destination ||
+    payload?.data?.key?.remoteJid || ""
   );
 }
 
 function formatMessageLabel(type: string, text: string) {
   if (type === "reaction") return `Reação: ${text || "👍"}`;
-  if (type === "audio") return text || "[Áudio]";
-  if (type === "image") return text || "[Imagem]";
-  if (type === "document") return text || "[Documento]";
-  if (type === "video") return text || "[Vídeo]";
+  if (["audio", "image", "document", "video"].includes(type)) return text || `[${type.toUpperCase()}]`;
   return text;
 }
 
@@ -52,79 +47,54 @@ function formatSenderLabel(source?: string | null, type?: string | null) {
   return "Cliente";
 }
 
-function formatDateTimeInput(value?: string | null) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  const pad = (num: number) => String(num).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+/** Returns a display name for a lead — never returns just a phone number */
+function getDisplayName(chat: any): string {
+  const raw = String(chat?.full_name || chat?.nome || "").trim();
+  // If the "name" is all digits (phone number stored as name), fallback
+  if (!raw || /^\+?\d[\d\s\-()]{6,}$/.test(raw)) {
+    return "Visitante";
+  }
+  return raw;
 }
 
-function formatDateTimeLabel(value?: string | null) {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleString("pt-BR", {
-    day: "2-digit",
-    month: "2-digit",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+/** Returns a single initial for avatar — never a digit */
+function getInitial(name: string): string {
+  const letter = name.replace(/[^a-zA-ZÀ-ÿ]/g, "").charAt(0).toUpperCase();
+  return letter || "V";
 }
 
-function formatAppointmentStatusLabel(status?: string | null) {
-  const normalized = String(status || "scheduled").toLowerCase();
-  if (normalized === "pending_confirmation") return "Aguardando confirmação";
-  if (normalized === "confirmed") return "Consulta confirmada";
-  if (normalized === "completed") return "Consulta realizada";
-  if (normalized === "no_show") return "Faltou";
-  if (normalized === "canceled") return "Consulta cancelada";
-  if (normalized === "rescheduled") return "Remarcação";
-  return "Consulta agendada";
-}
-
+/**
+ * Conversations Page: Hybrid messaging hub combining AI automation and human interaction.
+ */
 export default function Conversations() {
   const [activeChats, setActiveChats] = useState<any[]>([]);
   const [selectedChat, setSelectedChat] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
   const [automationState, setAutomationState] = useState<any>(null);
   const [loadingChats, setLoadingChats] = useState(true);
-  const [isGeneratingDoc, setIsGeneratingDoc] = useState(false);
   const [isUpdatingAutomation, setIsUpdatingAutomation] = useState(false);
-  const [googleAuthError, setGoogleAuthError] = useState<string | null>(null);
-  const [isUpdatingLeadOps, setIsUpdatingLeadOps] = useState(false);
   const [currentUser, setCurrentUser] = useState<any>(null);
-  const [nextFollowupInput, setNextFollowupInput] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
   const [sendError, setSendError] = useState<string | null>(null);
-
   const [inputText, setInputText] = useState("");
   const [isSending, setIsSending] = useState(false);
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const supabase = useMemo(() => createClient(), []);
   const navigate = useNavigate();
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
 
-  const selectedLeadStatus =
-    automationState?.conversation_status ||
-    selectedChat?.conversation_status ||
-    "novo";
-  const currentAgentName =
-    currentUser?.user_metadata?.full_name ||
-    currentUser?.user_metadata?.name ||
-    currentUser?.email ||
-    "Equipe Clínica";
+  const currentAgentName = currentUser?.user_metadata?.full_name || currentUser?.email || "Equipe Clínica";
   const currentAgentId = currentUser?.id || null;
   
   const filteredChats = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return activeChats;
-
-    return activeChats.filter((chat: any) => {
-      const name = String(chat.full_name || chat.nome || "").toLowerCase();
-      const phone = String(chat.phone || chat.telefone || "").toLowerCase();
-      const origin = String(chat.origin || chat.origem || "").toLowerCase();
-      return name.includes(term) || phone.includes(term) || origin.includes(term);
+    return activeChats.filter((c: any) => {
+      const name = getDisplayName(c).toLowerCase();
+      const phone = String(c.phone || c.telefone || "").toLowerCase();
+      return name.includes(term) || phone.includes(term);
     });
   }, [activeChats, searchTerm]);
 
@@ -133,269 +103,155 @@ export default function Conversations() {
       const { data } = await supabase.auth.getUser();
       setCurrentUser(data.user || null);
     }
-
     fetchCurrentUser();
   }, [supabase]);
 
-  // Load leads/chats
   useEffect(() => {
     async function fetchChats() {
       let { data, error } = await supabase
         .from('leads')
-        .select('*');
-
+        .select('id, full_name, nome, phone, telefone, origin, automation_status, updated_at, created_at');
       if (error) {
-        console.warn('Falha ao buscar conversas em public.leads, tentando Usuarios:', error.message);
-        const legacy = await supabase
-          .from('Usuarios')
-          .select('*');
-        data = legacy.data;
-        error = legacy.error;
+        const legacy = await supabase.from('Usuarios').select('*');
+        data = legacy.data ? legacy.data.map((u: any) => ({
+          ...u,
+          full_name: u.full_name || u.nome || '',
+          phone: u.phone || u.telefone || '',
+        })) : null;
       }
-
-      if (error) {
-        console.error('Erro ao buscar conversas (leads/Usuarios):', error);
-        setActiveChats([]);
-        setLoadingChats(false);
-        return;
-      }
-
       if (data) {
-        const sorted = [...data].sort((a: any, b: any) => {
-          const ta = new Date(a.updated_at || a.created_at || 0).getTime();
-          const tb = new Date(b.updated_at || b.created_at || 0).getTime();
-          return tb - ta;
-        });
-        const preferredLeadId = String(searchParams.get("leadId") || "").trim();
-        const preferredChat = preferredLeadId ? sorted.find((item: any) => item.id === preferredLeadId) : null;
-
+        const sorted = [...data].sort((a: any, b: any) =>
+          new Date(b.updated_at || b.created_at || 0).getTime() -
+          new Date(a.updated_at || a.created_at || 0).getTime()
+        );
+        const prefId = String(searchParams.get("leadId") || "").trim();
+        const prefChat = prefId ? sorted.find((item: any) => item.id === prefId) : null;
         setActiveChats(sorted);
-        setSelectedChat((prev: any) => {
-          if (preferredChat && !prev) return preferredChat;
-          if (!prev && sorted.length > 0) return sorted[0];
-          if (prev) {
-            const updated = sorted.find(c => c.id === prev.id);
-            if (updated) return updated;
-          }
-          return prev;
-        });
+        setSelectedChat((prev: any) => prefChat || prev || (sorted.length > 0 ? sorted[0] : null));
       }
       setLoadingChats(false);
     }
     fetchChats();
-
-    const channel = supabase
-      .channel('realtime-leads')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, () => {
-        fetchChats();
-      })
+    const ch = supabase.channel('realtime-leads')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'leads' }, fetchChats)
       .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
+    return () => { supabase.removeChannel(ch); };
   }, [searchParams, supabase]);
 
-  // Load messages when selectedChat changes
   useEffect(() => {
     async function fetchMessages() {
       if (!selectedChat) return;
-
+      setLoadingMessages(true);
       const selectedPhone = normalizePhone(selectedChat.phone || selectedChat.telefone || "");
+      
       if (!selectedPhone) {
         setMessages([]);
-        return;
-      }
-
-      const { data: convRows, error: convErr } = await supabase
-        .from('conversations')
-        .select('id')
-        .eq('lead_id', selectedChat.id)
-        .order('updated_at', { ascending: false })
-        .limit(5);
-
-      if (!convErr && convRows && convRows.length > 0) {
-        const conversationIds = convRows.map((c: any) => c.id);
-        const { data: msgRows, error: msgErr } = await supabase
-          .from('messages')
-          .select('id, direction, type, source, content, created_at')
-          .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: true })
-          .limit(300);
-
-        if (!msgErr && msgRows && msgRows.length > 0) {
-          const mappedFromMessages = msgRows.map((m: any) => ({
-            id: m.id,
-            type: m.type === 'system' ? 'system' : m.direction === 'outbound' ? 'outbound' : 'inbound',
-            messageType: m.type || 'text',
-            senderLabel: formatSenderLabel(m.source, m.type),
-            text: formatMessageLabel(String(m.type || 'text'), String(m.content || '[mensagem sem texto]')),
-            time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          }));
-          setMessages(mappedFromMessages);
-          return;
-        }
-      }
-
-      const { data, error } = await supabase
-        .from('integration_events')
-        .select('id, direction, payload, created_at')
-        .order('created_at', { ascending: true })
-        .limit(300);
-
-      if (error) {
-        console.error('Erro ao buscar mensagens em integration_events:', error);
-        setMessages([]);
-        return;
-      }
-
-      const mapped = (data || [])
-        .filter((evt: any) => extractPhone(evt.payload) === selectedPhone)
-        .map((evt: any) => {
-          const text = extractMessageText(evt.payload);
-          const messageType = String(
-            evt.payload?.messageType ||
-            evt.payload?.type ||
-            evt.payload?.data?.messageType ||
-            "text"
-          ).trim();
-          return {
-            id: evt.id,
-            type: evt.direction === 'outbound' ? 'outbound' : 'inbound',
-            messageType,
-            senderLabel: formatSenderLabel(
-              evt.payload?.source ||
-              evt.payload?.payload?.source ||
-              (evt.direction === 'outbound' ? 'agent' : 'customer'),
-              messageType
-            ),
-            text: formatMessageLabel(messageType, text || '[mensagem sem texto]'),
-            time: new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-          };
-        })
-        .filter((m: any) => m.text);
-
-      setMessages(mapped);
-    }
-
-    fetchMessages();
-
-    const channelMessages = supabase
-      .channel('realtime-messages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, () => {
-        fetchMessages();
-      })
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'integration_events' }, () => {
-        fetchMessages();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channelMessages);
-    };
-  }, [selectedChat, supabase]);
-
-  useEffect(() => {
-    async function fetchAutomationState() {
-      if (!selectedChat?.id) {
-        setAutomationState(null);
+        setLoadingMessages(false);
         return;
       }
 
       try {
-        const res = await fetch(`/api/conversations/automation?leadId=${encodeURIComponent(selectedChat.id)}`);
-        const data = await res.json().catch(() => ({}));
+        // 1. Try structured messages table via conversations
+        const { data: convRows } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('lead_id', selectedChat.id)
+          .order('updated_at', { ascending: false })
+          .limit(5);
 
-        if (!res.ok || !data?.ok) {
-          setAutomationState(null);
-          return;
+        if (convRows && convRows.length > 0) {
+          const { data: msgRows } = await supabase
+            .from('messages')
+            .select('*')
+            .in('conversation_id', convRows.map((c: any) => c.id))
+            .order('created_at', { ascending: true })
+            .limit(300);
+
+          if (msgRows && msgRows.length > 0) {
+            setMessages(msgRows.map((m: any) => ({
+              id: m.id,
+              type: m.type === 'system' ? 'system' : m.direction === 'outbound' ? 'outbound' : 'inbound',
+              messageType: m.type || 'text',
+              senderLabel: formatSenderLabel(m.source, m.type),
+              text: formatMessageLabel(String(m.type || 'text'), String(m.content || '')),
+              time: new Date(m.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            })));
+            setLoadingMessages(false);
+            return;
+          }
         }
 
-        setAutomationState(data.lead);
+        // 2. Fallback: integration_events filtered by phone
+        const { data: events } = await supabase
+          .from('integration_events')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(500);
+
+        const mapped = (events || [])
+          .filter((evt: any) => {
+            const evtPhone = extractPhone(evt.payload);
+            return evtPhone && evtPhone.slice(-8) === selectedPhone.slice(-8);
+          })
+          .map((evt: any) => {
+            const text = extractMessageText(evt.payload);
+            const type = String(
+              evt.payload?.messageType ||
+              evt.payload?.type ||
+              evt.payload?.data?.messageType ||
+              "text"
+            ).trim();
+            return {
+              id: evt.id,
+              type: evt.direction === 'outbound' ? 'outbound' : 'inbound',
+              messageType: type,
+              senderLabel: formatSenderLabel(
+                evt.payload?.source || evt.payload?.payload?.source ||
+                (evt.direction === 'outbound' ? 'agent' : 'customer'),
+                type
+              ),
+              text: formatMessageLabel(type, text || '[mensagem sem texto]'),
+              time: new Date(evt.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              rawDate: new Date(evt.created_at),
+            };
+          })
+          .filter(m => m.text && m.text !== '[mensagem sem texto]');
+
+        setMessages([...mapped].sort((a, b) => a.rawDate.getTime() - b.rawDate.getTime()));
+      } catch (err) {
+        console.error('Erro ao buscar mensagens:', err);
+        setMessages([]);
+      } finally {
+        setLoadingMessages(false);
+      }
+    }
+
+    fetchMessages();
+    const chMsg = supabase.channel(`realtime-msg-${selectedChat?.id || 'none'}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'messages' }, fetchMessages)
+      .subscribe();
+    return () => { supabase.removeChannel(chMsg); };
+  }, [selectedChat, supabase]);
+
+  useEffect(() => {
+    async function fetchAutomation() {
+      if (!selectedChat?.id) return;
+      try {
+        const res = await fetch(`/api/conversations/automation?leadId=${encodeURIComponent(selectedChat.id)}`);
+        const data = await res.json();
+        if (data?.ok) setAutomationState(data.lead);
+        else setAutomationState(selectedChat); // fallback to lead data
       } catch {
-        setAutomationState(null);
+        setAutomationState(selectedChat);
       }
     }
-
-    fetchAutomationState();
+    fetchAutomation();
   }, [selectedChat]);
-
-  useEffect(() => {
-    const nextValue = formatDateTimeInput(
-      automationState?.next_followup_at ||
-      selectedChat?.next_followup_at ||
-      null
-    );
-    setNextFollowupInput(nextValue);
-  }, [automationState, selectedChat]);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSend = async () => {
-    if (!inputText.trim() || !selectedChat) return;
-    setSendError(null);
-    
-    const newMsg = {
-      id: Date.now(),
-      type: "outbound",
-      senderLabel: "Equipe",
-      text: inputText.trim(),
-      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setMessages(prev => [...prev, newMsg]);
-    setInputText("");
-    setIsSending(true);
-
-    try {
-      const res = await fetch("/api/n8n/outbound", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          contactId: selectedChat.id, 
-          message: newMsg.text, 
-          type: "text",
-          destination: selectedChat.phone || selectedChat.telefone,
-          source: "human",
-          ownerId: currentAgentId,
-          ownerName: currentAgentName,
-          nextFollowupAt: nextFollowupInput || null,
-        })
-      });
-      
-      const data = await res.json().catch(() => ({}));
-      if (res.ok && data?.success) {
-        setAutomationState((prev: any) => ({
-          ...(prev || {}),
-          id: selectedChat.id,
-          automation_status: 'paused_human',
-          automation_paused_at: new Date().toISOString(),
-        }));
-      } else {
-        setMessages((prev) => prev.filter((msg) => msg.id !== newMsg.id));
-        setSendError(data?.details || data?.error || `Falha ao enviar mensagem (${res.status})`);
-      }
-    } catch (err) {
-      setMessages((prev) => prev.filter((msg) => msg.id !== newMsg.id));
-      setSendError("Não foi possível enviar a mensagem agora.");
-      console.error("Failed to send message via n8n:", err);
-    } finally {
-      setIsSending(false);
-    }
-  };
 
   const handleAutomationToggle = async () => {
     if (!selectedChat?.id) return;
-
     const nextAction = automationState?.automation_status === 'paused_human' ? 'resume' : 'pause';
     setIsUpdatingAutomation(true);
-
     try {
       const res = await fetch('/api/conversations/automation', {
         method: 'POST',
@@ -408,489 +264,281 @@ export default function Conversations() {
           ownerName: nextAction === 'pause' ? currentAgentName : null,
         }),
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || `Falha ao atualizar automacao (${res.status})`);
-      }
-
-      setAutomationState(data.lead);
-    } catch (err) {
-      console.error('Failed to update automation state:', err);
-    } finally {
-      setIsUpdatingAutomation(false);
-    }
+      const data = await res.json();
+      if (data?.ok) setAutomationState(data.lead);
+    } finally { setIsUpdatingAutomation(false); }
   };
 
-  const handleGenerateProposal = async () => {
-    if (!selectedChat) return;
-
-    setGoogleAuthError(null);
-    setIsGeneratingDoc(true);
+  const handleSend = async () => {
+    if (!inputText.trim() || !selectedChat) return;
+    setSendError(null);
+    const newMsg = {
+      id: Date.now(),
+      type: "outbound",
+      senderLabel: "Equipe",
+      text: inputText.trim(),
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+    setMessages(prev => [...prev, newMsg]);
+    setInputText("");
+    setIsSending(true);
     try {
-      const payload = {
-        leadId: selectedChat.id,
-        contactName: selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone,
-        phone: selectedChat.phone || selectedChat.telefone || '',
-        origin: selectedChat.origin || selectedChat.origem || '',
-        interest: selectedChat.interest || selectedChat.interesse || '',
-      };
-
-      const res = await fetch('/api/n8n/proposal-doc', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data.ok || !data.docUrl) {
-        throw new Error(data?.error || `Falha ao gerar proposta (${res.status})`);
-      }
-
-      window.open(data.docUrl, '_blank');
-    } catch (err: any) {
-      console.error('Failed to generate proposal:', err);
-      setGoogleAuthError(err?.message || 'Falha ao gerar proposta no Google Docs. Tente novamente.');
-    } finally {
-      setIsGeneratingDoc(false);
-    }
-  };
-
-  const handleConversationStatusChange = async (nextStatus: string) => {
-    if (!selectedChat?.id) return;
-    setIsUpdatingLeadOps(true);
-    try {
-      const res = await fetch('/api/leads/ops', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const res = await fetch("/api/n8n/outbound", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          leadId: selectedChat.id,
-          conversationStatus: nextStatus,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || `Falha ao atualizar status (${res.status})`);
-      }
-
-      setAutomationState((prev: any) => ({ ...(prev || {}), ...data.lead }));
-      setSelectedChat((prev: any) => (prev ? { ...prev, ...data.lead } : prev));
-      setActiveChats((prev: any[]) => prev.map((chat) => (chat.id === data.lead.id ? { ...chat, ...data.lead } : chat)));
-    } catch (err) {
-      console.error('Failed to update lead ops:', err);
-    } finally {
-      setIsUpdatingLeadOps(false);
-    }
-  };
-
-  const handleAssignToMe = async () => {
-    if (!selectedChat?.id) return;
-    setIsUpdatingLeadOps(true);
-    try {
-      const res = await fetch('/api/leads/ops', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          leadId: selectedChat.id,
+          contactId: selectedChat.id,
+          message: newMsg.text,
+          type: "text",
+          destination: selectedChat.phone || selectedChat.telefone,
+          source: "human",
           ownerId: currentAgentId,
           ownerName: currentAgentName,
         }),
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || `Falha ao atribuir responsavel (${res.status})`);
+      if (res.ok) {
+        setAutomationState((p: any) => ({ ...p, automation_status: 'paused_human' }));
+      } else {
+        throw new Error();
       }
-
-      setAutomationState((prev: any) => ({ ...(prev || {}), ...data.lead }));
-      setSelectedChat((prev: any) => (prev ? { ...prev, ...data.lead } : prev));
-      setActiveChats((prev: any[]) => prev.map((chat) => (chat.id === data.lead.id ? { ...chat, ...data.lead } : chat)));
-    } catch (err) {
-      console.error('Failed to assign owner:', err);
-    } finally {
-      setIsUpdatingLeadOps(false);
-    }
+    } catch {
+      setMessages(prev => prev.filter(m => m.id !== newMsg.id));
+      setSendError("Falha no envio. Verifique a conexão com o n8n.");
+    } finally { setIsSending(false); }
   };
 
-  const handleSaveFollowup = async () => {
-    if (!selectedChat?.id) return;
-    setIsUpdatingLeadOps(true);
-    try {
-      const res = await fetch('/api/leads/ops', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          leadId: selectedChat.id,
-          nextFollowupAt: nextFollowupInput || null,
-        }),
+  // Scroll to bottom when new messages arrive
+  useEffect(() => {
+    if (messagesContainerRef.current && messages.length > 0) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
       });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || `Falha ao salvar retorno (${res.status})`);
-      }
-
-      setAutomationState((prev: any) => ({ ...(prev || {}), ...data.lead }));
-      setSelectedChat((prev: any) => (prev ? { ...prev, ...data.lead } : prev));
-      setActiveChats((prev: any[]) => prev.map((chat) => (chat.id === data.lead.id ? { ...chat, ...data.lead } : chat)));
-    } catch (err) {
-      console.error('Failed to save follow-up:', err);
-    } finally {
-      setIsUpdatingLeadOps(false);
     }
-  };
+  }, [messages]);
 
-  const handleScheduleConsultation = () => {
-    if (!selectedChat?.id) return;
-    navigate(`/calendar?leadId=${encodeURIComponent(selectedChat.id)}`);
-  };
-
-  const handleSelectChat = (chat: any) => {
-    setSelectedChat(chat);
-    if (searchParams.get("leadId")) {
-      const nextParams = new URLSearchParams(searchParams);
-      nextParams.delete("leadId");
-      setSearchParams(nextParams, { replace: true });
-    }
-  };
-
-  const handleAppointmentStatusChange = async (nextStatus: string) => {
-    if (!selectedChat?.id) return;
-    setIsUpdatingLeadOps(true);
-    try {
-      const res = await fetch('/api/automation/appointments', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          leadId: selectedChat.id,
-          event: nextStatus,
-        }),
-      });
-
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok || !data?.ok) {
-        throw new Error(data?.error || `Falha ao atualizar consulta (${res.status})`);
-      }
-
-      setAutomationState((prev: any) => ({ ...(prev || {}), ...data.lead }));
-      setSelectedChat((prev: any) => (prev ? { ...prev, ...data.lead } : prev));
-      setActiveChats((prev: any[]) => prev.map((chat) => (chat.id === data.lead.id ? { ...chat, ...data.lead } : chat)));
-    } catch (err) {
-      console.error('Failed to update appointment status:', err);
-    } finally {
-      setIsUpdatingLeadOps(false);
-    }
-  };
+  const isHumanMode = automationState?.automation_status === 'paused_human';
 
   return (
-    <div className="flex-1 overflow-hidden p-8 h-full w-full space-y-6 flex flex-col bg-transparent">
+    <div className="flex-1 overflow-hidden h-full w-full flex flex-col">
       
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
-        <div>
-          <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
-            <MessageSquare className="h-3 w-3" />
-            <span>Mensageria Atendimento</span>
+      {/* --- Compact Header --- */}
+      <div className="shrink-0 px-5 pt-4 pb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[8px] uppercase tracking-[0.15em] font-bold text-[#E5C38C] mb-0.5">
+              <Zap className="h-2.5 w-2.5 animate-pulse" />
+              <span>Intervenção Humana</span>
+            </div>
+            <h1 className="text-lg font-bold tracking-tight text-white font-display">Central de Conversas</h1>
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Central de Conversas</h1>
-          <p className="text-xs text-white/40 font-light mt-1">Gestão híbrida de leads por canais integrados.</p>
         </div>
+        <p className="text-xs font-light text-white/30">
+          {loadingChats ? "Carregando..." : `${activeChats.length} diálogos ativos`}
+        </p>
       </div>
 
-      {/* Main Container */}
-      <div className="flex-1 flex overflow-hidden rounded-3xl border border-white/5 bg-[#0B0D12]/60 backdrop-blur-xl min-h-[500px] h-full shadow-2xl">
+      {/* --- Main Interface: Split Pane --- */}
+      <section className="flex-1 flex min-h-0 overflow-hidden mx-3 mb-3 mt-3 rounded-xl border border-white/5 bg-black-void/40 backdrop-blur-3xl shadow-2xl">
         
-        {/* Left Pane: Chat List */}
-        <div className="w-80 flex flex-col border-r border-white/5 shrink-0 bg-[#0E1118]/80">
-          <div className="p-4 border-b border-white/5 space-y-3">
-            <div className="flex items-center gap-2 px-3 py-2.5 border border-white/5 rounded-2xl bg-[#07090E]/60 text-xs focus-within:border-[#D4AF37]/45 transition-colors">
-              <Search className="w-4 h-4 text-white/30" />
+        {/* Left: Chat Directory */}
+        <div className="w-64 shrink-0 flex flex-col border-r border-white/5 bg-black-matte/40">
+          <div className="p-3 border-b border-white/5 space-y-2">
+            <div className="relative group">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/10 group-focus-within:text-gold transition-colors" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Buscar conversa..."
-                className="bg-transparent outline-none w-full text-white placeholder:text-white/20"
+                placeholder="Localizar diálogo..."
+                className="w-full bg-white/[0.02] border border-white/5 rounded-lg py-2 pl-9 pr-3 text-[11px] text-white focus:outline-none focus:border-gold/30 transition-all"
               />
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] uppercase tracking-widest font-bold text-white/50">Abertas ({filteredChats.length})</span>
+            <div className="flex justify-between items-center px-1">
+              <span className="text-[8px] uppercase tracking-[0.2em] font-black text-white/20">DIÁLOGOS ATIVOS</span>
+              <span className="text-[8px] font-mono text-gold/60">{filteredChats.length}</span>
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto divide-y divide-white/5">
+          <div className="flex-1 overflow-y-auto scrollbar-hide py-2">
             {loadingChats ? (
-              <div className="p-4 text-center text-xs text-white/40">Carregando conversas...</div>
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-6 w-6 text-gold/40 animate-spin" />
+              </div>
             ) : filteredChats.length === 0 ? (
-              <div className="p-4 text-center text-xs text-white/40">Nenhuma conversa encontrada.</div>
+              <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                <MessageSquare className="h-7 w-7 text-white/5 mb-2" />
+                <p className="text-[9px] font-bold uppercase tracking-widest text-white/20">Nenhum diálogo encontrado</p>
+              </div>
             ) : filteredChats.map((chat) => {
               const isSelected = selectedChat?.id === chat.id;
-              const dateStr = chat.last_interaction_at || chat.ultima_interacao_em || chat.updated_at || chat.created_at;
-              const time = dateStr ? new Date(dateStr).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
-              
+              const displayName = getDisplayName(chat);
+              const phone = chat.phone || chat.telefone || "";
               return (
-                <div 
-                  key={chat.id} 
-                  onClick={() => handleSelectChat(chat)}
-                  className={`p-4 cursor-pointer transition-colors relative ${isSelected ? 'bg-gradient-to-r from-[#D4AF37]/10 to-transparent' : 'hover:bg-white/[0.01]'}`}
+                <motion.div
+                  key={chat.id}
+                  onClick={() => setSelectedChat(chat)}
+                  className={cn(
+                    "px-3 py-2.5 cursor-pointer transition-all relative group border-b border-white/[0.02]",
+                    isSelected ? "bg-gold/5" : "hover:bg-white/[0.02]"
+                  )}
                 >
-                  {isSelected && <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-[#D4AF37]" />}
-                  <div className="flex justify-between items-start mb-1">
-                    <h4 className={`text-xs font-bold truncate pr-2 ${isSelected ? 'text-[#E5C38C]' : 'text-white'}`}>
-                      {chat.full_name || chat.nome || chat.phone || chat.telefone}
-                    </h4>
-                    <span className="text-[9px] text-white/30 shrink-0 font-mono">{time}</span>
+                  {isSelected && (
+                    <motion.div layoutId="chat-select" className="absolute left-0 top-2 bottom-2 w-0.5 bg-gold rounded-r-full" />
+                  )}
+                  <div className="flex items-center gap-2.5">
+                    {/* Mini avatar */}
+                    <div className={cn(
+                      "h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-black",
+                      isSelected ? "bg-gold-gradient text-black" : "bg-white/5 text-white/40"
+                    )}>
+                      {getInitial(displayName)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-center gap-2">
+                        <h4 className={cn(
+                          "text-xs font-bold truncate transition-colors",
+                          isSelected ? "text-gold" : "text-white/80 group-hover:text-white"
+                        )}>
+                          {displayName}
+                        </h4>
+                        <div className={cn(
+                          "h-1.5 w-1.5 rounded-full shrink-0",
+                          chat.automation_status === 'paused_human'
+                            ? "bg-amber-400"
+                            : "bg-blue-400"
+                        )} />
+                      </div>
+                      <p className="text-[9px] text-white/30 font-mono truncate mt-0.5">
+                        {phone ? `...${phone.slice(-8)}` : (chat.origin || "DIRECT")}
+                      </p>
+                    </div>
                   </div>
-                  <div className="flex justify-between items-end">
-                    <p className="text-[10px] text-white/45 truncate pr-4">{chat.phone || chat.telefone} • {chat.origin || chat.origem || 'WhatsApp'}</p>
-                    {chat.automation_status === 'paused_human' ? (
-                      <span className="shrink-0 rounded-full bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-amber-400">Humano</span>
-                    ) : (
-                      <span className="shrink-0 rounded-full bg-blue-500/10 border border-blue-500/20 px-2 py-0.5 text-[8px] font-bold uppercase tracking-wider text-blue-400">Agente IA</span>
-                    )}
-                  </div>
-                </div>
+                </motion.div>
               );
             })}
           </div>
         </div>
 
-        {/* Right Pane: Active Chat */}
-        <div className="flex-1 flex flex-col bg-[#07090E]/40 relative">
-          
+        {/* Right: Chat Pane */}
+        <div className="flex-1 flex flex-col min-w-0 bg-black-void/20 relative">
           {selectedChat ? (
             <>
-              {/* Chat Header */}
-              <div className="border-b border-white/5 bg-[#0E1118]/80 p-4 md:p-6 shrink-0 space-y-4">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div className="flex items-start gap-3.5 flex-1 min-w-0">
-                    <div className="h-11 w-11 shrink-0 flex items-center justify-center rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/20 text-[#E5C38C] font-semibold font-serif text-base uppercase">
-                      {(selectedChat.full_name || selectedChat.nome) ? (selectedChat.full_name || selectedChat.nome).substring(0, 2) : 'RD'}
-                    </div>
-                    <div className="flex-1 min-w-0 flex flex-col gap-2">
-                      <h2 className="text-sm font-bold text-white truncate">{selectedChat.full_name || selectedChat.nome || selectedChat.phone || selectedChat.telefone}</h2>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        {automationState?.automation_status === 'paused_human' ? (
-                          <span className="inline-flex shrink-0 items-center gap-1 text-[9px] uppercase tracking-wider font-semibold text-amber-400 bg-amber-500/10 px-2.5 py-0.5 rounded-full border border-amber-500/20">
-                            Atendimento Humano
-                          </span>
-                        ) : (
-                          <span className="inline-flex shrink-0 items-center gap-1 text-[9px] uppercase tracking-wider font-semibold text-blue-400 bg-blue-500/10 px-2.5 py-0.5 rounded-full border border-blue-500/20 animate-pulse">
-                            Automação IA Ativa
-                          </span>
-                        )}
-                        <span className="shrink-0 rounded-full bg-white/5 border border-white/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-white/50">
-                          {selectedLeadStatus.replaceAll("_", " ")}
-                        </span>
-                        {(automationState?.owner_name || selectedChat?.owner_name) && (
-                          <span className="shrink-0 rounded-full bg-[#111622] border border-white/5 px-2 py-0.5 text-[9px] font-bold text-[#E5C38C] truncate max-w-[150px]">
-                            Resp: {automationState?.owner_name || selectedChat?.owner_name}
-                          </span>
-                        )}
-                        {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
-                          <span className="shrink-0 rounded-full bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 text-[9px] font-bold text-emerald-400">
-                            Consulta Agendada
-                          </span>
-                        )}
-                      </div>
-                    </div>
+              {/* Chat Header — compact, no overflow */}
+              <div className="shrink-0 px-4 py-3 border-b border-white/5 bg-black-matte/60 backdrop-blur-xl flex flex-wrap items-center gap-3">
+                {/* Contact Info */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="h-9 w-9 shrink-0 rounded-xl bg-gold-gradient text-black flex items-center justify-center font-display font-black text-sm shadow-gold">
+                    {getInitial(getDisplayName(selectedChat))}
                   </div>
-
-                  {/* Ações Rápidas no Header */}
-                  <div className="flex flex-wrap items-start gap-2.5 shrink-0 pt-1">
-                    <select
-                      value={selectedLeadStatus}
-                      onChange={(e) => handleConversationStatusChange(e.target.value)}
-                      disabled={isUpdatingLeadOps}
-                      className="rounded-xl border border-white/10 bg-[#07090E] px-3 py-1.5 text-[10px] font-bold text-white/80 outline-none focus:border-[#D4AF37]/40 disabled:opacity-50"
-                    >
-                      <option value="novo">Novo</option>
-                      <option value="em_atendimento">Em atendimento</option>
-                      <option value="aguardando_cliente">Aguardando cliente</option>
-                      <option value="agendado">Agendado</option>
-                      <option value="em_followup">Em follow-up</option>
-                      <option value="encerrado">Encerrado</option>
-                    </select>
-
-                    <button
-                      onClick={handleAssignToMe}
-                      disabled={isUpdatingLeadOps}
-                      className="px-3 py-1.5 shrink-0 border border-white/10 bg-white/5 text-white rounded-xl text-[10px] font-bold hover:bg-white/10 transition-colors disabled:opacity-50"
-                    >
-                      Assumir Lead
-                    </button>
-                    
-                    <button 
-                      onClick={handleAutomationToggle}
-                      disabled={isUpdatingAutomation}
-                      className={`px-3 py-1.5 shrink-0 rounded-xl text-[10px] font-bold border transition-colors ${
-                        automationState?.automation_status === 'paused_human'
-                          ? 'border-emerald-500/20 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20'
-                          : 'border-amber-500/20 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20'
-                      } disabled:opacity-50`}
-                    >
-                      {isUpdatingAutomation ? 'Salvando...' : automationState?.automation_status === 'paused_human' ? 'Ligar IA' : 'Pausar IA'}
-                    </button>
-
-                    <button 
-                      onClick={handleGenerateProposal}
-                      disabled={isGeneratingDoc}
-                      className="px-3 py-1.5 shrink-0 border border-purple-500/20 bg-purple-500/10 text-purple-400 rounded-xl text-[10px] font-bold hover:bg-purple-500/20 transition-colors disabled:opacity-50"
-                    >
-                      {isGeneratingDoc ? "Gerando..." : "Gerar Contrato"}
-                    </button>
-
-                    <button
-                      onClick={handleScheduleConsultation}
-                      className="px-3 py-1.5 shrink-0 border border-emerald-500/20 bg-emerald-500/10 text-emerald-400 rounded-xl text-[10px] font-bold hover:bg-emerald-500/20 transition-colors"
-                    >
-                      Agendar
-                    </button>
+                  <div className="min-w-0">
+                    <h2 className="text-sm font-black text-white font-display tracking-tight leading-none truncate">
+                      {getDisplayName(selectedChat)}
+                    </h2>
+                    <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <div className={cn(
+                        "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border shrink-0",
+                        isHumanMode
+                          ? "border-amber-500/20 text-amber-400 bg-amber-500/5"
+                          : "border-blue-500/20 text-blue-400 bg-blue-500/5 animate-pulse"
+                      )}>
+                        {isHumanMode ? "MODO HUMANO" : "IA ASSISTENTE"}
+                      </div>
+                      <span className="text-[9px] text-white/20 font-mono truncate">
+                        {selectedChat.phone || selectedChat.telefone || "—"}
+                      </span>
+                    </div>
                   </div>
                 </div>
-
-                {/* Sub-Header: Agendamento & Follow-ups */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pt-3 border-t border-white/5">
-                  <div className="flex flex-wrap items-center gap-2 rounded-xl border border-white/5 bg-[#07090E]/60 px-3 py-1.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wider text-white/40">Definir Retorno</span>
-                    <input
-                      type="datetime-local"
-                      value={nextFollowupInput}
-                      onChange={(e) => setNextFollowupInput(e.target.value)}
-                      disabled={isUpdatingLeadOps}
-                      className="bg-transparent text-[10px] font-semibold text-white outline-none disabled:opacity-50 [color-scheme:dark]"
-                    />
-                    <button
-                      onClick={handleSaveFollowup}
-                      disabled={isUpdatingLeadOps}
-                      className="rounded-lg bg-white/10 px-2 py-0.5 text-[9px] font-bold text-[#E5C38C] hover:bg-white/20 disabled:opacity-50"
-                    >
-                      Salvar
-                    </button>
-                  </div>
-
-                  {(automationState?.calendar_event_id || selectedChat?.calendar_event_id) && (
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="text-[10px] text-white/50">Status da Agenda:</span>
-                      <button
-                        onClick={() => handleAppointmentStatusChange('confirmed')}
-                        className="px-2.5 py-1 bg-teal-500/10 border border-teal-500/20 text-teal-400 rounded-lg text-[9px] font-bold hover:bg-teal-500/20 shrink-0"
-                      >
-                        Confirmar
-                      </button>
-                      <button
-                        onClick={() => handleAppointmentStatusChange('rescheduled')}
-                        className="px-2.5 py-1 bg-orange-500/10 border border-orange-500/20 text-orange-400 rounded-lg text-[9px] font-bold hover:bg-orange-500/20 shrink-0"
-                      >
-                        Remarcar
-                      </button>
-                    </div>
-                  )}
+                {/* Action Buttons */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <PremiumButton
+                    variant="outline"
+                    onClick={() => navigate(`/calendar?leadId=${selectedChat.id}`)}
+                    className="py-1.5 px-3 text-[9px]"
+                  >
+                    AGENDAR
+                  </PremiumButton>
+                  <PremiumButton
+                    onClick={handleAutomationToggle}
+                    className="py-1.5 px-3 text-[9px]"
+                    disabled={isUpdatingAutomation}
+                  >
+                    {isUpdatingAutomation ? "..." : isHumanMode ? "LIGAR IA" : "PAUSAR IA"}
+                  </PremiumButton>
                 </div>
               </div>
 
-              {googleAuthError && (
-                <div className="mx-6 mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
-                  {googleAuthError}
-                </div>
-              )}
-
-              {sendError && (
-                <div className="mx-6 mt-3 rounded-2xl border border-red-500/20 bg-red-500/10 px-4 py-2.5 text-xs text-red-400">
-                  {sendError}
-                </div>
-              )}
-
-              {/* Messages Area */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6">
-                <div className="flex justify-center">
-                  <span className="bg-white/5 border border-white/10 text-white/40 text-[9px] uppercase tracking-widest font-semibold px-3 py-1 rounded-full">
-                    Histórico Recente
-                  </span>
-                </div>
-                
-                {messages.map((msg) => {
-                  if (msg.type === "system") {
-                    return (
-                      <div key={msg.id} className="flex justify-center">
-                        <div className="bg-blue-500/10 border border-blue-500/20 px-4 py-2 rounded-2xl flex items-center gap-2 max-w-sm">
-                          <div className="w-1.5 h-1.5 rounded-full bg-blue-400" />
-                          <span className="text-[10px] font-medium text-blue-300">
-                            <span className="font-bold">{msg.senderLabel || "Sistema"}</span> • {msg.text} às {msg.time}
-                          </span>
+              {/* Messages Stage */}
+              <div
+                ref={messagesContainerRef}
+                className="flex-1 overflow-y-auto p-4 space-y-3 scrollbar-hide"
+              >
+                {loadingMessages ? (
+                  <div className="flex items-center justify-center py-16">
+                    <Loader2 className="h-8 w-8 text-gold/40 animate-spin" />
+                  </div>
+                ) : messages.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3 opacity-30">
+                    <User className="h-10 w-10 text-white" />
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Sem mensagens</p>
+                      <p className="text-[9px] text-white/50 mt-1">As mensagens aparecerão aqui quando sincronizadas pelo n8n</p>
+                    </div>
+                  </div>
+                ) : messages.map((msg, i) => {
+                  const isOut = msg.type === "outbound";
+                  const isSys = msg.type === "system";
+                  if (isSys) return (
+                    <div key={msg.id} className="flex justify-center">
+                      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/10 bg-white/[0.02] px-5 py-1.5 rounded-full border border-white/5">
+                        {msg.text}
+                      </span>
+                    </div>
+                  );
+                  return (
+                    <motion.div
+                      key={msg.id}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                      className={cn("flex flex-col gap-1", isOut ? "items-end" : "items-start")}
+                    >
+                      <div className={cn(
+                        "text-[9px] font-bold uppercase tracking-widest px-2 flex items-center gap-1",
+                        isOut ? "text-gold/50" : "text-white/20"
+                      )}>
+                        {isOut && <Zap className="h-2.5 w-2.5" />}
+                        {msg.senderLabel}
+                      </div>
+                      <div className={cn(
+                        "max-w-[75%] px-4 py-2.5 rounded-xl text-xs leading-relaxed shadow-lg border",
+                        isOut
+                          ? "bg-gold/8 border-gold/15 text-white rounded-tr-sm"
+                          : "bg-white/[0.04] border-white/5 text-white/80 rounded-tl-sm"
+                      )}>
+                        <p className="font-light whitespace-pre-wrap break-words">{msg.text}</p>
+                        <div className="mt-2 flex justify-end">
+                          <span className="text-[9px] font-mono text-white/15">{msg.time}</span>
                         </div>
                       </div>
-                    );
-                  }
-                  
-                  if (msg.type === "inbound") {
-                    return (
-                      <div key={msg.id} className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#E5C38C] font-semibold text-xs flex items-center justify-center shrink-0 uppercase">
-                          CL
-                        </div>
-                        <div className="bg-[#0E1118] border border-white/5 p-4 rounded-2xl rounded-tl-none shadow-md max-w-[80%]">
-                          <div className="mb-1 text-[9px] font-bold uppercase tracking-wider text-[#E5C38C]">
-                            {msg.senderLabel || "Cliente"}
-                          </div>
-                          {msg.messageType && msg.messageType !== "text" && (
-                            <div className="mb-1.5 inline-flex rounded-full bg-white/5 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white/50">
-                              {msg.messageType}
-                            </div>
-                          )}
-                          <p className="text-xs leading-relaxed text-white/80 whitespace-pre-wrap">{msg.text}</p>
-                          <div className="text-right mt-2">
-                            <span className="text-[9px] text-white/30 font-mono">{msg.time}</span>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  }
-                  
-                  if (msg.type === "outbound") {
-                    const isAgent = msg.senderLabel === "Agente IA";
-                    return (
-                      <div key={msg.id} className="flex items-start justify-end gap-3">
-                        <div className={`p-4 rounded-2xl rounded-tr-none shadow-md max-w-[80%] border ${
-                          isAgent 
-                            ? 'bg-blue-950/20 border-blue-500/10' 
-                            : 'bg-[#0E1118] border-white/5'
-                        }`}>
-                          <div className={`mb-1 text-[9px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
-                            isAgent ? 'text-blue-400' : 'text-emerald-400'
-                          }`}>
-                            {isAgent && <Zap className="h-3 w-3 animate-pulse" />}
-                            {msg.senderLabel || "Equipe"}
-                          </div>
-                          {msg.messageType && msg.messageType !== "text" && (
-                            <div className="mb-1.5 inline-flex rounded-full bg-white/5 px-2.5 py-0.5 text-[8px] font-bold uppercase tracking-wider text-white/50">
-                              {msg.messageType}
-                            </div>
-                          )}
-                          <p className="text-xs leading-relaxed text-white/80 whitespace-pre-wrap">{msg.text}</p>
-                          <div className="text-right mt-2">
-                            <span className="text-[9px] text-white/30 font-mono">{msg.time}</span>
-                          </div>
-                        </div>
-                        <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-[#D4AF37] to-[#F3E5AB] text-[#0B0D12] flex items-center justify-center text-xs font-bold shrink-0 italic">RD</div>
-                      </div>
-                    );
-                  }
-
-                  return null;
+                    </motion.div>
+                  );
                 })}
-                
-                <div ref={messagesEndRef} />
               </div>
 
-              {/* Input Area */}
-              <div className="p-4 bg-[#0E1118]/80 border-t border-white/5 shrink-0">
-                <div className="flex items-end gap-2 bg-[#07090E]/60 border border-white/5 rounded-2xl p-2 focus-within:border-[#D4AF37]/45 transition-colors">
-                  <button className="p-2.5 text-white/30 hover:text-white transition-colors">
-                    <Paperclip className="w-4 h-4" />
+              {/* Input Command Center */}
+              <div className="shrink-0 p-3 bg-black-matte/80 border-t border-white/5 backdrop-blur-2xl">
+                {sendError && (
+                  <div className="mb-3 text-xs text-red-400 bg-red-500/10 px-4 py-2 rounded-xl border border-red-500/20">
+                    {sendError}
+                  </div>
+                )}
+                <div className="flex items-end gap-2 bg-white/[0.02] border border-white/8 rounded-xl p-2 focus-within:border-gold/30 transition-all">
+                  <button className="p-1.5 text-white/10 hover:text-gold transition-colors shrink-0">
+                    <Paperclip className="h-3.5 w-3.5" />
                   </button>
-                  <textarea 
+                  <textarea
                     rows={1}
                     value={inputText}
                     onChange={(e) => setInputText(e.target.value)}
@@ -900,29 +548,29 @@ export default function Conversations() {
                         handleSend();
                       }
                     }}
-                    placeholder="Digite sua resposta comercial..." 
-                    className="w-full bg-transparent outline-none resize-none text-xs py-2 max-h-32 text-white placeholder:text-white/20"
+                    placeholder="Escrever mensagem... (Enter para enviar)"
+                    className="flex-1 bg-transparent outline-none resize-none text-xs py-1.5 max-h-32 text-white placeholder:text-white/15 font-light"
                   />
-                  <button 
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
                     onClick={handleSend}
                     disabled={isSending || !inputText.trim()}
-                    className="p-2.5 bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0B0D12] rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50 shrink-0"
+                    className="h-8 w-8 bg-gold-gradient text-black rounded-lg flex items-center justify-center shadow-gold disabled:opacity-30 shrink-0 transition-opacity"
                   >
-                    <Send className="w-3.5 h-3.5" />
-                  </button>
+                    {isSending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                  </motion.button>
                 </div>
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
-              <MessageSquare className="h-12 w-12 text-white/10 mb-3" />
-              <p className="text-sm text-white/40 font-light">Selecione uma conversa ao lado para visualizar a linha do tempo.</p>
+            <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-20">
+              <MessageSquare className="h-10 w-10 text-white" />
+              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white">Selecione um diálogo</p>
             </div>
           )}
-
         </div>
-
-      </div>
+      </section>
     </div>
   );
 }

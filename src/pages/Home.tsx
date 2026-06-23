@@ -78,6 +78,68 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const SLOTS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00"];
+  const [busySlots, setBusySlots] = useState<string[]>([]);
+  const [loadingCalendar, setLoadingCalendar] = useState(false);
+
+  useEffect(() => {
+    if (!isModalOpen || !selectedDate) return;
+
+    let active = true;
+    const fetchAvailability = async () => {
+      setLoadingCalendar(true);
+      try {
+        const timeMin = `${selectedDate}T00:00:00-03:00`;
+        const res = await fetch(`/api/n8n/calendar?action=list&timeMin=${encodeURIComponent(timeMin)}&days=1`);
+        if (!res.ok) throw new Error("Failed to fetch calendar");
+        const data = await res.json();
+        
+        if (!active) return;
+        
+        const events = Array.isArray(data.events) ? data.events : [];
+        const occupied: string[] = [];
+
+        for (const slot of SLOTS) {
+          const slotStart = new Date(`${selectedDate}T${slot}:00-03:00`);
+          const slotEnd = new Date(slotStart.getTime() + 30 * 60 * 1000);
+
+          const isOverlapping = events.some((event: any) => {
+            const evStartStr = event.start?.dateTime || event.start?.date;
+            const evEndStr = event.end?.dateTime || event.end?.date;
+            if (!evStartStr || !evEndStr) return false;
+
+            const evStart = new Date(evStartStr);
+            const evEnd = new Date(evEndStr);
+
+            return slotStart.getTime() < evEnd.getTime() && slotEnd.getTime() > evStart.getTime();
+          });
+
+          if (isOverlapping) {
+            occupied.push(slot);
+          }
+        }
+
+        setBusySlots(occupied);
+        
+        // Auto-select first available slot if current is busy
+        if (occupied.includes(selectedSlot) || !selectedSlot) {
+          const firstAvailable = SLOTS.find(s => !occupied.includes(s));
+          setSelectedSlot(firstAvailable || "");
+        }
+      } catch (err) {
+        console.error("Error fetching availability:", err);
+      } finally {
+        if (active) {
+          setLoadingCalendar(false);
+        }
+      }
+    };
+
+    fetchAvailability();
+
+    return () => {
+      active = false;
+    };
+  }, [isModalOpen, selectedDate]);
 
   const trackEvent = async (eventType: string, leadId?: string) => {
     try {
@@ -249,8 +311,13 @@ export default function Home() {
     },
   ], [siteSettings]);
 
-  const patients = useMemo(() => patientTemplates.map((patient) => ({
+  const patients = useMemo(() => patientTemplates.map((patient, index) => ({
     ...patient,
+    name: siteSettings[`case_name_${index}`] || patient.name,
+    role: siteSettings[`case_role_${index}`] || patient.role,
+    location: siteSettings[`case_location_${index}`] || patient.location,
+    comment: siteSettings[`case_comment_${index}`] || patient.comment,
+    avatar: siteSettings[`case_avatar_${index}`] || `https://i.pravatar.cc/100?u=${patient.name}`,
     beforeImage: siteSettings[patient.beforeKey] || DEFAULT_MEDIA_SETTINGS[patient.beforeKey],
     afterImage: siteSettings[patient.afterKey] || DEFAULT_MEDIA_SETTINGS[patient.afterKey],
   })), [siteSettings]);
@@ -359,9 +426,9 @@ export default function Home() {
             className="space-y-10"
           >
             <h2 className="text-6xl md:text-8xl lg:text-9xl font-display font-light leading-[0.85] text-white">
-              Dr. Rafael <br />
+              {siteSettings.home_hero_title_first || "Dr. Rafael"} <br />
               <span className="italic text-gold text-glow-gold relative">
-                Dias
+                {siteSettings.home_hero_title_last || "Dias"}
                 <motion.span 
                   className="absolute -bottom-2 left-0 h-[1px] bg-gold/50"
                   initial={{ width: 0 }}
@@ -372,7 +439,7 @@ export default function Home() {
             </h2>
             
             <p className="text-white/40 text-sm md:text-base font-light max-w-md leading-relaxed tracking-wide">
-              Descubra a arte da transformação sutil. Sob a liderança do Dr. Rafael Dias, esculpimos sua melhor versão com precisão clínica e um toque de luxo incomparável.
+              {siteSettings.home_hero_desc || "Descubra a arte da transformação sutil. Sob a liderança do Dr. Rafael Dias, esculpimos sua melhor versão com precisão clínica e um toque de luxo incomparável."}
             </p>
 
             <div className="flex flex-wrap gap-10 pt-6">
@@ -411,13 +478,23 @@ export default function Home() {
                 {[...Array(5)].map((_, i) => <Sparkles key={i} size={8} className="text-gold" />)}
               </div>
               <p className="text-xs text-white/80 italic leading-relaxed font-light">
-                "O Dr. Rafael Dias mudou minha percepção sobre estética. Naturalidade em cada detalhe, um verdadeiro artista."
+                "{patients[0]?.comment || "O Dr. Rafael Dias mudou minha percepção sobre estética. Naturalidade em cada detalhe, um verdadeiro artista."}"
               </p>
               <div className="mt-6 pt-6 border-t border-white/10 flex items-center gap-4">
-                <div className="h-8 w-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center font-display text-[10px] text-gold">RD</div>
+                <div className="h-8 w-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center overflow-hidden font-display text-[10px] text-gold shrink-0">
+                  {patients[0]?.avatar ? (
+                    <img 
+                      src={patients[0].avatar} 
+                      alt={patients[0].name}
+                      className="w-full h-full object-cover grayscale"
+                    />
+                  ) : (
+                    "RD"
+                  )}
+                </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gold">Letícia Oliveira</p>
-                  <p className="text-[8px] text-white/30 uppercase tracking-tighter">Influenciadora Digital</p>
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-gold">{patients[0]?.name || "Letícia Oliveira"}</p>
+                  <p className="text-[8px] text-white/30 uppercase tracking-tighter">{patients[0]?.role || "Influenciadora Digital"}</p>
                 </div>
               </div>
             </motion.div>
@@ -568,10 +645,9 @@ export default function Home() {
             <div className="space-y-10">
               <h5 className="text-[10px] font-medium uppercase tracking-[0.4em] text-white/50">Concierge</h5>
               <ul className="space-y-5 text-[10px] uppercase tracking-[0.15em] text-white/30 font-light">
-                <li className="flex items-center gap-3 text-white/60"><Phone size={14} className="text-gold/50" /> (94) 99999-9999</li>
-                <li>contato@rafaeldias.com.br</li>
-                <li>Rua das Esmeraldas, 123</li>
-                <li>Parauapebas - PA</li>
+                <li className="flex items-center gap-3 text-white/60"><Phone size={14} className="text-gold/50" /> {siteSettings.home_footer_phone || "(94) 99999-9999"}</li>
+                <li>{siteSettings.home_footer_email || "contato@rafaeldias.com.br"}</li>
+                <li className="whitespace-pre-line">{siteSettings.home_footer_address || "Rua das Esmeraldas, 123 - Parauapebas - PA"}</li>
               </ul>
             </div>
 
@@ -723,23 +799,55 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Horários Disponíveis</label>
-                      <div className="grid grid-cols-3 gap-2">
-                        {SLOTS.map((slotOption) => (
-                          <button
-                            key={slotOption}
-                            type="button"
-                            onClick={() => setSelectedSlot(slotOption)}
-                            className={`py-2 px-3 rounded-lg border text-center text-xs font-mono transition-all ${
-                              selectedSlot === slotOption
-                                ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#E5C38C] font-bold"
-                                : "bg-black/20 border-white/10 text-white/50 hover:border-white/20 hover:text-white"
-                            }`}
-                          >
-                            {slotOption}
-                          </button>
-                        ))}
+                      <div className="flex items-center justify-between">
+                        <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Horários Disponíveis</label>
+                        {loadingCalendar && (
+                          <span className="flex items-center gap-1 text-[9px] text-[#E5C38C] animate-pulse">
+                            <Loader2 className="w-2.5 h-2.5 animate-spin" /> Verificando agenda...
+                          </span>
+                        )}
                       </div>
+                      
+                      {loadingCalendar ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {SLOTS.map((slotOption) => (
+                            <div
+                              key={slotOption}
+                              className="py-2 px-3 rounded-lg border border-white/5 bg-black/10 text-center text-xs font-mono text-white/20 animate-pulse select-none"
+                            >
+                              {slotOption}
+                            </div>
+                          ))}
+                        </div>
+                      ) : SLOTS.every(s => busySlots.includes(s)) ? (
+                        <div className="p-4 rounded-xl border border-red-500/20 bg-red-500/5 text-center text-xs text-red-300 font-light">
+                          😔 Nenhum horário disponível nesta data. Por favor, selecione outro dia.
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-3 gap-2">
+                          {SLOTS.map((slotOption) => {
+                            const isBusy = busySlots.includes(slotOption);
+                            return (
+                              <button
+                                key={slotOption}
+                                type="button"
+                                disabled={isBusy}
+                                onClick={() => setSelectedSlot(slotOption)}
+                                className={`py-2 px-3 rounded-lg border text-center text-xs font-mono transition-all ${
+                                  selectedSlot === slotOption
+                                    ? "bg-[#D4AF37]/20 border-[#D4AF37] text-[#E5C38C] font-bold shadow-[0_0_10px_rgba(212,175,55,0.15)]"
+                                    : isBusy
+                                    ? "bg-red-500/5 border-red-500/10 text-red-400/30 line-through cursor-not-allowed"
+                                    : "bg-black/20 border-white/10 text-white/50 hover:border-white/20 hover:text-white"
+                                }`}
+                                title={isBusy ? "Horário indisponível (reservado)" : `Selecionar ${slotOption}`}
+                              >
+                                {slotOption}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-3 mt-4">
@@ -752,7 +860,8 @@ export default function Home() {
                       </button>
                       <button
                         type="submit"
-                        className="flex-[1.5] flex items-center justify-center gap-2 py-3 px-5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95"
+                        disabled={!selectedSlot || loadingCalendar}
+                        className="flex-[1.5] flex items-center justify-center gap-2 py-3 px-5 bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold uppercase tracking-wider text-[#0B0D12] rounded-xl hover:shadow-[0_4px_20px_rgba(212,175,55,0.25)] transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
                       >
                         <span>Avançar</span>
                         <ArrowRight className="w-3.5 h-3.5" />

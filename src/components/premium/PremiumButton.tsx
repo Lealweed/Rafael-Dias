@@ -10,6 +10,7 @@ interface PremiumButtonProps {
   href?: string;
   target?: string;
   disabled?: boolean;
+  type?: "submit" | "reset" | "button";
 }
 
 export function PremiumButton({
@@ -20,11 +21,13 @@ export function PremiumButton({
   href,
   target,
   disabled,
+  type = "button",
 }: PremiumButtonProps) {
   const isLink = !!href;
 
   const content = (
     <motion.button
+      type={type}
       whileHover={disabled ? {} : { scale: 1.05 }}
       whileTap={disabled ? {} : { scale: 0.95 }}
       transition={{ type: "spring", stiffness: 600, damping: 15 }}

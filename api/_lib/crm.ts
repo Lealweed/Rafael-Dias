@@ -254,6 +254,7 @@ export async function updateLeadOps(params: {
   lastConfirmationSentAt?: string | null;
   lastReminderSentAt?: string | null;
   lastNoShowCheckSentAt?: string | null;
+  lastHumanInteractionAt?: string | null;
 }) {
   const supabase = getServiceSupabase();
   if (!supabase) return { ok: false as const, reason: 'missing_supabase_service_role' };
@@ -271,6 +272,7 @@ export async function updateLeadOps(params: {
   if (params.lastConfirmationSentAt !== undefined) patch.last_confirmation_sent_at = params.lastConfirmationSentAt;
   if (params.lastReminderSentAt !== undefined) patch.last_reminder_sent_at = params.lastReminderSentAt;
   if (params.lastNoShowCheckSentAt !== undefined) patch.last_no_show_check_sent_at = params.lastNoShowCheckSentAt;
+  if (params.lastHumanInteractionAt !== undefined) patch.last_human_interaction_at = params.lastHumanInteractionAt;
 
   if (Object.keys(patch).length === 0) {
     return { ok: false as const, reason: 'empty_patch' };
@@ -317,3 +319,87 @@ export async function logIntegrationEvent(params: {
   if (error) return { ok: false as const, reason: 'insert_failed', error };
   return { ok: true as const, duplicated: false };
 }
+
+export async function isAuthorizedRequest(req: any, requiredSecret?: string): Promise<boolean> {
+  const authHeader = String(req.headers?.authorization || '').trim();
+  
+  // 1. Check direct secret (e.g. webhook secret) if provided
+  if (requiredSecret) {
+    const bearer = `Bearer ${requiredSecret}`;
+    if (authHeader === requiredSecret || authHeader === bearer) {
+      return true;
+    }
+  }
+
+  // 2. Check general webhook secrets
+  const inboundSecret = process.env.N8N_WEBHOOK_INBOUND_SECRET || '';
+  const calendarSecret = process.env.N8N_CALENDAR_WEBHOOK_SECRET || '';
+  if (inboundSecret && (authHeader === inboundSecret || authHeader === `Bearer ${inboundSecret}`)) {
+    return true;
+  }
+  if (calendarSecret && (authHeader === calendarSecret || authHeader === `Bearer ${calendarSecret}`)) {
+    return true;
+  }
+
+  // 3. Check Supabase user JWT token
+  if (authHeader.toLowerCase().startsWith('bearer ')) {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseAnon = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (supabaseUrl && supabaseAnon) {
+      try {
+        const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+          method: 'GET',
+          headers: {
+            apikey: supabaseAnon,
+            Authorization: authHeader,
+          },
+        });
+        if (resp.ok) {
+          const user = await resp.json().catch(() => null);
+          return Boolean(user?.id);
+        }
+      } catch {
+        // Network/parsing failures
+      }
+    }
+  }
+
+  return false;
+}
+
+export async function isAuthorizedAdmin(req: any): Promise<boolean> {
+  const authHeader = String(req.headers?.authorization || '').trim();
+  if (!authHeader.toLowerCase().startsWith('bearer ')) return false;
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnon = process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !supabaseAnon) return false;
+
+  try {
+    const resp = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      method: 'GET',
+      headers: {
+        apikey: supabaseAnon,
+        Authorization: authHeader,
+      },
+    });
+    if (!resp.ok) return false;
+    const user = await resp.json().catch(() => null);
+    if (!user?.id) return false;
+
+    // Check profiles table role
+    const supabase = getServiceSupabase();
+    if (!supabase) return false;
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return profile?.role === 'admin';
+  } catch {
+    return false;
+  }
+}
+

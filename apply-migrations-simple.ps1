@@ -4,8 +4,39 @@
 Write-Host "🚀 Aplicador de Migrações Supabase" -ForegroundColor Green
 Write-Host "Conectando ao projeto...`n" -ForegroundColor Cyan
 
-$baseUrl = "https://erlwnyutxrrmcdqujrzq.supabase.co/rest/v1"
-$serviceRoleKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybHdueXV0eHJybWNkcXVqcnpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTA3NTM5NSwiImV4cCI6MjA5NDY1MTM5NX0.3h0J136VrrVaD0rVrCTr4lbE3SIqtRS_kRLrXn4YSQ8"
+# Carregar variáveis de ambiente dos arquivos .env
+$envFiles = @(".env.local", ".env")
+foreach ($file in $envFiles) {
+    if (Test-Path $file) {
+        Get-Content $file | ForEach-Object {
+            $line = $_.Trim()
+            if ($line -and -not $line.StartsWith("#") -and $line.Contains("=")) {
+                $parts = $line -split '=', 2
+                $key = $parts[0].Trim()
+                $val = $parts[1].Trim().Trim('"').Trim("'")
+                if (-not (Test-Path "env:$key")) {
+                    Set-Item -Path "env:\$key" -Value $val
+                }
+            }
+        }
+    }
+}
+
+$SUPABASE_URL = $env:VITE_SUPABASE_URL
+if (-not $SUPABASE_URL) {
+    $SUPABASE_URL = $env:NEXT_PUBLIC_SUPABASE_URL
+}
+if (-not $SUPABASE_URL) {
+    $SUPABASE_URL = "https://erlwnyutxrrmcdqujrzq.supabase.co"
+}
+$baseUrl = "$SUPABASE_URL/rest/v1"
+
+$serviceRoleKey = $env:SUPABASE_SERVICE_ROLE_KEY
+
+if (-not $serviceRoleKey) {
+    Write-Host "❌ Erro: SUPABASE_SERVICE_ROLE_KEY não está definido nos arquivos .env." -ForegroundColor Red
+    exit 1
+}
 
 $migrations = @(
     "00011_create_storage_buckets.sql",

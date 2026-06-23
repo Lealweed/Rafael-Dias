@@ -1,8 +1,38 @@
 # Script para aplicar migrações via Supabase API REST
 # Executar com: .\apply-migrations.ps1
 
-$SUPABASE_URL = "https://erlwnyutxrrmcdqujrzq.supabase.co"
-$SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybHdueXV0eHJybWNkcXVqcnpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTA3NTM5NSwiZXhwIjoyMDk0NjUxMzk1fQ.3h0J136VrrVaD0rVrCTr4lbE3SIqtRS_kRLrXn4YSQ8"
+# Carregar variáveis de ambiente dos arquivos .env
+$envFiles = @(".env.local", ".env")
+foreach ($file in $envFiles) {
+    if (Test-Path $file) {
+        Get-Content $file | ForEach-Object {
+            $line = $_.Trim()
+            if ($line -and -not $line.StartsWith("#") -and $line.Contains("=")) {
+                $parts = $line -split '=', 2
+                $key = $parts[0].Trim()
+                $val = $parts[1].Trim().Trim('"').Trim("'")
+                if (-not (Test-Path "env:$key")) {
+                    Set-Item -Path "env:\$key" -Value $val
+                }
+            }
+        }
+    }
+}
+
+$SUPABASE_URL = $env:VITE_SUPABASE_URL
+if (-not $SUPABASE_URL) {
+    $SUPABASE_URL = $env:NEXT_PUBLIC_SUPABASE_URL
+}
+if (-not $SUPABASE_URL) {
+    $SUPABASE_URL = "https://erlwnyutxrrmcdqujrzq.supabase.co"
+}
+
+$SERVICE_ROLE_KEY = $env:SUPABASE_SERVICE_ROLE_KEY
+
+if (-not $SERVICE_ROLE_KEY) {
+    Write-Host "❌ Erro: SUPABASE_SERVICE_ROLE_KEY não está definido nos arquivos .env." -ForegroundColor Red
+    exit 1
+}
 
 $migrations = @(
     "00011_create_storage_buckets.sql",
@@ -30,55 +60,35 @@ foreach ($migration in $migrations) {
     
     $sql = Get-Content $filePath -Raw
     
-    # Dividir por ponto-e-vírgula e executar cada statement
-    $statements = $sql -split ";" | Where-Object { $_.Trim() }
-    
-    $totalStatements = $statements.Count
-    
-    foreach ($i in 0..($totalStatements - 1)) {
-        $statement = $statements[$i].Trim()
-        
-        if ($statement.Length -eq 0) {
-            continue
+    try {
+        $headers = @{
+            "Authorization" = "Bearer $SERVICE_ROLE_KEY"
+            "apikey" = $SERVICE_ROLE_KEY
+            "Content-Type" = "application/json"
+            "Prefer" = "return=minimal"
         }
         
-        try {
-            $headers = @{
-                "Authorization" = "Bearer $SERVICE_ROLE_KEY"
-                "Content-Type" = "application/json"
-                "Prefer" = "return=minimal"
-            }
-            
-            # Adicionar ; ao final se não tiver
-            if (-not $statement.EndsWith(";")) {
-                $statement += ";"
-            }
-            
-            $body = @{
-                query = $statement
-            } | ConvertTo-Json -Compress
-            
-            $response = Invoke-WebRequest `
-                -Uri "$SUPABASE_URL/rest/v1/rpc/exec_sql" `
-                -Method Post `
-                -Headers $headers `
-                -Body $body `
-                -ErrorAction SilentlyContinue
-            
-            if ($response.StatusCode -in @(200, 201, 204)) {
-                # OK
-            } else {
-                Write-Host "  ⚠️ Status: $($response.StatusCode)" -ForegroundColor Yellow
-            }
-        }
-        catch {
-            # Continuar mesmo com erros individuais
-            Write-Host "  ⚠️ Erro em statement $($i+1): $($_.Exception.Message.Substring(0, [Math]::Min(100, $_.Exception.Message.Length)))" -ForegroundColor Yellow
+        $body = @{
+            sql = $sql
+        } | ConvertTo-Json -Compress
+        
+        $response = Invoke-WebRequest `
+            -Uri "$SUPABASE_URL/rest/v1/rpc/exec_sql" `
+            -Method Post `
+            -Headers $headers `
+            -Body $body `
+            -ErrorAction SilentlyContinue
+        
+        if ($response.StatusCode -in @(200, 201, 204)) {
+            Write-Host "✅ $migration processada!`n" -ForegroundColor Green
+            $successCount++
+        } else {
+            Write-Host "❌ $migration - Falha na execução. Status: $($response.StatusCode)" -ForegroundColor Red
         }
     }
-    
-    Write-Host "✅ $migration processada!`n" -ForegroundColor Green
-    $successCount++
+    catch {
+        Write-Host "❌ $migration - Erro: $($_.Exception.Message)" -ForegroundColor Red
+    }
 }
 
 Write-Host ("=" * 50) -ForegroundColor Cyan

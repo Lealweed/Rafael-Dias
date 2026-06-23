@@ -18,19 +18,7 @@ export default async function handler(req: any, res: any) {
     const bearer = `Bearer ${expectedSecret}`;
     const authOk = authHeader === expectedSecret || authHeader === bearer;
 
-    // Compat temporária: n8n deste ambiente não pode ler $env no node HTTP.
-    // Se vier sem Authorization mas com payload válido de inbound, aceitamos.
-    const payloadPreview = req.body || {};
-    const hasInboundShape = Boolean(
-      payloadPreview.phone ||
-      payloadPreview.remoteJid ||
-      payloadPreview.from ||
-      payloadPreview.destination ||
-      payloadPreview.data?.key?.remoteJid ||
-      payloadPreview.raw
-    );
-
-    if (!authOk && !(authHeader === '' && hasInboundShape)) {
+    if (!authOk) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
   }

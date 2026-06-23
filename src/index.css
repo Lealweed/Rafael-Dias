@@ -13,7 +13,8 @@
   --font-body: "Montserrat", sans-serif;
 
   --shadow-premium: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
-  --shadow-gold: 0 0 20px rgba(212, 175, 55, 0.2);
+  --shadow-gold: 0 0 30px rgba(212, 175, 55, 0.25);
+  --shadow-gold-intense: 0 0 50px rgba(212, 175, 55, 0.4);
   
   --radius-premium: 2rem;
 }
@@ -55,7 +56,11 @@
   }
 
   .text-glow-gold {
-    text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+    text-shadow: 0 0 30px rgba(212, 175, 55, 0.4);
+  }
+
+  .gold-border-glow {
+    @apply border border-gold/30 shadow-[0_0_15px_rgba(212,175,55,0.1)];
   }
 
   .btn-premium {

@@ -1,4 +1,4 @@
-import { getServiceSupabase, logIntegrationEvent, updateLeadOps } from '../_lib/crm.js';
+import { getServiceSupabase, logIntegrationEvent, updateLeadOps, isAuthorizedRequest } from '../_lib/crm.js';
 
 const DUE_PHASES = ['confirmation_request', 'reminder_day_of', 'missed_followup'] as const;
 const STATUS_VALUES = ['scheduled', 'pending_confirmation', 'confirmed', 'completed', 'no_show', 'canceled', 'rescheduled'] as const;
@@ -137,6 +137,11 @@ async function markPhaseSent(leadId: string, phase: DuePhase) {
 }
 
 export default async function handler(req: any, res: any) {
+  const allowed = await isAuthorizedRequest(req);
+  if (!allowed) {
+    return json(res, 401, { ok: false, error: 'Unauthorized' });
+  }
+
   const supabase = getServiceSupabase();
   if (!supabase) {
     return json(res, 500, { ok: false, error: 'missing_supabase_service_role' });

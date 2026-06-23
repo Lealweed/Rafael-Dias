@@ -1,9 +1,15 @@
+import "dotenv/config";
 import { createClient } from "@supabase/supabase-js";
 import { readFileSync } from "fs";
 import { join } from "path";
 
-const SUPABASE_URL = "https://erlwnyutxrrmcdqujrzq.supabase.co";
-const SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybHdueXV0eHJybWNkcXVqcnpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTA3NTM5NSwiZXhwIjoyMDk0NjUxMzk1fQ.3h0J136VrrVaD0rVrCTr4lbE3SIqtRS_kRLrXn4YSQ8";
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || "https://erlwnyutxrrmcdqujrzq.supabase.co";
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SERVICE_ROLE_KEY) {
+  console.error("❌ SUPABASE_SERVICE_ROLE_KEY is missing from environment.");
+  process.exit(1);
+}
 
 const migrations = [
   "00011_create_storage_buckets.sql",

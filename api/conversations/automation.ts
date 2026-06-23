@@ -1,5 +1,5 @@
 import { findLeadByIdOrPhone, getLeadAutomationState, setLeadAutomationState } from '../_lib/automation.js';
-import { updateLeadOps } from '../_lib/crm.js';
+import { updateLeadOps, isAuthorizedRequest } from '../_lib/crm.js';
 
 function json(res: any, status: number, payload: any) {
   return res.status(status).json(payload);
@@ -14,6 +14,11 @@ function readPhone(req: any): string {
 }
 
 export default async function handler(req: any, res: any) {
+  const allowed = await isAuthorizedRequest(req);
+  if (!allowed) {
+    return json(res, 401, { ok: false, error: 'Unauthorized' });
+  }
+
   const leadId = readLeadId(req);
   const phone = readPhone(req);
 

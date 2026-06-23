@@ -212,11 +212,9 @@ export default async function handler(req: any, res: any) {
 
   const action = getAction(req);
 
-  if (!isReadOnlyAction(action)) {
-    const allowed = await isAuthorizedForWrite(req);
-    if (!allowed) {
-      return json(res, 401, { ok: false, action, error: 'Unauthorized' });
-    }
+  const allowed = await isAuthorizedForWrite(req);
+  if (!allowed && action !== 'list') {
+    return json(res, 401, { ok: false, action, error: 'Unauthorized' });
   }
 
   const timezone = String(req.body?.timezone || req.query?.timezone || process.env.TZ || 'America/Fortaleza');
@@ -239,11 +237,21 @@ export default async function handler(req: any, res: any) {
       }).toString();
 
       const data = await gcal(`/events?${query}`, 'GET', accessToken);
+      const items = Array.isArray(data.items) ? data.items : [];
+
+      // Filter events to maintain medical and personal privacy for public inquiries
+      const filteredEvents = allowed
+        ? items
+        : items.map((event: any) => ({
+            start: event?.start || {},
+            end: event?.end || {},
+          }));
+
       const responsePayload = {
         ok: true,
         action,
-        count: Array.isArray(data.items) ? data.items.length : 0,
-        events: data.items || [],
+        count: filteredEvents.length,
+        events: filteredEvents,
       };
       await logCalendarEvent({ action, status: 'success', requestPayload: req.body || req.query, responsePayload });
       return json(res, 200, responsePayload);

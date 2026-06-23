@@ -16,7 +16,7 @@ export default function ClientPortal() {
 
   const supabase = useMemo(() => createClient(), []);
 
-  // Handle Login using Phone number & Password
+  // Handle Login using Phone number & Password via secure serverless API
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -35,92 +35,63 @@ export default function ClientPortal() {
     }
 
     try {
-      // Find lead by phone
-      let { data: leads, error: leadError } = await supabase
-        .from("leads")
-        .select("*")
-        .like("phone", `%${cleanPhone.slice(-8)}`)
-        .limit(1);
+      const response = await fetch("/api/portal/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: cleanPhone, password: patientPassword.trim() }),
+      });
 
-      if (leadError || !leads || leads.length === 0) {
-        // Try fallback legacy table
-        const legacy = await supabase
-          .from("Usuarios")
-          .select("*")
-          .like("telefone", `%${cleanPhone.slice(-8)}`)
-          .limit(1);
-        leads = legacy.data;
-        leadError = legacy.error;
+      const data = await response.json();
+      if (!response.ok || !data.ok) {
+        throw new Error(data?.error || "Falha ao autenticar.");
       }
 
-      if (leadError || !leads || leads.length === 0) {
-        setError("Paciente não localizado. Verifique o número ou fale com a clínica.");
-        setLoading(false);
-        return;
-      }
-
-      const lead = leads[0];
-
-      // Verify portal password
-      if (lead.portal_password && lead.portal_password !== patientPassword.trim()) {
-        setError("Senha incorreta. Verifique os dados ou solicite suporte à clínica.");
-        setLoading(false);
-        return;
-      }
-
-      // Check if access is active
-      if (lead.portal_access_active === false) {
-        setError("Acesso ao portal desativado. Entre em contato com a clínica.");
-        setLoading(false);
-        return;
-      }
-
-      setPatientData(lead);
+      setPatientData(data.patient);
+      setRecord(data.record);
+      setFinancials(data.financials || []);
+      setNotifications(data.notifications || []);
       setIsLoggedIn(true);
-
-      // Fetch related data
-      await fetchPatientData(lead.id);
     } catch (err: any) {
-      setError("Erro ao autenticar. Tente novamente.");
+      setError(err?.message || "Erro ao autenticar. Tente novamente.");
     } finally {
       setLoading(false);
     }
   };
 
   const fetchPatientData = async (leadId: string) => {
-    // 1. Fetch clinical record
-    const { data: recordData } = await supabase
-      .from("patient_records")
-      .select("*")
-      .eq("lead_id", leadId)
-      .maybeSingle();
-    setRecord(recordData);
-
-    // 2. Fetch financials
-    const { data: financialData } = await supabase
-      .from("patient_financials")
-      .select("*")
-      .eq("lead_id", leadId);
-    setFinancials(financialData || []);
-
-    // 3. Fetch notifications
-    const { data: notifData } = await supabase
-      .from("notifications")
-      .select("*")
-      .eq("recipient_id", leadId)
-      .order("created_at", { ascending: false });
-    setNotifications(notifData || []);
+    try {
+      const response = await fetch("/api/portal/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: patientPhone, password: patientPassword }),
+      });
+      const data = await response.json();
+      if (response.ok && data.ok) {
+        setRecord(data.record);
+        setFinancials(data.financials || []);
+        setNotifications(data.notifications || []);
+      }
+    } catch (err) {
+      console.error("Erro ao recarregar dados:", err);
+    }
   };
 
   const handleMarkAsRead = async (notifId: string) => {
-    await supabase
-      .from("notifications")
-      .update({ read: true })
-      .eq("id", notifId);
-    
-    setNotifications(prev => 
-      prev.map(n => n.id === notifId ? { ...n, read: true } : n)
-    );
+    try {
+      const response = await fetch("/api/portal/data", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "read-notification", notifId }),
+      });
+      const data = await response.json();
+      if (response.ok && data.ok) {
+        setNotifications(prev => 
+          prev.map(n => n.id === notifId ? { ...n, read: true } : n)
+        );
+      }
+    } catch (err) {
+      console.error("Erro ao marcar como lida:", err);
+    }
   };
 
   const handleLogout = () => {

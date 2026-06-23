@@ -76,6 +76,75 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       if (apptErr) throw apptErr;
 
+      // 2.5 Sync to Google Calendar (Simulator Mode)
+      try {
+        const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
+        const client_id = process.env.GOOGLE_CLIENT_ID;
+        const client_secret = process.env.GOOGLE_CLIENT_SECRET;
+        const refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
+        const timezone = process.env.TZ || "America/Fortaleza";
+
+        if (client_id && client_secret && refresh_token) {
+          const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: new URLSearchParams({
+              client_id,
+              client_secret,
+              refresh_token,
+              grant_type: 'refresh_token',
+            }).toString(),
+          });
+          const tokenData = await tokenRes.json();
+          
+          if (tokenRes.ok && tokenData.access_token) {
+            const accessToken = tokenData.access_token;
+            const startIso = appointmentDate.toISOString();
+            const endDate = new Date(appointmentDate.getTime() + 30 * 60000);
+            const endIso = endDate.toISOString();
+
+            const eventPayload = {
+              summary: `Consulta VIP: ${treatment} - ${name} (Simulação)`,
+              description: `Agendamento Online via Formulário de Simulação.\nPaciente: ${name}\nTelefone: ${cleanPhone}\nCPF: ${cpf || ''}\nEmail: ${email || ''}`,
+              start: { dateTime: startIso, timeZone: timezone },
+              end: { dateTime: endIso, timeZone: timezone },
+              attendees: email ? [{ email }] : undefined,
+            };
+
+            const gcalRes = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(eventPayload),
+            });
+
+            if (gcalRes.ok) {
+              const gcalEvent = await gcalRes.json();
+              const { updateLeadOps } = await import("../_lib/crm");
+              await updateLeadOps({
+                leadId,
+                calendarEventId: gcalEvent.id,
+                lastAppointmentAt: startIso,
+                conversationStatus: 'agendado',
+                appointmentStatus: 'scheduled',
+                appointmentConfirmedAt: null,
+                lastConfirmationSentAt: null,
+                lastReminderSentAt: null,
+                lastNoShowCheckSentAt: null,
+              });
+              console.log(`Google Calendar event synced successfully (Simulated): ${gcalEvent.id}`);
+            } else {
+              const errData = await gcalRes.text();
+              console.error("Google Calendar event creation failed inside simulation:", errData);
+            }
+          }
+        }
+      } catch (gcalErr) {
+        console.error("Google Calendar sync exception inside simulation:", gcalErr);
+      }
+
       // 3. Log Analytics
       await supabase.from("landing_analytics").insert([
         { event_type: "form_submission", lead_id: leadId },

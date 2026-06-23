@@ -16,7 +16,9 @@ import {
   FileImage,
   Sliders,
   TrendingUp,
-  ExternalLink
+  ExternalLink,
+  FileText,
+  MessageSquare
 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import {
@@ -41,6 +43,33 @@ const MEDIA_LABELS: Record<string, string> = {
   patient_after_image_1: "Caso 2: Imagem Depois",
   patient_before_image_2: "Caso 3: Imagem Antes",
   patient_after_image_2: "Caso 3: Imagem Depois",
+
+  // Textos da página principal
+  home_hero_title_first: "Hero: Primeiro Nome",
+  home_hero_title_last: "Hero: Sobrenome",
+  home_hero_desc: "Hero: Descrição Principal",
+  home_footer_phone: "Rodapé: Telefone de Contato",
+  home_footer_email: "Rodapé: E-mail de Contato",
+  home_footer_address: "Rodapé: Endereço",
+
+  // Depoimentos dos casos
+  case_name_0: "Caso 1: Nome do Paciente",
+  case_role_0: "Caso 1: Profissão / Cargo",
+  case_location_0: "Caso 1: Cidade / UF",
+  case_comment_0: "Caso 1: Comentário / Relato",
+  case_avatar_0: "Caso 1: Imagem de Perfil (Avatar)",
+
+  case_name_1: "Caso 2: Nome do Paciente",
+  case_role_1: "Caso 2: Profissão / Cargo",
+  case_location_1: "Caso 2: Cidade / UF",
+  case_comment_1: "Caso 2: Comentário / Relato",
+  case_avatar_1: "Caso 2: Imagem de Perfil (Avatar)",
+
+  case_name_2: "Caso 3: Nome do Paciente",
+  case_role_2: "Caso 3: Profissão / Cargo",
+  case_location_2: "Caso 3: Cidade / UF",
+  case_comment_2: "Caso 3: Comentário / Relato",
+  case_avatar_2: "Caso 3: Imagem de Perfil (Avatar)",
 };
 
 const CATEGORIES = {
@@ -66,6 +95,62 @@ const CATEGORIES = {
       "patient_after_image_2",
     ],
   },
+  texts: {
+    label: "Textos Principais",
+    icon: FileText,
+    keys: [
+      "home_hero_title_first",
+      "home_hero_title_last",
+      "home_hero_desc",
+      "home_footer_phone",
+      "home_footer_email",
+      "home_footer_address",
+    ],
+  },
+  comments: {
+    label: "Depoimentos",
+    icon: MessageSquare,
+    keys: [
+      "case_name_0",
+      "case_role_0",
+      "case_location_0",
+      "case_comment_0",
+      "case_avatar_0",
+      "case_name_1",
+      "case_role_1",
+      "case_location_1",
+      "case_comment_1",
+      "case_avatar_1",
+      "case_name_2",
+      "case_role_2",
+      "case_location_2",
+      "case_comment_2",
+      "case_avatar_2",
+    ],
+  },
+};
+
+const MEDIA_KEYS = [
+  "login_bg_image",
+  "home_hero_video",
+  "home_hero_portrait_image",
+  "bento_service_image_0",
+  "bento_service_image_1",
+  "bento_service_image_2",
+  "bento_service_image_3",
+  "patient_before_image_0",
+  "patient_after_image_0",
+  "patient_before_image_1",
+  "patient_after_image_1",
+  "patient_before_image_2",
+  "patient_after_image_2",
+  "case_avatar_0",
+  "case_avatar_1",
+  "case_avatar_2",
+];
+
+const isTextAreaKey = (key: string) => {
+  return key === "home_hero_desc" || key.endsWith("_comment") || key === "home_footer_address";
 };
 
 export default function ConfigPage() {
@@ -258,12 +343,12 @@ export default function ConfigPage() {
   return (
     <div className="flex-1 overflow-y-auto p-8 h-full w-full font-sans bg-[#07090E] selection:bg-[#D4AF37]/20 selection:text-[#E5C38C] pb-12">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6 border-b border-white/10 pb-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-white/10 pb-4">
         <div>
-          <h1 className="text-3xl font-light tracking-tight text-white font-serif">
+          <h1 className="text-xl font-light tracking-tight text-white font-serif">
             Configurações & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E5C38C] via-[#D4AF37] to-[#B8860B]">Mídias</span>
           </h1>
-          <p className="text-xs uppercase tracking-[0.2em] text-[#E5C38C] font-semibold mt-1">
+          <p className="text-[10px] uppercase tracking-[0.15em] text-[#E5C38C] font-semibold mt-0.5">
             Personalize imagens, vídeos da landing page e monitore as integrações do sistema.
           </p>
         </div>
@@ -274,7 +359,7 @@ export default function ConfigPage() {
               fetchSettings();
               setStatusMessage(null);
             }}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-[#0E1118]/80 text-xs font-semibold text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/40 transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-[#0E1118]/80 text-[10px] font-semibold text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/40 transition-all shadow-sm active:scale-95"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Sincronizar</span>
@@ -282,7 +367,7 @@ export default function ConfigPage() {
           <button
             onClick={handleSave}
             disabled={saving || settingsLoading}
-            className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-xs font-bold text-[#0B0D12] hover:shadow-[0_4px_20px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 active:scale-95 shadow-md"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-[10px] font-bold text-[#0B0D12] hover:shadow-[0_4px_20px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 active:scale-95 shadow-md"
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             <span>Salvar Tudo</span>
@@ -310,9 +395,9 @@ export default function ConfigPage() {
       )}
 
       {/* MAIN LAYOUT */}
-      <div className="grid gap-8 lg:grid-cols-[1.35fr_0.65fr]">
+      <div className="grid gap-5 lg:grid-cols-[1.35fr_0.65fr]">
         {/* MEDIA MANAGEMENT */}
-        <div className="bg-[#0B0D12]/70 backdrop-blur-xl rounded-3xl border border-white/5 shadow-2xl p-6 md:p-8 flex flex-col gap-6">
+        <div className="bg-[#0B0D12]/70 backdrop-blur-xl rounded-2xl border border-white/5 shadow-2xl p-4 md:p-5 flex flex-col gap-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">
             <div>
               <h2 className="text-xl font-medium tracking-tight text-white font-serif">Mídias e Arquivos</h2>
@@ -320,22 +405,20 @@ export default function ConfigPage() {
             </div>
           </div>
 
-          {/* Elegant Category Tabs */}
-          <div className="grid grid-cols-3 gap-2 bg-[#07090E]/80 p-1.5 rounded-2xl border border-white/5">
+          {/* Elegant Category Navigation (Anchor scroll) */}
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 bg-[#07090E]/80 p-1.5 rounded-2xl border border-white/5">
             {Object.entries(CATEGORIES).map(([catKey, cat]) => {
               const Icon = cat.icon;
-              const isActive = activeTab === catKey;
               return (
                 <button
                   key={catKey}
-                  onClick={() => setActiveTab(catKey as any)}
-                  className={`flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-semibold tracking-wide transition-all ${
-                    isActive
-                      ? "bg-gradient-to-tr from-[#D4AF37]/20 to-[#E5C38C]/10 border border-[#D4AF37]/30 text-[#E5C38C] shadow-inner"
-                      : "text-white/40 hover:text-white/80 hover:bg-white/[0.02] border border-transparent"
-                  }`}
+                  onClick={() => {
+                    const el = document.getElementById(`cat-section-${catKey}`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  }}
+                  className="flex flex-col sm:flex-row items-center justify-center gap-2 py-3 px-3 rounded-xl text-xs font-semibold tracking-wide text-white/40 hover:text-[#E5C38C] hover:bg-white/[0.02] border border-transparent transition-all"
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? "text-[#E5C38C]" : "text-white/40"}`} />
+                  <Icon className="w-4 h-4 text-white/40 group-hover:text-[#E5C38C] transition-colors" />
                   <span>{cat.label}</span>
                 </button>
               );
@@ -352,134 +435,205 @@ export default function ConfigPage() {
               {settingsError}
             </div>
           ) : (
-            <div className="grid gap-6">
-              {CATEGORIES[activeTab].keys.map((key) => {
-                const value = settings[key] || "";
-                const isImage = isImageUrl(value);
-                const isVideo = isVideoUrl(value);
-
+            <div className="space-y-12">
+              {Object.entries(CATEGORIES).map(([catKey, cat]) => {
+                const Icon = cat.icon;
                 return (
-                  <div
-                    key={key}
-                    className="group relative flex flex-col md:flex-row gap-6 p-5 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[#D4AF37]/20 transition-all duration-300 shadow-sm"
-                  >
-                    {/* Media Preview Box */}
-                    <div className="w-full md:w-36 h-36 shrink-0 rounded-2xl bg-[#07090E] border border-white/5 overflow-hidden flex flex-col items-center justify-center relative shadow-inner group-hover:border-[#D4AF37]/30 transition-all">
-                      {isImage && (
-                        <img
-                          src={value}
-                          alt={MEDIA_LABELS[key]}
-                          className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
-                          onError={(e) => {
-                            (e.target as HTMLElement).style.display = "none";
-                          }}
-                        />
-                      )}
-                      {isVideo && (
-                        <div className="flex flex-col items-center justify-center h-full w-full bg-[#0E1118] p-4 text-center">
-                          <Film className="w-8 h-8 text-[#E5C38C] mb-2 animate-pulse" />
-                          <span className="text-[10px] text-white/50 font-mono tracking-widest uppercase truncate max-w-full">
-                            Vídeo Ativo
-                          </span>
-                        </div>
-                      )}
-                      {!isImage && !isVideo && (
-                        <div className="flex flex-col items-center gap-2">
-                          <ImageIcon className="w-8 h-8 text-white/20" />
-                          <span className="text-[9px] text-white/30 font-semibold tracking-wider">SEM PREVIEW</span>
-                        </div>
-                      )}
+                  <div key={catKey} id={`cat-section-${catKey}`} className="space-y-6 scroll-mt-28">
+                    <div className="flex items-center gap-3 border-b border-white/10 pb-3">
+                      <div className="p-2 rounded-xl bg-[#D4AF37]/10 text-[#E5C38C]">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-semibold tracking-wide text-white font-serif">{cat.label}</h3>
+                        <p className="text-xs text-white/40">Campos relacionados a {cat.label.toLowerCase()}</p>
+                      </div>
                     </div>
 
-                    {/* Inputs & Configuration */}
-                    <div className="flex-1 flex flex-col justify-between gap-4">
-                      <div>
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-sm font-semibold tracking-wide text-[#E5C38C] font-serif">
-                            {MEDIA_LABELS[key] || key}
-                          </span>
-                          <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-white/50 font-mono uppercase">
-                            {isVideo ? "Vídeo" : "Imagem"}
-                          </span>
-                        </div>
-                        <span className="text-[10px] text-white/30 font-mono tracking-wider block mt-1">
-                          Parâmetro: {key}
-                        </span>
-                      </div>
+                    <div className="grid gap-6">
+                      {cat.keys.map((key) => {
+                        const value = settings[key] || "";
+                        const isMedia = MEDIA_KEYS.includes(key);
 
-                      {/* Direct URL input */}
-                      <div className="flex flex-col gap-2">
-                        <label className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
-                          Link da Mídia / URL
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            value={value}
-                            onChange={(e) => handleFieldChange(key, e.target.value)}
-                            className="flex-1 rounded-xl border border-white/10 bg-[#07090E]/90 px-4 py-2.5 text-xs text-white placeholder-white/25 outline-none transition focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 font-mono"
-                            placeholder="URL do arquivo..."
-                          />
-                        </div>
-                      </div>
+                        if (!isMedia) {
+                          const isTextArea = isTextAreaKey(key);
+                          return (
+                            <div
+                              key={key}
+                              className="group relative flex flex-col gap-4 p-5 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[#D4AF37]/20 transition-all duration-300 shadow-sm"
+                            >
+                              <div className="flex items-center justify-between gap-2">
+                                <div>
+                                  <span className="text-sm font-semibold tracking-wide text-[#E5C38C] font-serif">
+                                    {MEDIA_LABELS[key] || key}
+                                  </span>
+                                  <span className="text-[10px] text-white/30 font-mono tracking-wider block mt-0.5">
+                                    Parâmetro: {key}
+                                  </span>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestoreDefault(key)}
+                                  className="flex items-center justify-center h-8 px-3 rounded-lg border border-white/10 bg-[#0E1118]/80 text-white/50 hover:bg-white/5 hover:text-white transition-all active:scale-95 text-[10px] gap-1"
+                                  title="Restaurar valor padrão"
+                                >
+                                  <RotateCcw className="w-3 h-3" />
+                                  <span>Restaurar</span>
+                                </button>
+                              </div>
 
-                      {/* Multi-action Row (Premium Controls) */}
-                      <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
-                        {/* PC File Upload Label */}
-                        <label className="cursor-pointer flex items-center justify-center h-9 px-4 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#E5C38C] hover:bg-[#D4AF37]/20 transition-all font-semibold text-xs gap-1.5 whitespace-nowrap active:scale-95">
-                          {uploadingKey === key ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            <Upload className="w-3.5 h-3.5" />
-                          )}
-                          <span>{uploadingKey === key ? "Enviando..." : "Subir do PC"}</span>
-                          <input
-                            type="file"
-                            accept={isVideo ? "video/*" : "image/*"}
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              if (file) handleFileUpload(key, file);
-                            }}
-                            disabled={uploadingKey !== null}
-                          />
-                        </label>
+                              <div className="flex flex-col gap-1.5">
+                                {isTextArea ? (
+                                  <textarea
+                                    value={value}
+                                    onChange={(e) => handleFieldChange(key, e.target.value)}
+                                    rows={3}
+                                    className="w-full rounded-xl border border-white/10 bg-[#07090E]/90 px-4 py-2.5 text-xs text-white placeholder-white/25 outline-none transition focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 resize-y"
+                                    placeholder="Digite o texto..."
+                                  />
+                                ) : (
+                                  <input
+                                    type="text"
+                                    value={value}
+                                    onChange={(e) => handleFieldChange(key, e.target.value)}
+                                    className="w-full rounded-xl border border-white/10 bg-[#07090E]/90 px-4 py-2.5 text-xs text-white placeholder-white/25 outline-none transition focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20"
+                                    placeholder="Digite o texto..."
+                                  />
+                                )}
+                              </div>
+                            </div>
+                          );
+                        }
 
-                        {/* Copy URL */}
-                        <button
-                          type="button"
-                          onClick={() => handleCopyLink(key, value)}
-                          disabled={!value}
-                          className="flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-[#0E1118]/80 text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
-                          title="Copiar Link"
-                        >
-                          {copiedKey === key ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
+                        const isImage = isImageUrl(value);
+                        const isVideo = isVideoUrl(value);
 
-                        {/* External View */}
-                        <a
-                          href={value || undefined}
-                          target="_blank"
-                          rel="noreferrer"
-                          className={`flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-[#0E1118]/80 text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/30 transition-all active:scale-95 ${
-                            !value ? "pointer-events-none opacity-30" : ""
-                          }`}
-                          title="Abrir em Nova Guia"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </a>
+                        return (
+                          <div
+                            key={key}
+                            className="group relative flex flex-col md:flex-row gap-6 p-5 rounded-2xl border border-white/5 bg-white/[0.01] hover:bg-white/[0.03] hover:border-[#D4AF37]/20 transition-all duration-300 shadow-sm"
+                          >
+                            {/* Media Preview Box */}
+                            <div className="w-full md:w-36 h-36 shrink-0 rounded-2xl bg-[#07090E] border border-white/5 overflow-hidden flex flex-col items-center justify-center relative shadow-inner group-hover:border-[#D4AF37]/30 transition-all">
+                              {isImage && (
+                                <img
+                                  src={value}
+                                  alt={MEDIA_LABELS[key]}
+                                  className="w-full h-full object-cover transition duration-500 group-hover:scale-105"
+                                  onError={(e) => {
+                                    (e.target as HTMLElement).style.display = "none";
+                                  }}
+                                />
+                              )}
+                              {isVideo && (
+                                <div className="flex flex-col items-center justify-center h-full w-full bg-[#0E1118] p-4 text-center">
+                                  <Film className="w-8 h-8 text-[#E5C38C] mb-2 animate-pulse" />
+                                  <span className="text-[10px] text-white/50 font-mono tracking-widest uppercase truncate max-w-full">
+                                    Vídeo Ativo
+                                  </span>
+                                </div>
+                              )}
+                              {!isImage && !isVideo && (
+                                <div className="flex flex-col items-center gap-2">
+                                  <ImageIcon className="w-8 h-8 text-white/20" />
+                                  <span className="text-[9px] text-white/30 font-semibold tracking-wider">SEM PREVIEW</span>
+                                </div>
+                              )}
+                            </div>
 
-                        {/* Restore Default */}
-                        <button
-                          type="button"
-                          onClick={() => handleRestoreDefault(key)}
-                          className="flex items-center justify-center h-9 px-3.5 rounded-xl border border-white/10 bg-[#0E1118]/80 text-white/50 hover:bg-white/5 hover:text-white transition-all active:scale-95 text-xs gap-1.5 ml-auto"
-                          title="Restaurar endereço padrão sugerido pelo sistema"
-                        >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          <span className="hidden sm:inline">Restaurar Padrão</span>
-                        </button>
-                      </div>
+                            {/* Inputs & Configuration */}
+                            <div className="flex-1 flex flex-col justify-between gap-4">
+                              <div>
+                                <div className="flex items-center justify-between gap-2">
+                                  <span className="text-sm font-semibold tracking-wide text-[#E5C38C] font-serif">
+                                    {MEDIA_LABELS[key] || key}
+                                  </span>
+                                  <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-white/50 font-mono uppercase">
+                                    {isVideo ? "Vídeo" : "Imagem"}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] text-white/30 font-mono tracking-wider block mt-1">
+                                  Parâmetro: {key}
+                                </span>
+                              </div>
+
+                              {/* Direct URL input */}
+                              <div className="flex flex-col gap-2">
+                                <label className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
+                                  Link da Mídia / URL
+                                </label>
+                                <div className="flex items-center gap-2">
+                                  <input
+                                    type="text"
+                                    value={value}
+                                    onChange={(e) => handleFieldChange(key, e.target.value)}
+                                    className="flex-1 rounded-xl border border-white/10 bg-[#07090E]/90 px-4 py-2.5 text-xs text-white placeholder-white/25 outline-none transition focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/20 font-mono"
+                                    placeholder="URL do arquivo..."
+                                  />
+                                </div>
+                              </div>
+
+                              {/* Multi-action Row (Premium Controls) */}
+                              <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-white/5">
+                                {/* PC File Upload Label */}
+                                <label className="cursor-pointer flex items-center justify-center h-9 px-4 rounded-xl border border-[#D4AF37]/30 bg-[#D4AF37]/10 text-[#E5C38C] hover:bg-[#D4AF37]/20 transition-all font-semibold text-xs gap-1.5 whitespace-nowrap active:scale-95">
+                                  {uploadingKey === key ? (
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  ) : (
+                                    <Upload className="w-3.5 h-3.5" />
+                                  )}
+                                  <span>{uploadingKey === key ? "Enviando..." : "Subir do PC"}</span>
+                                  <input
+                                    type="file"
+                                    accept={isVideo ? "video/*" : "image/*"}
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      const file = e.target.files?.[0];
+                                      if (file) handleFileUpload(key, file);
+                                    }}
+                                    disabled={uploadingKey !== null}
+                                  />
+                                </label>
+
+                                {/* Copy URL */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleCopyLink(key, value)}
+                                  disabled={!value}
+                                  className="flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-[#0E1118]/80 text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/30 transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none"
+                                  title="Copiar Link"
+                                >
+                                  {copiedKey === key ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                                </button>
+
+                                {/* External View */}
+                                <a
+                                  href={value || undefined}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className={`flex items-center justify-center w-9 h-9 rounded-xl border border-white/10 bg-[#0E1118]/80 text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/30 transition-all active:scale-95 ${
+                                    !value ? "pointer-events-none opacity-30" : ""
+                                  }`}
+                                  title="Abrir em Nova Guia"
+                                >
+                                  <Eye className="w-3.5 h-3.5" />
+                                </a>
+
+                                {/* Restore Default */}
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestoreDefault(key)}
+                                  className="flex items-center justify-center h-9 px-3.5 rounded-xl border border-white/10 bg-[#0E1118]/80 text-white/50 hover:bg-white/5 hover:text-white transition-all active:scale-95 text-xs gap-1.5 ml-auto"
+                                  title="Restaurar endereço padrão sugerido pelo sistema"
+                                >
+                                  <RotateCcw className="w-3.5 h-3.5" />
+                                  <span className="hidden sm:inline">Restaurar Padrão</span>
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 );

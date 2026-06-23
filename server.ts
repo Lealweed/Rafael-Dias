@@ -11,6 +11,10 @@ import proposalDocHandler from "./api/n8n/proposal-doc.js";
 import siteSettingsRouter from "./api/site-settings";
 import leadsOpsHandler from "./api/leads/ops.js";
 import appointmentsHandler from "./api/automation/appointments.js";
+import stripeCheckoutHandler from "./api/stripe/checkout.js";
+import stripeWebhookHandler from "./api/stripe/webhook.js";
+import portalDataHandler from "./api/portal/data.js";
+import healthHandler from "./api/health.js";
 
 async function startServer() {
   const app = express();
@@ -18,15 +22,11 @@ async function startServer() {
 
   app.use(express.json());
 
-  // API Routes (Fase 1: Healthcheck)
-  app.get("/api/health", (req, res) => {
-    res.json({
-      status: "ok",
-      timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV,
-      supabase: process.env.NEXT_PUBLIC_SUPABASE_URL ? "configured" : "missing",
-      n8n: process.env.N8N_WEBHOOK_OUTBOUND_TOKEN ? "configured" : "missing"
-    });
+  // API Routes (Fase 1: Healthcheck + Diagnostics)
+  app.get("/api/health", healthHandler);
+  app.get("/api/diag/crm-status", (req, res) => {
+    req.query = { ...req.query, diag: '1' };
+    return healthHandler(req, res);
   });
 
   app.get("/api/conversations/automation", async (req, res) => {
@@ -83,6 +83,11 @@ async function startServer() {
   app.use("/api/site-settings", siteSettingsRouter);
   app.all("/api/leads/ops", leadsOpsHandler);
   app.all("/api/automation/appointments", appointmentsHandler);
+  app.post("/api/stripe/checkout", stripeCheckoutHandler as any);
+  app.post("/api/stripe/webhook", stripeWebhookHandler as any);
+  app.post("/api/portal/data", portalDataHandler);
+  // /api/portal/read-notification is now handled by portalDataHandler with action='read-notification'
+  app.post("/api/portal/read-notification", portalDataHandler);
 
   // Vite middleware
   if (process.env.NODE_ENV !== "production") {

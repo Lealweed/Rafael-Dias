@@ -1,3 +1,5 @@
+import { createClient } from "./supabase/client";
+
 export type SiteMediaSettings = Record<string, string>;
 
 export const DEFAULT_MEDIA_SETTINGS: SiteMediaSettings = {
@@ -14,6 +16,33 @@ export const DEFAULT_MEDIA_SETTINGS: SiteMediaSettings = {
   patient_after_image_1: "/assets/skincare_treatment.png",
   patient_before_image_2: "/assets/facial_massage.png",
   patient_after_image_2: "/assets/facial_massage.png",
+  case_avatar_0: "https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg",
+  case_avatar_1: "https://images.pexels.com/photos/762020/pexels-photo-762020.jpeg",
+  case_avatar_2: "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg",
+
+  // Textos da página principal
+  home_hero_title_first: "Dr. Rafael",
+  home_hero_title_last: "Dias",
+  home_hero_desc: "Descubra a arte da transformação sutil. Sob a liderança do Dr. Rafael Dias, esculpimos sua melhor versão com precisão clínica e um toque de luxo incomparável.",
+  home_footer_phone: "(94) 99999-9999",
+  home_footer_email: "contato@rafaeldias.com.br",
+  home_footer_address: "Rua das Esmeraldas, 123 - Parauapebas - PA",
+
+  // Depoimentos dos casos
+  case_name_0: "Letícia Oliveira",
+  case_role_0: "Influenciadora & Advogada",
+  case_location_0: "Parauapebas - PA",
+  case_comment_0: "Minha rotina exige uma imagem impecável e natural. O protocolo de Harmonização Facial do Dr. Rafael trouxe frescor e rejuvenescimento, mantendo minha identidade. Um atendimento premium único.",
+
+  case_name_1: "Dra. Mariana Castro",
+  case_role_1: "Promotora de Justiça",
+  case_location_1: "Parauapebas - PA",
+  case_comment_1: "Confiança e discrição. O Dr. Rafael explica cada detalhe do planejamento antes de começar. O Botox e os bioestimuladores trouxeram firmeza com total naturalidade.",
+
+  case_name_2: "Dr. Carlos Eduardo",
+  case_role_2: "Advogado Sócio-Sênior",
+  case_location_2: "Parauapebas - PA",
+  case_comment_2: "Sempre tive receio de ficar artificial. O Dr. Rafael me tranquilizou na consulta presencial. O resultado do preenchimento e colágeno ficou incrível, discreto e rejuvenescido.",
 };
 
 export const SITE_MEDIA_KEYS = Object.keys(DEFAULT_MEDIA_SETTINGS) as Array<keyof typeof DEFAULT_MEDIA_SETTINGS>;
@@ -43,11 +72,20 @@ export async function fetchSiteSettings(): Promise<{ ok: boolean; settings?: Rec
 
 export async function saveSiteSettings(settings: Record<string, string>): Promise<{ ok: boolean; settings?: Record<string, any>; error?: string }> {
   try {
+    const supabase = createClient();
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData.session?.access_token;
+
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (token) {
+      headers.Authorization = `Bearer ${token}`;
+    }
+
     const res = await fetch("/api/site-settings", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers,
       body: JSON.stringify({ settings }),
     });
 

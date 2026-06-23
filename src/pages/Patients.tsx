@@ -70,26 +70,32 @@ export default function Patients() {
   const [newPatientIsVip, setNewPatientIsVip] = useState(false);
   const [creatingPatient, setCreatingPatient] = useState(false);
 
-  // Fetch only Patients (leads with portal password or active configs)
+  // Fetch only Patients (leads with portal password set)
   const fetchPatients = async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('leads')
-      .select('*')
-      .not('portal_password', 'is', null);
+    try {
+      const { data, error } = await supabase
+        .from('leads')
+        .select('*')
+        .not('portal_password', 'is', null);
 
-    if (error) {
-      console.error('Erro ao buscar pacientes:', error);
+      if (error) {
+        console.error('Erro ao buscar pacientes:', error);
+        setPatients([]);
+      } else {
+        const sorted = (data || []).sort((a: any, b: any) => {
+          const da = new Date(a.created_at || 0).getTime();
+          const db = new Date(b.created_at || 0).getTime();
+          return db - da;
+        });
+        setPatients(sorted);
+      }
+    } catch (err) {
+      console.error('Erro inesperado ao buscar pacientes:', err);
       setPatients([]);
-    } else if (data) {
-      const sorted = [...data].sort((a: any, b: any) => {
-        const da = new Date(a.created_at || a.updated_at || 0).getTime();
-        const db = new Date(b.created_at || b.updated_at || 0).getTime();
-        return db - da;
-      });
-      setPatients(sorted);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {

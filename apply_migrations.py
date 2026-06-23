@@ -3,13 +3,41 @@
 Script para aplicar as migrações do Supabase via API REST
 """
 
+import sys
+if sys.stdout.encoding != 'utf-8':
+    try:
+        sys.stdout.reconfigure(encoding='utf-8')
+    except AttributeError:
+        pass  # Python versions < 3.7
 import requests
 import json
 import os
 from pathlib import Path
 
-SUPABASE_URL = "https://erlwnyutxrrmcdqujrzq.supabase.co"
-SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVybHdueXV0eHJybWNkcXVqcnpxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTA3NTM5NSwiZXhwIjoyMDk0NjUxMzk1fQ.3h0J136VrrVaD0rVrCTr4lbE3SIqtRS_kRLrXn4YSQ8"
+def load_env():
+    for env_file in [".env.local", ".env"]:
+        path = Path(env_file)
+        if path.exists():
+            with open(path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if not line or line.startswith("#"):
+                        continue
+                    parts = line.split("=", 1)
+                    if len(parts) == 2:
+                        key = parts[0].strip()
+                        val = parts[1].strip().strip('"').strip("'")
+                        if key not in os.environ:
+                            os.environ[key] = val
+
+load_env()
+
+SUPABASE_URL = os.environ.get("VITE_SUPABASE_URL") or os.environ.get("NEXT_PUBLIC_SUPABASE_URL") or "https://erlwnyutxrrmcdqujrzq.supabase.co"
+SERVICE_ROLE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+
+if not SERVICE_ROLE_KEY:
+    print("❌ Erro: SUPABASE_SERVICE_ROLE_KEY não está definido nos arquivos .env.")
+    exit(1)
 
 migrations = [
     "00011_create_storage_buckets.sql",
@@ -33,37 +61,32 @@ def apply_migration(migration_file: str) -> bool:
     
     print(f"📝 Aplicando: {migration_file}")
     
-    # Dividir em blocos se houver múltiplas statements
-    statements = sql.split(";")
-    
-    for i, statement in enumerate(statements):
-        statement = statement.strip()
-        if not statement:
-            continue
+    try:
+        headers = {
+            "Authorization": f"Bearer {SERVICE_ROLE_KEY}",
+            "apikey": SERVICE_ROLE_KEY,
+            "Content-Type": "application/json",
+            "Prefer": "return=minimal"
+        }
         
-        try:
-            headers = {
-                "Authorization": f"Bearer {SERVICE_ROLE_KEY}",
-                "Content-Type": "application/json",
-                "Prefer": "return=minimal"
-            }
-            
-            # Usar a API de query do Supabase
-            response = requests.post(
-                f"{SUPABASE_URL}/rest/v1/rpc/query",
-                headers=headers,
-                json={"query": statement + ";"},
-                timeout=30
-            )
-            
-            if response.status_code not in [200, 201, 204]:
-                print(f"⚠️ Status: {response.status_code}")
-                if response.text:
-                    print(f"   Resposta: {response.text[:200]}")
+        # Usar a API exec_sql do Supabase para rodar o arquivo completo
+        response = requests.post(
+            f"{SUPABASE_URL}/rest/v1/rpc/exec_sql",
+            headers=headers,
+            json={"sql": sql},
+            timeout=60
+        )
         
-        except Exception as e:
-            print(f"⚠️ Erro ao executar statement {i+1}: {str(e)[:100]}")
-    
+        if response.status_code not in [200, 201, 204]:
+            print(f"⚠️ Status: {response.status_code}")
+            if response.text:
+                print(f"   Resposta: {response.text[:200]}")
+            return False
+            
+    except Exception as e:
+        print(f"⚠️ Erro ao executar migração: {str(e)[:200]}")
+        return False
+        
     print(f"✅ {migration_file} processada!\n")
     return True
 

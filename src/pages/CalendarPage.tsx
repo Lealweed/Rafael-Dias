@@ -112,7 +112,7 @@ export default function CalendarPage() {
       const startOfMonth = new Date(date.getFullYear(), date.getMonth(), 1);
       const res = await fetch("/api/n8n/calendar", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: await getWriteHeaders(),
         body: JSON.stringify({
           action: "list",
           timeMin: startOfMonth.toISOString(),

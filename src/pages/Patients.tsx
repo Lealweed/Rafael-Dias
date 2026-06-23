@@ -339,12 +339,10 @@ export default function Patients() {
     setSavingProfile(true);
     try {
       const cleanPhone = editPatientPhone.replace(/\D/g, "");
-      const cleanCpf = editPatientCpf.replace(/\D/g, "");
       
       const payload = {
         full_name: editPatientName.trim(),
         phone: cleanPhone,
-        cpf: cleanCpf || null,
         portal_password: editPatientPassword,
         interest: editPatientInterest.trim() || "Tratamento Estético",
         allergies_restrictions: editPatientAllergies.trim() || null,
@@ -399,7 +397,6 @@ export default function Patients() {
         .insert({
           full_name: newPatientName.trim(),
           phone: cleanPhone,
-          cpf: newPatientCpf.replace(/\D/g, "") || null,
           interest: newPatientInterest.trim() || "Tratamento Estético",
           portal_password: newPatientPassword,
           portal_access_active: newPatientActiveAccess,

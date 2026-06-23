@@ -1,19 +1,38 @@
 import { VercelRequest, VercelResponse } from "@vercel/node";
 import Stripe from "stripe";
-import { getServiceSupabase } from "../_lib/crm";
+import { getServiceSupabase } from "../_lib/crm.js";
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  const { name, phone, email, cpf, treatment, date, slot } = req.body;
+  const { name, phone, email, cpf, treatment, date, slot, notes, source, requireFriday } = req.body;
 
   if (!name || !phone || !date || !slot) {
     return res.status(400).json({ error: "Dados incompletos para agendamento." });
   }
 
   const cleanPhone = phone.replace(/\D/g, "");
+  const cleanCpf = String(cpf || "").replace(/\D/g, "");
+  const sourceName = String(source || "site").trim();
+  const treatmentName = String(treatment || "Avaliação Geral").trim();
+  const notesText = String(notes || "").trim().slice(0, 1000);
+
+  const appointmentDateStr = `${date}T${slot}:00`;
+  const appointmentDate = new Date(appointmentDateStr);
+  if (Number.isNaN(appointmentDate.getTime())) {
+    return res.status(400).json({ error: "Data ou horario invalidos." });
+  }
+
+  if (requireFriday && appointmentDate.getDay() !== 5) {
+    return res.status(400).json({ error: "A depilacao a laser esta disponivel para reserva online apenas às sextas-feiras." });
+  }
+
+  const depositAmountCents = Number(process.env.STRIPE_LASER_DEPOSIT_AMOUNT_CENTS || process.env.STRIPE_DEPOSIT_AMOUNT_CENTS || 15000);
+  const depositAmount = depositAmountCents / 100;
+  const totalAmount = Number(process.env.CONSULTATION_TOTAL_AMOUNT || 300);
+  const remainingAmount = Math.max(totalAmount - depositAmount, 0);
 
   // Create Supabase client
   const supabase = getServiceSupabase();
@@ -43,7 +62,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .insert({
             full_name: name.trim(),
             phone: cleanPhone,
-            origin: "Agendamento Online (Simulado)",
+            origin: sourceName === "depilacao-laser" ? "Depilacao a Laser Online (Simulado)" : "Agendamento Online (Simulado)",
             temperature: "warm",
             conversation_status: "agendado",
           })
@@ -55,22 +74,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       // 2. Create calendar appointment with sinal / payment status
-      const appointmentDateStr = `${date}T${slot}:00`;
-      const appointmentDate = new Date(appointmentDateStr);
-      
       const { error: apptErr } = await supabase
         .from("appointments")
         .insert({
           lead_id: leadId,
-          title: `Consulta VIP: ${treatment}`,
+          title: `Consulta VIP: ${treatmentName}`,
           appointment_date: appointmentDate.toISOString(),
           status: "scheduled",
-          notes: "Agendamento com sinal R$ 150 pago (Modo Simulacao)",
-          cpf: cpf || null,
+          notes: [`Agendamento com sinal R$ ${depositAmount.toFixed(2).replace(".", ",")} pago (Modo Simulacao)`, sourceName ? `Origem: ${sourceName}` : "", notesText ? `Observacoes: ${notesText}` : ""].filter(Boolean).join("\n"),
+          cpf: cleanCpf || null,
           email: email || null,
           payment_status: "paid_deposit", // paid sinal
-          deposit_amount: 150.00,
-          remaining_amount: 150.00,
+          deposit_amount: depositAmount,
+          remaining_amount: remainingAmount,
           stripe_session_id: "sim_" + Date.now(),
         });
 
@@ -104,7 +120,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             const endIso = endDate.toISOString();
 
             const eventPayload = {
-              summary: `Consulta VIP: ${treatment} - ${name} (Simulação)`,
+              summary: `Consulta VIP: ${treatmentName} - ${name} (Simulação)`,
               description: `Agendamento Online via Formulário de Simulação.\nPaciente: ${name}\nTelefone: ${cleanPhone}\nCPF: ${cpf || ''}\nEmail: ${email || ''}`,
               start: { dateTime: startIso, timeZone: timezone },
               end: { dateTime: endIso, timeZone: timezone },
@@ -122,7 +138,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
             if (gcalRes.ok) {
               const gcalEvent = await gcalRes.json();
-              const { updateLeadOps } = await import("../_lib/crm");
+              const { updateLeadOps } = await import("../_lib/crm.js");
               await updateLeadOps({
                 leadId,
                 calendarEventId: gcalEvent.id,
@@ -155,10 +171,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await supabase.from("notifications").insert({
         recipient_id: leadId,
         title: "Agendamento Efetuado",
-        message: `Seu agendamento para ${treatment} em ${new Date(appointmentDate).toLocaleDateString("pt-BR")} as ${slot} foi confirmado com sinal de R$ 150,00 recebido (Modo Simulado).`
+        message: `Seu agendamento para ${treatmentName} em ${new Date(appointmentDate).toLocaleDateString("pt-BR")} as ${slot} foi confirmado com sinal de R$ ${depositAmount.toFixed(2).replace(".", ",")} recebido (Modo Simulado).`
       });
 
-      const successUrl = `/calendar?success=true&name=${encodeURIComponent(name)}&date=${date}&slot=${slot}&treatment=${encodeURIComponent(treatment)}&phone=${cleanPhone}&notes=${encodeURIComponent("Sinal de R$ 150,00 pago (Test Mode)")}`;
+      const successUrl = `/calendar?success=true&name=${encodeURIComponent(name)}&date=${date}&slot=${slot}&treatment=${encodeURIComponent(treatmentName)}&phone=${cleanPhone}&notes=${encodeURIComponent(`Sinal de R$ ${depositAmount.toFixed(2).replace(".", ",")} pago (Test Mode)`)}`;
       return res.status(200).json({ url: successUrl });
 
     } catch (err: any) {
@@ -185,10 +201,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           price_data: {
             currency: "brl",
             product_data: {
-              name: "Sinal de Reserva - Consulta VIP",
-              description: `Dr. Rafael Dias - Procedimento: ${treatment} em ${date} as ${slot}. Valor restante de R$ 150,00 a ser pago no consultorio.`,
+              name: sourceName === "depilacao-laser" ? "Sinal de Reserva - Depilação a Laser" : "Sinal de Reserva - Consulta VIP",
+              description: `Dr. Rafael Dias - Procedimento: ${treatmentName} em ${date} as ${slot}. Valor restante de R$ ${remainingAmount.toFixed(2).replace(".", ",")} a ser pago no consultorio.`,
             },
-            unit_amount: 15000, // R$ 150,00 in cents
+            unit_amount: depositAmountCents
           },
           quantity: 1,
         },
@@ -199,13 +215,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         name,
         phone: cleanPhone,
         email: email || "",
-        cpf: cpf || "",
-        treatment,
+        cpf: cleanCpf || "",
+        treatment: treatmentName,
         date,
         slot,
+        notes: notesText,
+        source: sourceName,
+        requireFriday: requireFriday ? "true" : "false",
       },
-      success_url: `${origin}/calendar?session_id={CHECKOUT_SESSION_ID}&success=true&name=${encodeURIComponent(name)}&date=${date}&slot=${slot}&treatment=${encodeURIComponent(treatment)}&phone=${cleanPhone}`,
-      cancel_url: `${origin}/`,
+      success_url: `${origin}/calendar?session_id={CHECKOUT_SESSION_ID}&success=true&name=${encodeURIComponent(name)}&date=${date}&slot=${slot}&treatment=${encodeURIComponent(treatmentName)}&phone=${cleanPhone}`,
+      cancel_url: sourceName === "depilacao-laser" ? `${origin}/depilacao-a-laser?checkout=cancelled` : `${origin}/`,
     });
 
     return res.status(200).json({ url: session.url });

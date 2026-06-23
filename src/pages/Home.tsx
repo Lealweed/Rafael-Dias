@@ -381,9 +381,19 @@ export default function Home() {
                 <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-hover:w-full" />
               </motion.a>
             ))}
+            <motion.a
+              href="/depilacao-a-laser"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              className="hover:text-gold transition-colors relative group"
+            >
+              Depilação Laser
+              <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-hover:w-full" />
+            </motion.a>
           </div>
 
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 sm:gap-6"
@@ -639,6 +649,7 @@ export default function Home() {
                 {["Serviços", "Resultados", "Método", "Equipe"].map(item => (
                   <li key={item}><a href="#" className="hover:text-gold transition-colors">{item}</a></li>
                 ))}
+                <li><a href="/depilacao-a-laser" className="hover:text-gold transition-colors">Depilação a Laser</a></li>
               </ul>
             </div>
 

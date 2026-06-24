@@ -3,7 +3,7 @@ import { Sparkles, Calendar, DollarSign, FileText, Bell, Phone, LogOut, Star, Us
 import { createClient } from "../lib/supabase/client";
 
 export default function ClientPortal() {
-  const [patientPhone, setPatientPhone] = useState("");
+  const [patientCpf, setPatientCpf] = useState("");
   const [patientPassword, setPatientPassword] = useState("");
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [patientData, setPatientData] = useState<any>(null);
@@ -16,15 +16,15 @@ export default function ClientPortal() {
 
   const supabase = useMemo(() => createClient(), []);
 
-  // Handle Login using Phone number & Password via secure serverless API
+  // Handle Login using CPF & Password via secure serverless API
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
-    const cleanPhone = patientPhone.replace(/\D/g, "");
-    if (!cleanPhone) {
-      setError("Por favor, insira um número de telefone válido.");
+    const cleanCpf = patientCpf.replace(/\D/g, "");
+    if (cleanCpf.length !== 11) {
+      setError("Por favor, insira um CPF válido com 11 dígitos.");
       setLoading(false);
       return;
     }
@@ -38,7 +38,7 @@ export default function ClientPortal() {
       const response = await fetch("/api/portal/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: cleanPhone, password: patientPassword.trim() }),
+        body: JSON.stringify({ cpf: cleanCpf, password: patientPassword.trim() }),
       });
 
       const data = await response.json();
@@ -63,7 +63,7 @@ export default function ClientPortal() {
       const response = await fetch("/api/portal/data", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: patientPhone, password: patientPassword }),
+        body: JSON.stringify({ cpf: patientCpf.replace(/\D/g, ""), password: patientPassword }),
       });
       const data = await response.json();
       if (response.ok && data.ok) {
@@ -100,7 +100,7 @@ export default function ClientPortal() {
     setRecord(null);
     setFinancials([]);
     setNotifications([]);
-    setPatientPhone("");
+    setPatientCpf("");
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -131,17 +131,17 @@ export default function ClientPortal() {
 
             <div className="space-y-2">
               <label className="block text-xs font-semibold text-[#E3D5C1]/70 uppercase tracking-widest">
-                Telefone cadastrado
+                CPF cadastrado
               </label>
               <input
-                type="tel"
+                type="text"
                 required
-                value={patientPhone}
-                onChange={(e) => setPatientPhone(e.target.value)}
+                value={patientCpf}
+                onChange={(e) => setPatientCpf(e.target.value)}
                 className="block w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm text-white placeholder-white/20 focus:border-[#ffd700] focus:outline-none focus:ring-1 focus:ring-[#ffd700] transition-all"
-                placeholder="(94) 99999-9999"
+                placeholder="000.000.000-00"
               />
-              <p className="text-[10px] text-white/30">Use o número de WhatsApp informado em seu atendimento.</p>
+              <p className="text-[10px] text-white/30">Use o CPF informado no cadastro da clínica.</p>
             </div>
 
             <div className="space-y-2">

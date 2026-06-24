@@ -343,6 +343,7 @@ export default function Patients() {
       const payload = {
         full_name: editPatientName.trim(),
         phone: cleanPhone,
+        cpf: editPatientCpf.replace(/\D/g, "") || null,
         portal_password: editPatientPassword,
         main_interest: editPatientInterest.trim() || "Tratamento Estético",
         allergies_restrictions: editPatientAllergies.trim() || null,
@@ -380,8 +381,8 @@ export default function Patients() {
   // Register New Patient with Password & Checklist options
   const handleRegisterPatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPatientName.trim() || !newPatientPhone.trim()) {
-      alert("Por favor, preencha o nome e o telefone.");
+    if (!newPatientName.trim() || !newPatientPhone.trim() || newPatientCpf.replace(/\D/g, "").length !== 11) {
+      alert("Por favor, preencha nome, telefone e CPF válido.");
       return;
     }
     if (newPatientPassword.length < 4 || newPatientPassword.length > 6) {
@@ -397,6 +398,7 @@ export default function Patients() {
         .insert({
           full_name: newPatientName.trim(),
           phone: cleanPhone,
+          cpf: newPatientCpf.replace(/\D/g, ""),
           main_interest: newPatientInterest.trim() || "Tratamento Estético",
           portal_password: newPatientPassword,
           portal_access_active: newPatientActiveAccess,
@@ -1199,9 +1201,10 @@ export default function Patients() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">CPF (Opcional)</label>
+                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">CPF de Login</label>
                   <input
                     type="text"
+                    required
                     value={newPatientCpf}
                     onChange={(e) => handleCpfChange(e.target.value)}
                     className="w-full rounded-xl border border-white/10 bg-[#0D0D0F]/50 px-4 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700] font-mono"

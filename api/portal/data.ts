@@ -38,19 +38,19 @@ export default async function handler(req: any, res: any) {
   }
 
   // ── Action: fetch patient portal data (default) ────────────────────────────
-  const phone = String(req.body?.phone || '').trim().replace(/\D/g, '');
+  const cpf = String(req.body?.cpf || '').trim().replace(/\D/g, '');
   const password = String(req.body?.password || '').trim();
 
-  if (!phone || !password) {
-    return json(res, 400, { ok: false, error: 'Telefone e senha são obrigatórios.' });
+  if (!cpf || !password) {
+    return json(res, 400, { ok: false, error: 'CPF e senha são obrigatórios.' });
   }
 
   try {
-    // 1. Fetch lead by phone (last 8 digits)
+    // 1. Fetch lead by CPF
     let { data: leads, error: leadError } = await supabase
       .from('leads')
       .select('*')
-      .like('phone', `%${phone.slice(-8)}`)
+      .eq('cpf', cpf)
       .limit(1);
 
     // 1.5 Fallback to legacy Usuarios table
@@ -58,7 +58,7 @@ export default async function handler(req: any, res: any) {
       const legacy = await supabase
         .from('Usuarios')
         .select('*')
-        .like('telefone', `%${phone.slice(-8)}`)
+        .eq('cpf', cpf)
         .limit(1);
       leads = legacy.data ? legacy.data.map((u: any) => ({
         ...u,
@@ -72,7 +72,7 @@ export default async function handler(req: any, res: any) {
     }
 
     if (leadError || !leads || leads.length === 0) {
-      return json(res, 404, { ok: false, error: 'Paciente não localizado. Verifique o número ou fale com a clínica.' });
+      return json(res, 404, { ok: false, error: 'Paciente não localizado. Verifique o CPF ou fale com a clínica.' });
     }
 
     const lead = leads[0];

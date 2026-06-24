@@ -401,6 +401,9 @@ export default function Home() {
             <PremiumButton variant="ghost" href="/login" className="hidden sm:flex opacity-50 hover:opacity-100">
               Equipe
             </PremiumButton>
+            <PremiumButton variant="ghost" href="/portal" className="hidden sm:flex opacity-70 hover:opacity-100">
+              Área do Paciente
+            </PremiumButton>
             <PremiumButton onClick={() => openBookingModal("Navbar")}>
               Agendar
             </PremiumButton>
@@ -455,6 +458,9 @@ export default function Home() {
             <div className="flex flex-wrap gap-10 pt-6">
               <PremiumButton onClick={() => openBookingModal("Hero")} className="px-14 py-6 text-[10px]">
                 Agendar Consulta VIP
+              </PremiumButton>
+              <PremiumButton variant="ghost" href="/portal" className="px-10 py-6 text-[10px] border border-gold/20">
+                Acessar Área do Paciente
               </PremiumButton>
             </div>
           </motion.div>

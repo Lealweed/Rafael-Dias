@@ -7,10 +7,7 @@ import {
   AlertCircle, 
   Sparkles, 
   TrendingUp, 
-  ArrowRight,
   Activity,
-  ArrowUpRight,
-  HeartHandshake,
   Clock,
   Settings
 } from "lucide-react";
@@ -20,7 +17,6 @@ import { PremiumButton } from "../components/premium/PremiumButton";
 import { cn } from "../lib/utils";
 
 // --- Assets ---
-const SILK_TEXTURE_URL = "https://images.unsplash.com/photo-1705674337411-3b89e5afcc11?auto=format&fit=crop&q=80";
 const FLOURISH_URL = "https://cdn.jsdelivr.net/npm/game-icons-transparent@latest/svgs/delapouite/fleur-de-lys.svg";
 
 // --- Sub-components ---
@@ -107,33 +103,6 @@ function StatCard({ index, value, label, trend, icon: Icon, onClick }: any) {
 
       {/* Subtle bottom line transition */}
       <div className="absolute bottom-0 left-0 h-[2px] w-0 bg-gold group-hover:w-full transition-all duration-700" />
-    </motion.div>
-  );
-}
-
-/**
- * PipelineNode: Circular nodes for the Alembic Flow.
- */
-function PipelineNode({ icon: Icon, label, value, subLabel, delay = 0 }: any) {
-  return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.8 }}
-      whileInView={{ opacity: 1, scale: 1 }}
-      transition={{ delay }}
-      className="flex flex-col items-center gap-3 relative z-10 group"
-    >
-      <div className="h-10 w-10 rounded-full bg-black-matte/80 border border-gold/30 flex items-center justify-center text-gold shadow-gold group-hover:shadow-[0_0_30px_rgba(212,175,55,0.4)] group-hover:scale-110 transition-all duration-500 backdrop-blur-md">
-        <Icon className="h-4 w-4" />
-      </div>
-      <div className="text-center space-y-0.5">
-        <p className="text-sm font-display text-white">{value}</p>
-        <p className="text-[8px] uppercase tracking-[0.1em] font-bold text-white/40">{label}</p>
-        {subLabel && (
-          <p className="text-[8px] font-mono text-gold/60 mt-1 bg-gold/5 px-2 py-0.5 rounded-full inline-block">
-            {subLabel}
-          </p>
-        )}
-      </div>
     </motion.div>
   );
 }
@@ -372,57 +341,7 @@ export default function Dashboard() {
         />
       </section>
 
-      {/* --- Section C: Alembic Pipeline (The Visual Flow) --- */}
-      <section className="relative p-4 lg:p-5 glass-dark rounded-xl overflow-hidden group border border-white/5">
-        <img 
-          src={SILK_TEXTURE_URL} 
-          alt="" 
-          className="absolute inset-0 w-full h-full object-cover opacity-[0.07] mix-blend-overlay group-hover:opacity-15 transition-opacity duration-1000" 
-        />
-        
-        <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-4">
-          <div className="space-y-1.5 max-w-sm">
-            <h3 className="text-base font-display text-gold leading-none italic">Alembic Pipeline</h3>
-            <p className="text-[11px] text-white/50 leading-relaxed font-light">
-              Uma visualização entrante da jornada comercial. Do primeiro clique à fidelização estética.
-            </p>
-            <PremiumButton variant="ghost" className="px-0 text-[8px] tracking-[0.2em] opacity-60 hover:opacity-100">
-              EXPLORAR FUNIL <ArrowUpRight className="h-2 w-2 ml-1" />
-            </PremiumButton>
-          </div>
-
-          <div className="flex-1 w-full grid grid-cols-2 md:grid-cols-4 gap-4 relative py-2">
-            {/* Animated Connector Path (SVG) */}
-            <div className="absolute top-7 left-0 right-0 h-px hidden md:block px-12">
-              <svg className="w-full h-4 overflow-visible">
-                <defs>
-                  <linearGradient id="gold-glow" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="transparent" />
-                    <stop offset="50%" stopColor="var(--color-gold)" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </linearGradient>
-                </defs>
-                <motion.line 
-                  x1="0" y1="2" x2="100%" y2="2"
-                  stroke="url(#gold-glow)" 
-                  strokeWidth="2"
-                  strokeDasharray="10, 20"
-                  animate={{ strokeDashoffset: [-100, 100] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                />
-                <line x1="0" y1="2" x2="100%" y2="2" stroke="var(--color-gold)" strokeWidth="0.5" strokeOpacity="0.2" />
-              </svg>
-            </div>
-
-            <PipelineNode icon={Users} label="Captação" value={stats.totalLeads} delay={0.1} />
-            <PipelineNode icon={Calendar} label="Consultas" value={stats.scheduled} subLabel={`${stats.totalLeads ? Math.round((stats.scheduled / stats.totalLeads) * 100) : 0}% Conv.`} delay={0.2} />
-            <PipelineNode icon={HeartHandshake} label="Conversão" value={Math.round(stats.scheduled * 0.45)} subLabel="45% Est." delay={0.3} />
-            <PipelineNode icon={Sparkles} label="Fidelização" value={stats.pendingFollowups} delay={0.4} />
-          </div>
-        </div>
-      </section>
-
-      {/* --- Section D: Facilitation Split (Activity & VIP) --- */}
+      {/* --- Section C: Facilitation Split (Activity & VIP) --- */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between border-b border-white/5 pb-1.5">

@@ -151,7 +151,7 @@ export default function Leads() {
         .insert({
           full_name: newLeadName.trim(),
           phone: cleanPhone,
-          interest: newLeadInterest.trim() || "Avaliação",
+          main_interest: newLeadInterest.trim() || "Avaliação",
           temperature: newLeadTemp,
           conversation_status: newLeadStatus,
           origin: "Cadastro Interno",
@@ -227,7 +227,7 @@ export default function Leads() {
     return leads.filter((l: any) => {
       const name = String(l.full_name || l.nome || "").toLowerCase();
       const phone = String(l.phone || l.telefone || "").toLowerCase();
-      const interest = String(l.interest || l.interesse || "").toLowerCase();
+      const interest = String(l.main_interest || l.interest || l.interesse || "").toLowerCase();
       return name.includes(term) || phone.includes(term) || interest.includes(term);
     });
   }, [leads, searchTerm]);
@@ -351,7 +351,7 @@ export default function Leads() {
                         <div className="text-[10px] text-white/25 mt-0.5 font-mono">{lead.phone || lead.telefone} • {lead.origin || lead.origem || 'WEB'}</div>
                       </td>
                       <td className="px-5 py-5">
-                        <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-white/40 text-[10px] font-bold uppercase">{lead.interest || lead.interesse || 'Avaliação'}</span>
+                        <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-white/40 text-[10px] font-bold uppercase">{lead.main_interest || lead.interest || lead.interesse || 'Avaliação'}</span>
                       </td>
                       <td className="px-5 py-5">{getStatusBadge(lead.conversation_status)}</td>
                       <td className="px-5 py-5 hidden lg:table-cell">{getTempBadge(lead.temperature || lead.temperatura)}</td>

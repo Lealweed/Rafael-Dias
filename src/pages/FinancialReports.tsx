@@ -58,6 +58,10 @@ export default function FinancialReports() {
   // Messages
   const [feedback, setFeedback] = useState<{ type: "success" | "error", text: string } | null>(null);
 
+  // 4. Cash Sessions State
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [sessionSearch, setSessionSearch] = useState("");
+
   useEffect(() => {
     fetchInitialData();
   }, [activeTab, catalogTab]);
@@ -71,6 +75,8 @@ export default function FinancialReports() {
         await fetchInstallments();
       } else if (activeTab === "catalog") {
         await fetchCatalog();
+      } else if (activeTab === "sessions") {
+        await fetchSessions();
       }
     } catch (err) {
       console.error("Error loading financial dashboard:", err);
@@ -220,6 +226,21 @@ export default function FinancialReports() {
       setLoading(false);
     }
   };
+
+  // --- SESSIONS LOGIC ---
+  async function fetchSessions() {
+    const { data, error } = await supabase
+      .from("cash_sessions")
+      .select(`
+        *,
+        opened_by_profile:profiles!cash_sessions_opened_by_fkey (full_name),
+        closed_by_profile:profiles!cash_sessions_closed_by_fkey (full_name)
+      `)
+      .order("opened_at", { ascending: false });
+
+    if (error) throw error;
+    setSessions(data || []);
+  }
 
   // --- CATALOG LOGIC ---
   async function fetchCatalog() {
@@ -407,6 +428,7 @@ export default function FinancialReports() {
           {[
             { id: "sales", label: "Vendas" },
             { id: "installments", label: "Contas a Receber" },
+            { id: "sessions", label: "Turnos de Caixa" },
             { id: "catalog", label: "Catálogo" }
           ].map(tab => (
             <button
@@ -468,6 +490,7 @@ export default function FinancialReports() {
                       <th className="p-4">Vendedor</th>
                       <th className="p-4">Métodos</th>
                       <th className="p-4 text-right">Valor Líquido</th>
+                      <th className="p-4 text-center">Comprovante</th>
                       <th className="p-4 text-center">Status</th>
                       <th className="p-4 text-center">Ações</th>
                     </tr>
@@ -483,6 +506,21 @@ export default function FinancialReports() {
                           {s.sale_payments?.map((p: any) => p.payment_method.replace("_", " ")).join(", ") || "-"}
                         </td>
                         <td className="p-4 text-right font-bold text-white font-display">{formatCurrency(s.net_amount)}</td>
+                        <td className="p-4 text-center font-bold">
+                          {s.receipt_url ? (
+                            <a 
+                              href={s.receipt_url} 
+                              target="_blank" 
+                              rel="noreferrer" 
+                              className="text-gold hover:underline text-[9px] font-black uppercase tracking-widest"
+                              title="Ver Comprovante"
+                            >
+                              [Ver Anexo]
+                            </a>
+                          ) : (
+                            <span className="text-white/20">-</span>
+                          )}
+                        </td>
                         <td className="p-4 text-center">
                           <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
                             s.status === "completed" 
@@ -637,9 +675,104 @@ export default function FinancialReports() {
               </div>
             </div>
           </div>
+        ) : activeTab === "sessions" ? (
+          /* ================= TAB 3: TURNOS DE CAIXA ================= */
+          <div className="space-y-4">
+            <div className="relative max-w-md">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/20" />
+              <input
+                type="text"
+                placeholder="Filtrar turnos por operador..."
+                value={sessionSearch}
+                onChange={(e) => setSessionSearch(e.target.value)}
+                className="w-full bg-white/[0.01] border border-white/5 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white placeholder:text-white/25 focus:border-gold/30 outline-none"
+              />
+            </div>
+
+            <div className="glass-dark rounded-2xl border border-white/5 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[8px] font-black">
+                      <th className="p-4">Abertura</th>
+                      <th className="p-4">Fechamento</th>
+                      <th className="p-4">Operador</th>
+                      <th className="p-4 text-right">Inicial</th>
+                      <th className="p-4 text-right">Declarado</th>
+                      <th className="p-4 text-right">Esperado</th>
+                      <th className="p-4 text-right">Discrepância</th>
+                      <th className="p-4 text-center">Status</th>
+                      <th className="p-4 text-center">Comprovante</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/[0.02]">
+                    {sessions
+                      .filter(s => {
+                        if (!sessionSearch) return true;
+                        const name = s.opened_by_profile?.full_name || "";
+                        return name.toLowerCase().includes(sessionSearch.toLowerCase());
+                      })
+                      .map((s) => {
+                        const diff = s.status === "closed" 
+                          ? (Number(s.closing_balance_declared) - Number(s.closing_balance_expected)) 
+                          : 0;
+                        return (
+                          <tr key={s.id} className="hover:bg-white/[0.005] transition-colors">
+                            <td className="p-4 text-white/60 font-light">{formatDate(s.opened_at)} {new Date(s.opened_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
+                            <td className="p-4 text-white/60 font-light">
+                              {s.closed_at ? (
+                                `${formatDate(s.closed_at)} ${new Date(s.closed_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                              ) : "-"}
+                            </td>
+                            <td className="p-4 text-white font-bold">{s.opened_by_profile?.full_name || "Desconhecido"}</td>
+                            <td className="p-4 text-right">{formatCurrency(s.opening_balance)}</td>
+                            <td className="p-4 text-right">{s.status === "closed" ? formatCurrency(s.closing_balance_declared) : "-"}</td>
+                            <td className="p-4 text-right">{s.status === "closed" ? formatCurrency(s.closing_balance_expected) : "-"}</td>
+                            <td className={`p-4 text-right font-bold ${
+                              diff === 0 ? "text-emerald-400" : diff > 0 ? "text-blue-400" : "text-red-400"
+                            }`}>
+                              {s.status === "closed" ? (diff === 0 ? "Bateu" : formatCurrency(diff)) : "-"}
+                            </td>
+                            <td className="p-4 text-center">
+                              <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                                s.status === "open" 
+                                  ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 animate-pulse" 
+                                  : "bg-white/5 text-white/30 border border-white/5"
+                              }`}>
+                                {s.status === "open" ? "Aberto" : "Fechado"}
+                              </span>
+                            </td>
+                            <td className="p-4 text-center">
+                              {s.receipt_url ? (
+                                <a 
+                                  href={s.receipt_url} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  className="text-gold hover:underline text-[9px] font-black uppercase tracking-widest animate-pulse"
+                                >
+                                  [Ver Anexo]
+                                </a>
+                              ) : (
+                                <span className="text-white/20">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+
+                    {sessions.length === 0 && (
+                      <tr>
+                        <td colSpan={9} className="p-8 text-center text-white/30 font-light">Nenhum turno de caixa registrado.</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
         ) :
         
-        /* ================= TAB 3: CATÁLOGO DE PRODUTOS E SERVIÇOS ================= */
+        /* ================= TAB 4: CATÁLOGO DE PRODUTOS E SERVIÇOS ================= */
         <div className="space-y-4">
           <div className="flex items-center justify-between gap-4 flex-wrap">
             <div className="flex bg-white/[0.02] border border-white/5 p-1 rounded-lg">

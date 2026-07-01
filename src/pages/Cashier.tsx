@@ -34,11 +34,65 @@ export default function Cashier() {
   const [actionType, setActionType] = useState<"suprimento" | "sangria">("suprimento");
   const [actionAmount, setActionAmount] = useState<string>("");
   const [actionDescription, setActionDescription] = useState<string>("");
-  
   const [declaredBalance, setDeclaredBalance] = useState<string>("");
   const [closingNotes, setClosingNotes] = useState<string>("");
+  
+  // Attachment states
+  const [txReceiptUrl, setTxReceiptUrl] = useState<string>("" );
+  const [uploadingTxReceipt, setUploadingTxReceipt] = useState(false);
+
+  const [closeReceiptUrl, setCloseReceiptUrl] = useState<string>("");
+  const [uploadingCloseReceipt, setUploadingCloseReceipt] = useState(false);
 
   const [feedbackMsg, setFeedbackMsg] = useState<{ type: "success" | "error", text: string } | null>(null);
+
+  const handleTxReceiptUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingTxReceipt(true);
+    try {
+      const fileExt = file.name.split(".").pop() || "";
+      const fileName = `tx_receipt_${Date.now()}.${fileExt}`;
+      const filePath = `cashier/transactions/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from("site-assets")
+        .upload(filePath, file, { cacheControl: "3600", upsert: true });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(filePath);
+      setTxReceiptUrl(urlData.publicUrl);
+    } catch (err: any) {
+      console.error(err);
+      showFeedback("error", `Erro no upload do comprovante: ${err.message}`);
+    } finally {
+      setUploadingTxReceipt(false);
+    }
+  };
+
+  const handleCloseReceiptUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingCloseReceipt(true);
+    try {
+      const fileExt = file.name.split(".").pop() || "";
+      const fileName = `session_close_${Date.now()}.${fileExt}`;
+      const filePath = `cashier/sessions/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from("site-assets")
+        .upload(filePath, file, { cacheControl: "3600", upsert: true });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage.from("site-assets").getPublicUrl(filePath);
+      setCloseReceiptUrl(urlData.publicUrl);
+    } catch (err: any) {
+      console.error(err);
+      showFeedback("error", `Erro no upload do comprovante: ${err.message}`);
+    } finally {
+      setUploadingCloseReceipt(false);
+    }
+  };
 
   useEffect(() => {
     fetchSessionAndUser();
@@ -191,7 +245,8 @@ export default function Cashier() {
           session_id: currentSession.id,
           type: actionType,
           amount: amountVal,
-          description: actionDescription || (actionType === "suprimento" ? "Suprimento de caixa" : "Sangria de caixa")
+          description: actionDescription || (actionType === "suprimento" ? "Suprimento de caixa" : "Sangria de caixa"),
+          receipt_url: txReceiptUrl || null
         });
 
       if (error) throw error;
@@ -199,6 +254,7 @@ export default function Cashier() {
       showFeedback("success", `${actionType === "suprimento" ? "Suprimento" : "Sangria"} realizado com sucesso!`);
       setActionAmount("");
       setActionDescription("");
+      setTxReceiptUrl("");
       await fetchSessionDetails(currentSession.id);
     } catch (err: any) {
       console.error("Error creating cashier transaction:", err);
@@ -230,7 +286,8 @@ export default function Cashier() {
           closing_balance_declared: declaredVal,
           closing_balance_expected: expectedVal,
           status: "closed",
-          notes: closingNotes ? `${currentSession.notes || ''} | Fechamento: ${closingNotes}` : currentSession.notes
+          notes: closingNotes ? `${currentSession.notes || ''} | Fechamento: ${closingNotes}` : currentSession.notes,
+          receipt_url: closeReceiptUrl || null
         })
         .eq("id", currentSession.id);
 
@@ -239,6 +296,7 @@ export default function Cashier() {
       showFeedback("success", "Caixa fechado com sucesso!");
       setDeclaredBalance("");
       setClosingNotes("");
+      setCloseReceiptUrl("");
       setCurrentSession(null);
       setTransactions([]);
       setPaymentsSum({});
@@ -474,7 +532,7 @@ export default function Cashier() {
                 </div>
               </div>
 
-              <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+              <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-left">
                 <div className="space-y-1">
                   <label className="text-[8px] font-black uppercase tracking-wider text-white/50">Valor R$</label>
                   <input
@@ -499,6 +557,30 @@ export default function Cashier() {
                     placeholder="Ex: Compra de café, troco de R$50..."
                     className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs focus:border-gold/40 focus:bg-white/[0.04] outline-none transition-all"
                   />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[8px] font-black uppercase tracking-wider text-white/50 block">Comprovante (Opcional)</label>
+                  {txReceiptUrl ? (
+                    <div className="bg-gold/5 border border-gold/15 p-2.5 rounded-xl text-[10px] text-gold truncate">
+                      Anexado!
+                      <button type="button" onClick={() => setTxReceiptUrl("")} className="text-white/40 hover:text-red-400 ml-2 font-bold uppercase text-[9px]">Remover</button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleTxReceiptUpload(file);
+                        }}
+                        disabled={uploadingTxReceipt}
+                        className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-2 py-2 text-[9px] text-white/40 file:bg-white/5 file:border-0 file:text-[8px] file:text-white file:px-1.5 file:py-0.5 file:rounded file:cursor-pointer outline-none"
+                      />
+                      {uploadingTxReceipt && <span className="text-[8px] text-gold block animate-pulse mt-0.5 font-bold">Enviando...</span>}
+                    </div>
+                  )}
                 </div>
 
                 <PremiumButton type="submit" variant="outline" className="py-2.5 text-[9px] uppercase tracking-wider font-black">
@@ -539,7 +621,22 @@ export default function Cashier() {
                               <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider">Venda Dinheiro</span>
                             )}
                           </td>
-                          <td className="py-2.5 text-white/80 font-light max-w-[200px] truncate">{tx.description}</td>
+                          <td className="py-2.5 text-white/80 font-light max-w-[200px] truncate">
+                            <div className="flex items-center gap-1.5">
+                              <span>{tx.description}</span>
+                              {tx.receipt_url && (
+                                <a 
+                                  href={tx.receipt_url} 
+                                  target="_blank" 
+                                  rel="noreferrer" 
+                                  className="text-gold hover:underline text-[9px] font-black shrink-0 uppercase tracking-widest"
+                                  title="Ver comprovante"
+                                >
+                                  [Recibo]
+                                </a>
+                              )}
+                            </div>
+                          </td>
                           <td className={`py-2.5 text-right font-bold ${
                             tx.type === "sangria" ? "text-red-400" : "text-emerald-400"
                           }`}>
@@ -607,7 +704,41 @@ export default function Cashier() {
                   )}
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-2 text-left">
+                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 block">Comprovante de Fechamento (Opcional)</label>
+                  {closeReceiptUrl ? (
+                    <div className="flex items-center justify-between bg-gold/5 border border-gold/15 p-2 rounded-xl text-xs">
+                      <a href={closeReceiptUrl} target="_blank" rel="noreferrer" className="text-gold/80 hover:text-gold truncate max-w-[150px] font-mono text-[9px] underline">
+                        {closeReceiptUrl.split("/").pop()}
+                      </a>
+                      <button 
+                        onClick={() => setCloseReceiptUrl("")}
+                        className="text-white/40 hover:text-red-400 p-1 text-[9px] font-bold"
+                        type="button"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleCloseReceiptUpload(file);
+                        }}
+                        disabled={uploadingCloseReceipt}
+                        className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-2 py-1.5 text-[9px] text-white/40 file:bg-white/5 file:border-0 file:text-[9px] file:text-white file:px-2 file:py-1 file:rounded file:cursor-pointer outline-none"
+                      />
+                      {uploadingCloseReceipt && (
+                        <p className="text-[9px] text-gold animate-pulse mt-1 font-bold">Carregando comprovante...</p>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="space-y-2 text-left">
                   <label className="text-[10px] font-black uppercase tracking-wider text-white/50 block">Notas de Fechamento</label>
                   <textarea
                     value={closingNotes}

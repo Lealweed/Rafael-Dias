@@ -67,6 +67,8 @@ export default function POS() {
   
   // Success Receipt State
   const [completedSale, setCompletedSale] = useState<any>(null);
+  const [receiptUrl, setReceiptUrl] = useState<string>("");
+  const [uploadingReceipt, setUploadingReceipt] = useState(false);
   
   // Messages
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -255,7 +257,39 @@ export default function POS() {
     setCurrentAmount(totalAmount.toFixed(2));
     setCurrentMethod("pix");
     setCurrentInstallments(1);
+    setReceiptUrl("");
     setShowCheckout(true);
+  };
+
+  const handleReceiptUpload = async (file: File) => {
+    if (!file) return;
+    setUploadingReceipt(true);
+    setErrorMsg(null);
+    try {
+      const fileExt = file.name.split(".").pop() || "";
+      const fileName = `sale_receipt_${Date.now()}.${fileExt}`;
+      const filePath = `cashier/sales/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from("site-assets")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("site-assets")
+        .getPublicUrl(filePath);
+
+      setReceiptUrl(urlData.publicUrl);
+    } catch (err: any) {
+      console.error(err);
+      showError(`Erro no upload: ${err.message || "tente novamente."}`);
+    } finally {
+      setUploadingReceipt(false);
+    }
   };
 
   const addPayment = () => {
@@ -318,7 +352,8 @@ export default function POS() {
           discount: totalItemDiscounts + discGlobal,
           net_amount: totalAmount,
           status: "completed",
-          notes: saleNotes || null
+          notes: saleNotes || null,
+          receipt_url: receiptUrl || null
         })
         .select()
         .single();
@@ -414,10 +449,54 @@ export default function POS() {
               session_id: cashSession.id,
               type: "sale_cash",
               amount: pay.amount,
-              description: `Venda #${sale.id.substring(0, 8)} - Dinheiro`
+              description: `Venda #${sale.id.substring(0, 8)} - Dinheiro`,
+              receipt_url: receiptUrl || null
             });
           if (cashTxErr) throw cashTxErr;
         }
+      }
+
+      // 5. Sync with patient_financials for patient file history
+      const firstPay = payments[0]?.method || "dinheiro";
+      let mappedMethod = "dinheiro";
+      if (firstPay === "pix") mappedMethod = "pix";
+      else if (firstPay === "boleto") mappedMethod = "boleto";
+      else if (firstPay.startsWith("cartao")) mappedMethod = "cartao";
+
+      const pfInstallments = payments.flatMap((pay) => {
+        const instValue = parseFloat((pay.amount / pay.installments).toFixed(2));
+        return Array.from({ length: pay.installments }).map((_, i) => {
+          const idx = i + 1;
+          const dueDate = new Date();
+          dueDate.setDate(dueDate.getDate() + (idx * 30));
+          const startStatus = (pay.installments === 1 && ["dinheiro", "pix", "cartao_debito"].includes(pay.method))
+            ? "pago"
+            : "pendente";
+          return {
+            number: idx,
+            due_date: dueDate.toISOString().split("T")[0],
+            value: idx === pay.installments
+              ? parseFloat((pay.amount - (instValue * (pay.installments - 1))).toFixed(2))
+              : instValue,
+            status: startStatus
+          };
+        });
+      });
+
+      const { error: pfErr } = await supabase
+        .from("patient_financials")
+        .insert({
+          lead_id: selectedPatient.id,
+          description: `PDV Venda #${sale.id.substring(0, 8)}: ` + cart.map(i => `${i.quantity}x ${i.name}`).join(", "),
+          total_value: totalAmount,
+          payment_method: mappedMethod,
+          installments: pfInstallments,
+          receipt_url: receiptUrl || null
+        });
+
+      if (pfErr) {
+        console.error("Error syncing patient_financials:", pfErr);
+        // Do not throw to prevent blocking the checkout success state if sync fails
       }
 
       // Record finished details for receipt modal
@@ -903,6 +982,40 @@ export default function POS() {
                           </div>
                         </div>
                       ))}
+                    </div>
+                  )}
+                </div>
+                {/* File Upload for Receipt */}
+                <div className="border-t border-white/5 pt-3 space-y-1.5 text-left">
+                  <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Anexar Comprovante (Opcional)</label>
+                  {receiptUrl ? (
+                    <div className="flex items-center justify-between bg-gold/5 border border-gold/15 p-2 rounded-xl text-xs">
+                      <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-gold/80 hover:text-gold truncate max-w-[200px] font-mono text-[9px] underline">
+                        {receiptUrl.split("/").pop()}
+                      </a>
+                      <button 
+                        onClick={() => setReceiptUrl("")}
+                        className="text-white/40 hover:text-red-400 p-1 text-[9px] font-bold"
+                        type="button"
+                      >
+                        Remover
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <input
+                        type="file"
+                        accept="image/*,application/pdf"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleReceiptUpload(file);
+                        }}
+                        disabled={uploadingReceipt}
+                        className="w-full bg-white/[0.01] border border-white/5 text-[9px] text-white/40 file:bg-white/5 file:border-0 file:text-[9px] file:text-white file:px-2.5 file:py-1.5 file:rounded-lg file:mr-2 file:cursor-pointer rounded-xl px-2 py-1 outline-none"
+                      />
+                      {uploadingReceipt && (
+                        <p className="text-[9px] text-gold animate-pulse mt-1 font-bold">Carregando comprovante...</p>
+                      )}
                     </div>
                   )}
                 </div>

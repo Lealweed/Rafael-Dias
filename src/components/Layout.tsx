@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut, UserCheck, Sparkles } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut, UserCheck, Sparkles, ShoppingBag, Calculator, DollarSign } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -272,6 +272,36 @@ export default function Layout() {
                 <span>Intelligence</span>
               </div>
               {location.pathname === "/reports" && (
+                <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
+              )}
+            </Link>
+
+            <Link to="/pos" className={navLinkClass("/pos")}>
+              <div className="flex items-center gap-5">
+                <ShoppingBag className={navIconClass("/pos")} />
+                <span>PDV (Vendas)</span>
+              </div>
+              {location.pathname === "/pos" && (
+                <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
+              )}
+            </Link>
+
+            <Link to="/cashier" className={navLinkClass("/cashier")}>
+              <div className="flex items-center gap-5">
+                <Calculator className={navIconClass("/cashier")} />
+                <span>Caixa & Turnos</span>
+              </div>
+              {location.pathname === "/cashier" && (
+                <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
+              )}
+            </Link>
+
+            <Link to="/financial-reports" className={navLinkClass("/financial-reports")}>
+              <div className="flex items-center gap-5">
+                <DollarSign className={navIconClass("/financial-reports")} />
+                <span>Financeiro</span>
+              </div>
+              {location.pathname === "/financial-reports" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
               )}
             </Link>

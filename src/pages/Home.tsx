@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { motion, useScroll, useTransform, AnimatePresence, useSpring } from "motion/react";
-import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook, Heart, Activity, Sun, X, Loader2 } from "lucide-react";
+import { Sparkles, ArrowRight, Play, CheckCircle2, Phone, Instagram, Facebook, Heart, Activity, Sun, X, Loader2, Menu } from "lucide-react";
 import Lenis from "lenis";
 import { PremiumButton } from "../components/premium/PremiumButton";
 import { BeforeAfterSlider } from "../components/premium/BeforeAfterSlider";
@@ -53,11 +53,23 @@ const patientTemplates = [
 
 export default function Home() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { scrollYProgress } = useScroll();
   const [activePatient, setActivePatient] = useState(0);
   const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = useMemo(() => createClient(), []);
+
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [mobileMenuOpen]);
 
   // Form & Tracking States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -404,9 +416,68 @@ export default function Home() {
             <PremiumButton onClick={() => openBookingModal("Navbar")}>
               Agendar
             </PremiumButton>
+            
+            {/* Hamburger Button */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="flex lg:hidden h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/[0.02] text-[#E3D5C1] hover:text-gold hover:border-gold/40 hover:shadow-gold transition-all duration-500 cursor-pointer z-50 relative"
+              aria-label="Toggle Menu"
+            >
+              {mobileMenuOpen ? <X size={16} /> : <Menu size={16} />}
+            </button>
           </motion.div>
         </div>
       </nav>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="fixed inset-0 z-40 lg:hidden bg-black-void/98 backdrop-blur-3xl pt-28 px-8 pb-10 flex flex-col justify-between overflow-y-auto"
+          >
+            <div className="flex flex-col items-center justify-center gap-6 mt-4">
+              {[
+                { label: "Serviços", href: "#servicos" },
+                { label: "Resultados", href: "#resultados" },
+                { label: "Método", href: "#metodo" },
+                { label: "Depoimentos", href: "#depoimentos" },
+                { label: "Depilação Laser", href: "/depilacao-a-laser" },
+                { label: "Equipe", href: "/login" }
+              ].map((item, index) => (
+                <motion.a
+                  key={item.label}
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.08, duration: 0.5 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="text-lg uppercase tracking-[0.25em] font-bold text-white/50 hover:text-gold active:text-gold focus:text-gold transition-all duration-300 relative py-3 w-full text-center flex flex-col items-center group"
+                >
+                  {item.label}
+                  <span className="absolute bottom-0 h-[1.5px] bg-gold w-0 group-hover:w-20 group-active:w-20 group-focus:w-20 transition-all duration-500" />
+                </motion.a>
+              ))}
+            </div>
+
+            <div className="flex flex-col gap-4 mt-8">
+              <PremiumButton 
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  openBookingModal("Mobile Menu");
+                }}
+                className="w-full py-4 text-[10px] tracking-[0.25em] shadow-gold"
+              >
+                Agendar Avaliação VIP
+              </PremiumButton>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Hero Section: Dark Spotlight & Cinematic Background */}
       <section className="relative min-h-screen flex items-center pt-24 pb-12 overflow-hidden">

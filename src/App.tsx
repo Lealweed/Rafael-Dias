@@ -24,6 +24,9 @@ import TermsOfService from "./pages/TermsOfService";
 import Home from "./pages/Home";
 import ClientPortal from "./pages/ClientPortal";
 import LaserHairRemoval from "./pages/LaserHairRemoval";
+import Cashier from "./pages/Cashier";
+import POS from "./pages/POS";
+import FinancialReports from "./pages/FinancialReports";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeContext";
 
@@ -80,6 +83,9 @@ export default function App() {
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/reports" element={<Reports />} />
           <Route path="/config" element={<ConfigPage />} />
+          <Route path="/cashier" element={<Cashier />} />
+          <Route path="/pos" element={<POS />} />
+          <Route path="/financial-reports" element={<FinancialReports />} />
         </Route>
 
         <Route path="*" element={<Navigate to={session ? "/dashboard" : "/login"} />} />

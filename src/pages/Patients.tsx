@@ -132,7 +132,7 @@ export default function Patients() {
     setEditPatientPhone(selectedPatientForDetails.phone || selectedPatientForDetails.telefone || "");
     setEditPatientCpf(selectedPatientForDetails.cpf ? selectedPatientForDetails.cpf.replace(/(\d{3})(\d{3})(\d{3})(\d{2})/, "$1.$2.$3-$4") : "");
     setEditPatientPassword(selectedPatientForDetails.portal_password || "");
-    setEditPatientInterest(selectedPatientForDetails.interest || selectedPatientForDetails.interesse || "");
+    setEditPatientInterest(selectedPatientForDetails.main_interest || selectedPatientForDetails.interest || selectedPatientForDetails.interesse || "");
     setEditPatientAllergies(selectedPatientForDetails.allergies_restrictions || "");
     setEditPatientActiveAccess(selectedPatientForDetails.portal_access_active ?? true);
     setEditPatientWhatsappReminders(selectedPatientForDetails.whatsapp_reminders ?? true);
@@ -376,7 +376,8 @@ export default function Patients() {
         full_name: editPatientName.trim(),
         phone: cleanPhone,
         portal_password: editPatientPassword,
-        interest: editPatientInterest.trim() || "Tratamento Estético",
+        main_interest: editPatientInterest.trim() || "Tratamento Estético",
+        cpf: editPatientCpf.replace(/\D/g, "") || null,
         allergies_restrictions: editPatientAllergies.trim() || null,
         portal_access_active: editPatientActiveAccess,
         whatsapp_reminders: editPatientWhatsappReminders,
@@ -429,7 +430,8 @@ export default function Patients() {
         .insert({
           full_name: newPatientName.trim(),
           phone: cleanPhone,
-          interest: newPatientInterest.trim() || "Tratamento Estético",
+          main_interest: newPatientInterest.trim() || "Tratamento Estético",
+          cpf: newPatientCpf.replace(/\D/g, "") || null,
           portal_password: newPatientPassword,
           portal_access_active: newPatientActiveAccess,
           whatsapp_reminders: newPatientWhatsappReminders,

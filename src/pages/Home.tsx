@@ -410,6 +410,9 @@ export default function Home() {
             animate={{ opacity: 1, x: 0 }}
             className="flex items-center gap-4 sm:gap-6"
           >
+            <PremiumButton variant="ghost" href="/portal" className="hidden sm:flex opacity-50 hover:opacity-100 text-gold font-bold">
+              Portal do Paciente
+            </PremiumButton>
             <PremiumButton variant="ghost" href="/login" className="hidden sm:flex opacity-50 hover:opacity-100">
               Equipe
             </PremiumButton>
@@ -446,6 +449,7 @@ export default function Home() {
                 { label: "Método", href: "#metodo" },
                 { label: "Depoimentos", href: "#depoimentos" },
                 { label: "Depilação Laser", href: "/depilacao-a-laser" },
+                { label: "Portal do Paciente", href: "/portal" },
                 { label: "Equipe", href: "/login" }
               ].map((item, index) => (
                 <motion.a

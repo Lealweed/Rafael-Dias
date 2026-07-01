@@ -25,6 +25,7 @@ export default function Patients() {
   });
   const [photos, setPhotos] = useState<string[]>([]);
   const [newPhotoUrl, setNewPhotoUrl] = useState("");
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [savingRecord, setSavingRecord] = useState(false);
 
   // Financeiro states
@@ -227,6 +228,37 @@ export default function Patients() {
 
   const handleRemovePhoto = (idx: number) => {
     setPhotos(photos.filter((_, i) => i !== idx));
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !selectedPatientForDetails) return;
+    setUploadingPhoto(true);
+    try {
+      const fileExt = file.name.split(".").pop() || "";
+      const fileName = `patient_${selectedPatientForDetails.id}_photo_${Date.now()}.${fileExt}`;
+      const filePath = `${selectedPatientForDetails.id}/${fileName}`;
+
+      const { data, error } = await supabase.storage
+        .from("patient-before-after")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (error) throw error;
+
+      const { data: urlData } = supabase.storage
+        .from("patient-before-after")
+        .getPublicUrl(filePath);
+
+      setPhotos(prev => [...prev, urlData.publicUrl]);
+    } catch (err: any) {
+      console.error("Error uploading photo:", err);
+      alert(`Falha no upload: ${err.message}`);
+    } finally {
+      setUploadingPhoto(false);
+    }
   };
 
   const handleCreateContract = async () => {
@@ -907,21 +939,38 @@ export default function Patients() {
 
                   {/* Before / After Photos */}
                   <div className="space-y-3">
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40">Imagens de Evolução (Antes/Depois)</label>
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={newPhotoUrl}
-                        onChange={(e) => setNewPhotoUrl(e.target.value)}
-                        className="flex-1 rounded-xl border border-white/5 bg-white/[0.01] px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
-                        placeholder="Link da imagem"
-                      />
-                      <button 
-                        onClick={handleAddPhoto}
-                        className="px-4 py-2 rounded-xl bg-white/5 text-xs font-semibold text-white border border-white/10"
-                      >
-                        Adicionar
-                      </button>
+                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Imagens de Evolução (Antes/Depois)</label>
+                    
+                    <div className="flex flex-col gap-2.5">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={newPhotoUrl}
+                          onChange={(e) => setNewPhotoUrl(e.target.value)}
+                          className="flex-1 rounded-xl border border-white/5 bg-white/[0.01] px-3.5 py-2 text-xs text-white focus:outline-none focus:border-[#ffd700]"
+                          placeholder="Link da imagem (URL)"
+                        />
+                        <button 
+                          onClick={handleAddPhoto}
+                          className="px-4 py-2 rounded-xl bg-white/5 text-xs font-semibold text-white border border-white/10 shrink-0 hover:bg-white/10 transition-colors"
+                        >
+                          Adicionar Link
+                        </button>
+                      </div>
+                      
+                      <div className="relative text-left">
+                        <span className="text-[10px] text-white/40 block mb-1.5 font-bold uppercase tracking-wider">Ou faça upload da imagem diretamente:</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          disabled={uploadingPhoto}
+                          className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/50 file:bg-white/5 file:border-0 file:text-[10px] file:text-white file:px-2.5 file:py-1 file:rounded-md file:mr-2 file:cursor-pointer outline-none focus:border-[#ffd700]"
+                        />
+                        {uploadingPhoto && (
+                          <p className="text-[9px] text-[#ffd700] animate-pulse mt-1.5 font-bold">Enviando imagem para o prontuário...</p>
+                        )}
+                      </div>
                     </div>
                     {photos.length > 0 && (
                       <div className="grid grid-cols-4 gap-3 pt-2">

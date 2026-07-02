@@ -27,6 +27,7 @@ import LaserHairRemoval from "./pages/LaserHairRemoval";
 import Cashier from "./pages/Cashier";
 import POS from "./pages/POS";
 import FinancialReports from "./pages/FinancialReports";
+import Marketing from "./pages/Marketing";
 import ScrollToTop from "./components/ScrollToTop";
 import { ThemeProvider } from "./components/ThemeContext";
 
@@ -82,6 +83,7 @@ export default function App() {
           <Route path="/follow-ups" element={<Followups />} />
           <Route path="/pipeline" element={<Pipeline />} />
           <Route path="/reports" element={<Reports />} />
+          <Route path="/marketing" element={<Marketing />} />
           <Route path="/config" element={<ConfigPage />} />
           <Route path="/cashier" element={<Cashier />} />
           <Route path="/pos" element={<POS />} />

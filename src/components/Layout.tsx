@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut, UserCheck, Sparkles, ShoppingBag, Calculator, DollarSign } from "lucide-react";
+import { LayoutDashboard, Users, MessageSquare, Settings, AlertCircle, BarChart3, Search, Calendar as CalendarIcon, LogOut, UserCheck, Sparkles, ShoppingBag, Calculator, DollarSign, Target } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import { motion, AnimatePresence } from "motion/react";
 
@@ -272,6 +272,16 @@ export default function Layout() {
                 <span>Intelligence</span>
               </div>
               {location.pathname === "/reports" && (
+                <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
+              )}
+            </Link>
+
+            <Link to="/marketing" className={navLinkClass("/marketing")}>
+              <div className="flex items-center gap-5">
+                <Target className={navIconClass("/marketing")} />
+                <span>Marketing & Ads</span>
+              </div>
+              {location.pathname === "/marketing" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
               )}
             </Link>

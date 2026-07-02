@@ -91,7 +91,7 @@ function StatCard({ index, value, label, trend, icon: Icon, onClick }: any) {
             </span>
             {trend !== undefined && (
               <div className={cn(
-                "flex items-center gap-0.5 text-[8px] font-bold px-1.5 py-0.5 rounded-full",
+                "flex items-center gap-0.5 text-[13px] font-bold px-1.5 py-0.5 rounded-full",
                 trend >= 0 ? "bg-emerald-500/10 text-emerald-400" : "bg-red-500/10 text-red-400"
               )}>
                 <TrendingUp className={cn("h-2.5 w-2.5", trend < 0 && "rotate-180")} />
@@ -99,7 +99,7 @@ function StatCard({ index, value, label, trend, icon: Icon, onClick }: any) {
               </div>
             )}
           </div>
-          <p className="text-[8px] uppercase tracking-[0.2em] font-bold text-white/40 group-hover:text-gold/80 transition-colors duration-500">
+          <p className="text-[13px] uppercase tracking-[0.2em] font-bold text-white/40 group-hover:text-gold/80 transition-colors duration-500">
             {label}
           </p>
         </div>
@@ -127,9 +127,9 @@ function PipelineNode({ icon: Icon, label, value, subLabel, delay = 0 }: any) {
       </div>
       <div className="text-center space-y-0.5">
         <p className="text-sm font-display text-white">{value}</p>
-        <p className="text-[8px] uppercase tracking-[0.1em] font-bold text-white/40">{label}</p>
+        <p className="text-[13px] uppercase tracking-[0.1em] font-bold text-white/40">{label}</p>
         {subLabel && (
-          <p className="text-[8px] font-mono text-gold/60 mt-1 bg-gold/5 px-2 py-0.5 rounded-full inline-block">
+          <p className="text-[13px] font-mono text-gold/60 mt-1 bg-gold/5 px-2 py-0.5 rounded-full inline-block">
             {subLabel}
           </p>
         )}
@@ -155,7 +155,7 @@ function VIPSpotlight({ appointment }: any) {
       <div className="relative z-10">
           <div className="flex items-center gap-1.5 mb-2">
             <div className="h-[1px] w-4 bg-gold/40" />
-            <span className="text-[8px] uppercase tracking-[0.2em] font-bold text-gold">VIP Spotlight</span>
+            <span className="text-[13px] uppercase tracking-[0.2em] font-bold text-gold">VIP Spotlight</span>
         </div>
         
         <AnimatePresence mode="wait">
@@ -179,7 +179,7 @@ function VIPSpotlight({ appointment }: any) {
                 </div>
                 <div className="flex items-center gap-2 text-white/50">
                   <Sparkles className="h-3.5 w-3.5 text-gold/60" />
-                  <span className="text-[9px] uppercase tracking-widest">
+                  <span className="text-[14px] uppercase tracking-widest">
                     {appointment.procedure}
                   </span>
                 </div>
@@ -192,7 +192,7 @@ function VIPSpotlight({ appointment }: any) {
       </div>
 
       <div className="relative z-10 mt-4">
-        <PremiumButton variant="primary" className="w-full py-2 text-[8px] tracking-widest">
+        <PremiumButton variant="primary" className="w-full py-2 text-[13px] tracking-widest">
           VER PRONTUÁRIO PREMIUM
         </PremiumButton>
       </div>
@@ -315,14 +315,14 @@ export default function Dashboard() {
           >
             <div className="flex items-center gap-1.5 bg-gold/5 px-2.5 py-1 rounded-full border border-gold/20">
               <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[8px] tracking-[0.2em] uppercase font-bold text-gold">Aesthetic intelligence active</span>
+              <span className="text-[13px] tracking-[0.2em] uppercase font-bold text-gold">Aesthetic intelligence active</span>
             </div>
-            <p className="text-[11px] font-light text-white/40 max-w-xs">
+            <p className="text-[13px] font-light text-white/40 max-w-xs">
               Processamento centralizado de {stats.newLeadsToday} solicitações via n8n.
             </p>
             <button 
               onClick={() => navigate('/config')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/10 hover:bg-gold/20 text-[8px] font-bold uppercase tracking-widest text-[#E5C38C] transition-all cursor-pointer shadow-sm hover:shadow-gold active:scale-95 duration-300"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-gold/30 bg-gold/10 hover:bg-gold/20 text-[13px] font-bold uppercase tracking-widest text-[#E5C38C] transition-all cursor-pointer shadow-sm hover:shadow-gold active:scale-95 duration-300"
             >
               <Settings className="w-2.5 h-2.5" />
               <span>Ajustar Mídias do Site</span>
@@ -383,10 +383,10 @@ export default function Dashboard() {
         <div className="relative z-10 flex flex-col xl:flex-row items-center justify-between gap-4">
           <div className="space-y-1.5 max-w-sm">
             <h3 className="text-base font-display text-gold leading-none italic">Alembic Pipeline</h3>
-            <p className="text-[11px] text-white/50 leading-relaxed font-light">
+            <p className="text-[13px] text-white/50 leading-relaxed font-light">
               Uma visualização entrante da jornada comercial. Do primeiro clique à fidelização estética.
             </p>
-            <PremiumButton variant="ghost" className="px-0 text-[8px] tracking-[0.2em] opacity-60 hover:opacity-100">
+            <PremiumButton variant="ghost" className="px-0 text-[13px] tracking-[0.2em] opacity-60 hover:opacity-100">
               EXPLORAR FUNIL <ArrowUpRight className="h-2 w-2 ml-1" />
             </PremiumButton>
           </div>
@@ -427,7 +427,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
             <h3 className="text-sm font-display text-white">Stream de Leads <span className="text-gold/40 italic font-light ml-1 text-xs">Recent activity</span></h3>
-            <PremiumButton variant="ghost" onClick={() => navigate('/leads')} className="text-[8px] opacity-40">
+            <PremiumButton variant="ghost" onClick={() => navigate('/leads')} className="text-[13px] opacity-40">
               Ver Histórico Completo
             </PremiumButton>
           </div>
@@ -442,19 +442,19 @@ export default function Dashboard() {
                 onClick={() => navigate(`/leads?id=${lead.id}`)}
               >
                 <div className="flex items-center gap-3">
-                  <div className="h-8 w-8 rounded-full border border-gold/30 flex items-center justify-center text-[9px] font-bold text-gold group-hover:bg-gold group-hover:text-black transition-all duration-500">
+                  <div className="h-8 w-8 rounded-full border border-gold/30 flex items-center justify-center text-[14px] font-bold text-gold group-hover:bg-gold group-hover:text-black transition-all duration-500">
                     {(lead.full_name || lead.nome || lead.name || "P").substring(0, 2).toUpperCase()}
                   </div>
                   <div className="space-y-0.5">
                     <p className="text-xs font-display text-white group-hover:text-gold transition-colors duration-500">{lead.full_name || lead.nome || lead.name || "Sem Nome"}</p>
-                    <p className="text-[8px] uppercase tracking-[0.15em] text-white/30 font-bold">{lead.phone || "Telefone não informado"}</p>
+                    <p className="text-[13px] uppercase tracking-[0.15em] text-white/30 font-bold">{lead.phone || "Telefone não informado"}</p>
                   </div>
                 </div>
                 <div className="text-right flex flex-col items-end gap-1">
-                  <p className="text-[9px] font-mono text-white/20">{new Date(lead.created_at).toLocaleDateString('pt-BR')}</p>
+                  <p className="text-[14px] font-mono text-white/20">{new Date(lead.created_at).toLocaleDateString('pt-BR')}</p>
                   <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/5 border border-gold/10">
                     <div className="h-1 w-1 rounded-full bg-gold" />
-                    <span className="text-[8px] uppercase tracking-widest text-gold/80 font-bold">{lead.automation_status || "Pendente"}</span>
+                    <span className="text-[13px] uppercase tracking-widest text-gold/80 font-bold">{lead.automation_status || "Pendente"}</span>
                   </div>
                 </div>
               </motion.div>

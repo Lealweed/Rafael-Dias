@@ -483,7 +483,7 @@ export default function FinancialReports() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[8px] font-black">
+                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[13px] font-black">
                       <th className="p-4">Data</th>
                       <th className="p-4">ID Venda</th>
                       <th className="p-4">Paciente</th>
@@ -499,7 +499,7 @@ export default function FinancialReports() {
                     {filteredSales.map((s) => (
                       <tr key={s.id} className="hover:bg-white/[0.005] transition-colors">
                         <td className="p-4 text-white/60 font-light">{formatDate(s.created_at)}</td>
-                        <td className="p-4 font-mono text-[10px] text-white/40">#{s.id.substring(0, 8)}</td>
+                        <td className="p-4 font-mono text-[13px] text-white/40">#{s.id.substring(0, 8)}</td>
                         <td className="p-4 text-white font-bold">{s.patient?.full_name || "Paciente Removido"}</td>
                         <td className="p-4 text-white/70">{s.seller?.full_name || "Desconhecido"}</td>
                         <td className="p-4 capitalize text-gold/80 font-medium">
@@ -512,7 +512,7 @@ export default function FinancialReports() {
                               href={s.receipt_url} 
                               target="_blank" 
                               rel="noreferrer" 
-                              className="text-gold hover:underline text-[9px] font-black uppercase tracking-widest"
+                              className="text-gold hover:underline text-[14px] font-black uppercase tracking-widest"
                               title="Ver Comprovante"
                             >
                               [Ver Anexo]
@@ -522,7 +522,7 @@ export default function FinancialReports() {
                           )}
                         </td>
                         <td className="p-4 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                          <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider ${
                             s.status === "completed" 
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10" 
                               : "bg-red-500/10 text-red-400 border border-red-500/10"
@@ -582,7 +582,7 @@ export default function FinancialReports() {
                   <button
                     key={f.key}
                     onClick={() => setInstStatusFilter(f.key)}
-                    className={`px-3 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                    className={`px-3 py-1.5 rounded-md text-[14px] font-black uppercase tracking-wider transition-all ${
                       instStatusFilter === f.key 
                         ? "bg-gold/10 text-gold border border-gold/20" 
                         : "text-white/40 hover:text-white/80"
@@ -599,7 +599,7 @@ export default function FinancialReports() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[8px] font-black">
+                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[13px] font-black">
                       <th className="p-4">Vencimento</th>
                       <th className="p-4">Paciente</th>
                       <th className="p-4">Venda Ref</th>
@@ -622,14 +622,14 @@ export default function FinancialReports() {
                             {isOverdue && <span className="text-[7px] uppercase font-black tracking-widest block text-red-500">(Vencida)</span>}
                           </td>
                           <td className="p-4 text-white font-bold">{inst.sales?.patient?.full_name || "Desconhecido"}</td>
-                          <td className="p-4 font-mono text-[9px] text-white/40">#{inst.sale_id.substring(0, 8)}</td>
+                          <td className="p-4 font-mono text-[14px] text-white/40">#{inst.sale_id.substring(0, 8)}</td>
                           <td className="p-4 text-center text-white/60">{inst.installment_number}</td>
                           <td className="p-4 capitalize text-gold/80 font-medium">
                             {inst.sales?.sale_payments?.map((p: any) => p.payment_method.replace("_", " ")).join(", ") || "-"}
                           </td>
                           <td className="p-4 text-right font-bold text-white font-display">{formatCurrency(inst.amount)}</td>
                           <td className="p-4 text-center">
-                            <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                            <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider ${
                               inst.status === "paid" 
                                 ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10" 
                                 : inst.status === "overdue" || isOverdue
@@ -693,7 +693,7 @@ export default function FinancialReports() {
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
-                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[8px] font-black">
+                    <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[13px] font-black">
                       <th className="p-4">Abertura</th>
                       <th className="p-4">Fechamento</th>
                       <th className="p-4">Operador</th>
@@ -734,7 +734,7 @@ export default function FinancialReports() {
                               {s.status === "closed" ? (diff === 0 ? "Bateu" : formatCurrency(diff)) : "-"}
                             </td>
                             <td className="p-4 text-center">
-                              <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                              <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider ${
                                 s.status === "open" 
                                   ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 animate-pulse" 
                                   : "bg-white/5 text-white/30 border border-white/5"
@@ -748,7 +748,7 @@ export default function FinancialReports() {
                                   href={s.receipt_url} 
                                   target="_blank" 
                                   rel="noreferrer" 
-                                  className="text-gold hover:underline text-[9px] font-black uppercase tracking-widest animate-pulse"
+                                  className="text-gold hover:underline text-[14px] font-black uppercase tracking-widest animate-pulse"
                                 >
                                   [Ver Anexo]
                                 </a>
@@ -778,7 +778,7 @@ export default function FinancialReports() {
             <div className="flex bg-white/[0.02] border border-white/5 p-1 rounded-lg">
               <button
                 onClick={() => setCatalogTab("products")}
-                className={`px-3.5 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                className={`px-3.5 py-1.5 rounded-md text-[14px] font-black uppercase tracking-wider transition-all ${
                   catalogTab === "products" 
                     ? "bg-gold/10 text-gold border border-gold/20" 
                     : "text-white/40 hover:text-white/80"
@@ -788,7 +788,7 @@ export default function FinancialReports() {
               </button>
               <button
                 onClick={() => setCatalogTab("services")}
-                className={`px-3.5 py-1.5 rounded-md text-[9px] font-black uppercase tracking-wider transition-all ${
+                className={`px-3.5 py-1.5 rounded-md text-[14px] font-black uppercase tracking-wider transition-all ${
                   catalogTab === "services" 
                     ? "bg-gold/10 text-gold border border-gold/20" 
                     : "text-white/40 hover:text-white/80"
@@ -798,7 +798,7 @@ export default function FinancialReports() {
               </button>
             </div>
 
-            <PremiumButton onClick={() => openItemModal()} variant="outline" className="py-2.5 text-[9px] uppercase tracking-widest font-black">
+            <PremiumButton onClick={() => openItemModal()} variant="outline" className="py-2.5 text-[14px] uppercase tracking-widest font-black">
               <Plus className="h-3.5 w-3.5" /> Novo {catalogTab === "products" ? "Produto" : "Serviço"}
             </PremiumButton>
           </div>
@@ -808,7 +808,7 @@ export default function FinancialReports() {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[8px] font-black">
+                  <tr className="border-b border-white/5 bg-white/[0.01] text-white/45 uppercase tracking-widest text-[13px] font-black">
                     <th className="p-4">Nome</th>
                     <th className="p-4">Descrição</th>
                     {catalogTab === "products" && <th className="p-4">SKU</th>}
@@ -829,9 +829,9 @@ export default function FinancialReports() {
                           {item.name}
                         </td>
                         <td className="p-4 text-white/50 font-light max-w-[200px] truncate">{item.description || "-"}</td>
-                        <td className="p-4 font-mono text-[10px] text-white/40">{item.sku || "-"}</td>
+                        <td className="p-4 font-mono text-[13px] text-white/40">{item.sku || "-"}</td>
                         <td className="p-4 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          <span className={`px-2 py-0.5 rounded-full text-[13px] font-bold ${
                             item.stock_quantity <= item.min_stock
                               ? "bg-red-500/10 text-red-400 border border-red-500/15 animate-pulse"
                               : "text-white/60"
@@ -842,7 +842,7 @@ export default function FinancialReports() {
                         <td className="p-4 text-right text-white/50">{item.cost_price ? formatCurrency(item.cost_price) : "-"}</td>
                         <td className="p-4 text-right text-gold font-bold font-display">{formatCurrency(item.price)}</td>
                         <td className="p-4 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                          <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider ${
                             item.status === "active" 
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10" 
                               : "bg-white/5 text-white/30 border border-white/5"
@@ -885,7 +885,7 @@ export default function FinancialReports() {
                         </td>
                         <td className="p-4 text-right text-gold font-bold font-display">{formatCurrency(item.price)}</td>
                         <td className="p-4 text-center">
-                          <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                          <span className={`px-2.5 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider ${
                             item.status === "active" 
                               ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10" 
                               : "bg-white/5 text-white/30 border border-white/5"
@@ -939,7 +939,7 @@ export default function FinancialReports() {
                 <h3 className="text-sm font-bold font-display text-white">
                   {editingItem ? "Editar Cadastro" : `Novo ${catalogTab === "products" ? "Produto" : "Serviço"}`}
                 </h3>
-                <p className="text-[9px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Cadastrar no catálogo</p>
+                <p className="text-[14px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Cadastrar no catálogo</p>
               </div>
               <button 
                 onClick={() => setShowItemModal(false)}
@@ -951,7 +951,7 @@ export default function FinancialReports() {
 
             <form onSubmit={handleSaveItem} className="p-4 overflow-y-auto space-y-4 text-left">
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Nome do Item</label>
+                <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Nome do Item</label>
                 <input
                   type="text"
                   required
@@ -963,7 +963,7 @@ export default function FinancialReports() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Descrição</label>
+                <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Descrição</label>
                 <textarea
                   value={itemDesc}
                   onChange={(e) => setItemDesc(e.target.value)}
@@ -975,7 +975,7 @@ export default function FinancialReports() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Preço de Tabela (Venda)</label>
+                  <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Preço de Tabela (Venda)</label>
                   <input
                     type="number"
                     step="0.01"
@@ -989,7 +989,7 @@ export default function FinancialReports() {
 
                 {catalogTab === "products" ? (
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Preço de Custo</label>
+                    <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Preço de Custo</label>
                     <input
                       type="number"
                       step="0.01"
@@ -1001,7 +1001,7 @@ export default function FinancialReports() {
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Duração (Minutos)</label>
+                    <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Duração (Minutos)</label>
                     <input
                       type="number"
                       value={itemDuration}
@@ -1016,7 +1016,7 @@ export default function FinancialReports() {
               {catalogTab === "products" && (
                 <>
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Código / SKU / Código de Barras</label>
+                    <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Código / SKU / Código de Barras</label>
                     <input
                       type="text"
                       value={itemSKU}
@@ -1028,7 +1028,7 @@ export default function FinancialReports() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Estoque Inicial</label>
+                      <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Estoque Inicial</label>
                       <input
                         type="number"
                         required
@@ -1040,7 +1040,7 @@ export default function FinancialReports() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Estoque Mínimo</label>
+                      <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Estoque Mínimo</label>
                       <input
                         type="number"
                         value={itemMinStock}

@@ -90,7 +90,7 @@ export default function Layout() {
   };
 
   const navLinkClass = (path: string) =>
-    `flex items-center justify-between rounded-xl px-3 py-2.5 text-[9px] uppercase tracking-[0.2em] font-bold transition-all duration-500 relative group ${
+    `flex items-center justify-between rounded-xl px-3 py-2.5 text-[14px] uppercase tracking-[0.2em] font-bold transition-all duration-500 relative group ${
       location.pathname === path
         ? "text-gold"
         : "text-white/30 hover:text-white/80"
@@ -114,7 +114,7 @@ export default function Layout() {
             <h1 className="text-sm font-bold tracking-tighter text-white font-display leading-none">Instituto Rafael Dias</h1>
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="h-[1px] w-3 bg-gold/40" />
-              <span className="text-[8px] uppercase tracking-[0.3em] text-gold/60 font-black">
+              <span className="text-[13px] uppercase tracking-[0.3em] text-gold/60 font-black">
                 Boutique Aesthetic Hub
               </span>
             </div>
@@ -135,7 +135,7 @@ export default function Layout() {
             name="search"
             type="text"
             placeholder="Search patients, protocols or inquiries..."
-            className="w-full bg-transparent text-[11px] outline-none placeholder:text-white/10 text-white font-light tracking-wide"
+            className="w-full bg-transparent text-[13px] outline-none placeholder:text-white/10 text-white font-light tracking-wide"
           />
         </form>
 
@@ -146,7 +146,7 @@ export default function Layout() {
               transition={{ duration: 2, repeat: Infinity }}
               className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
             />
-            <span className="text-[8px] uppercase tracking-[0.2em] font-black text-gold/80">Automation Live</span>
+            <span className="text-[13px] uppercase tracking-[0.2em] font-black text-gold/80">Automation Live</span>
           </div>
           
           <Link 
@@ -159,10 +159,10 @@ export default function Layout() {
 
           <div className="flex items-center gap-3 group cursor-pointer" onClick={handleLogout}>
             <div className="text-right flex flex-col justify-center">
-              <p className="text-[10px] font-bold text-white font-display tracking-tight uppercase group-hover:text-gold transition-colors">Dr. Rafael Dias</p>
-              <p className="text-[8px] text-white/30 font-black tracking-[0.15em] uppercase">Executive Director</p>
+              <p className="text-[13px] font-bold text-white font-display tracking-tight uppercase group-hover:text-gold transition-colors">Dr. Rafael Dias</p>
+              <p className="text-[13px] text-white/30 font-black tracking-[0.15em] uppercase">Executive Director</p>
             </div>
-            <div className="h-8 w-8 border border-white/10 flex items-center justify-center rounded-lg bg-black-matte text-white shadow-premium group-hover:border-gold/40 group-hover:shadow-gold transition-all duration-500 font-bold text-[10px]">
+            <div className="h-8 w-8 border border-white/10 flex items-center justify-center rounded-lg bg-black-matte text-white shadow-premium group-hover:border-gold/40 group-hover:shadow-gold transition-all duration-500 font-bold text-[13px]">
               RD
             </div>
           </div>
@@ -214,7 +214,7 @@ export default function Layout() {
                   <motion.span 
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-full bg-gold/10 border border-gold/20 px-2.5 py-0.5 text-[9px] font-black text-gold shadow-gold"
+                    className="rounded-full bg-gold/10 border border-gold/20 px-2.5 py-0.5 text-[14px] font-black text-gold shadow-gold"
                   >
                     {counters.conversations}
                   </motion.span>
@@ -255,7 +255,7 @@ export default function Layout() {
                   <motion.span 
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-[9px] font-black text-red-400"
+                    className="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-[14px] font-black text-red-400"
                   >
                     {counters.followUps}
                   </motion.span>
@@ -335,8 +335,8 @@ export default function Layout() {
               </div>
               <div className="flex justify-between items-end">
                 <div className="space-y-0.5">
-                  <h4 className="text-[8px] font-black text-white/20 uppercase tracking-[0.2em]">Monthly Goal</h4>
-                  <p className="text-base font-display text-white tracking-tighter italic">{goalStats.percent}% <span className="text-[9px] text-gold/40 non-italic ml-1">Achieved</span></p>
+                  <h4 className="text-[13px] font-black text-white/20 uppercase tracking-[0.2em]">Monthly Goal</h4>
+                  <p className="text-base font-display text-white tracking-tighter italic">{goalStats.percent}% <span className="text-[14px] text-gold/40 non-italic ml-1">Achieved</span></p>
                 </div>
               </div>
               <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
@@ -347,14 +347,14 @@ export default function Layout() {
                   className="h-full rounded-full gold-gradient shadow-gold"
                 />
               </div>
-              <p className="text-[8px] text-white/20 font-bold uppercase tracking-[0.3em] text-center">
+              <p className="text-[13px] text-white/20 font-bold uppercase tracking-[0.3em] text-center">
                 {goalStats.current} / {goalStats.target} Bookings
               </p>
             </div>
             
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[8px] font-black uppercase tracking-[0.3em] text-white/20 bg-white/[0.02] hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all hover:text-red-400 duration-500"
+              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-[0.3em] text-white/20 bg-white/[0.02] hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all hover:text-red-400 duration-500"
             >
               <LogOut className="h-3 w-3 opacity-40" />
               Sign Out
@@ -373,7 +373,7 @@ export default function Layout() {
       </div>
 
       {/* FOOTER STATUS BAR (The Foundation) */}
-      <footer className="relative z-30 flex h-10 shrink-0 w-full items-center justify-between border-t border-white/5 bg-black-void px-6 text-[8px] font-bold text-white/10 uppercase tracking-[0.3em]">
+      <footer className="relative z-30 flex h-10 shrink-0 w-full items-center justify-between border-t border-white/5 bg-black-void px-6 text-[13px] font-bold text-white/10 uppercase tracking-[0.3em]">
         <div className="flex gap-8 items-center">
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500/40" />

@@ -139,11 +139,11 @@ export default function LaserHairRemoval() {
           <Link to="/" className="flex items-center gap-3">
             <img src="/assets/logo.jpg" alt="Instituto Rafael Dias" className="h-11 w-11 rounded-full border border-gold/30 object-cover" />
             <div>
-              <p className="text-[9px] uppercase tracking-[0.5em] text-gold">Instituto</p>
+              <p className="text-[14px] uppercase tracking-[0.5em] text-gold">Instituto</p>
               <h1 className="font-display text-lg text-white">Rafael Dias</h1>
             </div>
           </Link>
-          <a href="#agendar" className="rounded-full border border-gold/30 bg-gold/10 px-5 py-3 text-[10px] font-bold uppercase tracking-[0.24em] text-gold transition hover:bg-gold hover:text-black">
+          <a href="#agendar" className="rounded-full border border-gold/30 bg-gold/10 px-5 py-3 text-[13px] font-bold uppercase tracking-[0.24em] text-gold transition hover:bg-gold hover:text-black">
             Agendar sexta-feira
           </a>
         </div>
@@ -153,7 +153,7 @@ export default function LaserHairRemoval() {
         <div className="absolute inset-0 top-spotlight opacity-40" />
         <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 items-center gap-14 lg:grid-cols-2">
           <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="space-y-9">
-            <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-4 py-2 text-[10px] font-bold uppercase tracking-[0.28em] text-gold">
+            <div className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-4 py-2 text-[13px] font-bold uppercase tracking-[0.28em] text-gold">
               <Zap className="h-3.5 w-3.5" />
               tecnologia laser premium
             </div>
@@ -174,11 +174,11 @@ export default function LaserHairRemoval() {
                 <div key={title} className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
                   <CheckCircle2 className="mb-4 h-5 w-5 text-gold" />
                   <p className="text-xs font-bold uppercase tracking-[0.2em] text-white">{title}</p>
-                  <p className="mt-2 text-[11px] leading-5 text-white/35">{desc}</p>
+                  <p className="mt-2 text-[13px] leading-5 text-white/35">{desc}</p>
                 </div>
               ))}
             </div>
-            <a href="#agendar" className="inline-flex items-center gap-3 rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] px-8 py-4 text-[11px] font-bold uppercase tracking-[0.24em] text-black shadow-[0_12px_40px_rgba(212,175,55,0.18)] transition hover:scale-[1.02]">
+            <a href="#agendar" className="inline-flex items-center gap-3 rounded-full bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] px-8 py-4 text-[13px] font-bold uppercase tracking-[0.24em] text-black shadow-[0_12px_40px_rgba(212,175,55,0.18)] transition hover:scale-[1.02]">
               Reservar meu horário
               <ArrowRight className="h-4 w-4" />
             </a>
@@ -199,7 +199,7 @@ export default function LaserHairRemoval() {
                   <Play className="h-7 w-7 fill-current" />
                 </div>
               )}
-              <p className="text-[10px] font-bold uppercase tracking-[0.35em] text-gold">Vídeo explicativo</p>
+              <p className="text-[13px] font-bold uppercase tracking-[0.35em] text-gold">Vídeo explicativo</p>
               <h3 className="mt-5 max-w-lg font-display text-3xl text-white">Entenda como funciona o laser e os cuidados antes da sessão.</h3>
               <p className="mt-4 max-w-xl text-sm leading-7 text-white/45">Área pronta para receber vídeos demonstrativos, depoimentos e bastidores clínicos do protocolo de depilação.</p>
             </div>
@@ -226,7 +226,7 @@ export default function LaserHairRemoval() {
       <section id="agendar" className="px-6 py-24">
         <div className="mx-auto grid max-w-7xl grid-cols-1 gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="space-y-7">
-            <p className="text-[10px] font-bold uppercase tracking-[0.5em] text-gold">Reserva online</p>
+            <p className="text-[13px] font-bold uppercase tracking-[0.5em] text-gold">Reserva online</p>
             <h2 className="font-display text-5xl font-light leading-tight text-white md:text-7xl">Preencha e garanta seu horário.</h2>
             <p className="text-sm leading-8 text-white/45">
               Ao finalizar, você será redirecionado ao Stripe para pagar o sinal de reserva. Após o pagamento, o lead e o agendamento entram no CRM.
@@ -243,29 +243,29 @@ export default function LaserHairRemoval() {
           <form onSubmit={handleSubmit} className="rounded-[36px] border border-white/10 bg-[#0B0D12]/90 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] md:p-9">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="space-y-2 md:col-span-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Nome completo</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">Nome completo</span>
                 <input required value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-gold" placeholder="Seu nome" />
               </label>
               <label className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">WhatsApp</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">WhatsApp</span>
                 <input required value={phone} onChange={(e) => handlePhoneChange(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-gold" placeholder="(94) 99999-9999" />
               </label>
               <label className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">E-mail</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">E-mail</span>
                 <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-gold" placeholder="voce@email.com" />
               </label>
               <label className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">CPF</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">CPF</span>
                 <input required value={cpf} onChange={(e) => handleCpfChange(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-gold" placeholder="000.000.000-00" />
               </label>
               <label className="space-y-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Área de interesse</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">Área de interesse</span>
                 <select value={area} onChange={(e) => setArea(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gold">
                   {TREATMENT_AREAS.map((option) => <option key={option} value={option}>{option}</option>)}
                 </select>
               </label>
               <label className="space-y-2 md:col-span-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Sexta-feira disponível</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">Sexta-feira disponível</span>
                 <select value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} className="w-full rounded-2xl border border-white/10 bg-black/80 px-4 py-3 text-sm text-white outline-none transition focus:border-gold">
                   {availableFridays.map((date) => {
                     const value = toDateInputValue(date);
@@ -274,7 +274,7 @@ export default function LaserHairRemoval() {
                 </select>
               </label>
               <div className="md:col-span-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Horário</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">Horário</span>
                 <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-7">
                   {FRIDAY_SLOTS.map((slot) => (
                     <button key={slot} type="button" onClick={() => setSelectedSlot(slot)} className={`rounded-xl border px-3 py-2 text-xs font-mono transition ${selectedSlot === slot ? "border-gold bg-gold/20 text-gold" : "border-white/10 bg-black/30 text-white/50 hover:border-white/25 hover:text-white"}`}>
@@ -284,7 +284,7 @@ export default function LaserHairRemoval() {
                 </div>
               </div>
               <label className="space-y-2 md:col-span-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-white/45">Observações</span>
+                <span className="text-[13px] font-bold uppercase tracking-[0.22em] text-white/45">Observações</span>
                 <textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={3} className="w-full resize-none rounded-2xl border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none transition focus:border-gold" placeholder="Conte qual região deseja tratar ou alguma dúvida importante." />
               </label>
             </div>

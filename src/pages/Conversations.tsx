@@ -327,7 +327,7 @@ export default function Conversations() {
       <div className="shrink-0 px-5 pt-4 pb-3 flex flex-wrap items-center justify-between gap-2 border-b border-white/5">
         <div className="flex items-center gap-3">
           <div>
-            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[8px] uppercase tracking-[0.15em] font-bold text-[#E5C38C] mb-0.5">
+            <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.15em] font-bold text-[#E5C38C] mb-0.5">
               <Zap className="h-2.5 w-2.5 animate-pulse" />
               <span>Intervenção Humana</span>
             </div>
@@ -352,12 +352,12 @@ export default function Conversations() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Localizar diálogo..."
-                className="w-full bg-white/[0.02] border border-white/5 rounded-lg py-2 pl-9 pr-3 text-[11px] text-white focus:outline-none focus:border-gold/30 transition-all"
+                className="w-full bg-white/[0.02] border border-white/5 rounded-lg py-2 pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-gold/30 transition-all"
               />
             </div>
             <div className="flex justify-between items-center px-1">
-              <span className="text-[8px] uppercase tracking-[0.2em] font-black text-white/20">DIÁLOGOS ATIVOS</span>
-              <span className="text-[8px] font-mono text-gold/60">{filteredChats.length}</span>
+              <span className="text-[13px] uppercase tracking-[0.2em] font-black text-white/20">DIÁLOGOS ATIVOS</span>
+              <span className="text-[13px] font-mono text-gold/60">{filteredChats.length}</span>
             </div>
           </div>
           
@@ -369,7 +369,7 @@ export default function Conversations() {
             ) : filteredChats.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
                 <MessageSquare className="h-7 w-7 text-white/5 mb-2" />
-                <p className="text-[9px] font-bold uppercase tracking-widest text-white/20">Nenhum diálogo encontrado</p>
+                <p className="text-[14px] font-bold uppercase tracking-widest text-white/20">Nenhum diálogo encontrado</p>
               </div>
             ) : filteredChats.map((chat) => {
               const isSelected = selectedChat?.id === chat.id;
@@ -390,7 +390,7 @@ export default function Conversations() {
                   <div className="flex items-center gap-2.5">
                     {/* Mini avatar */}
                     <div className={cn(
-                      "h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-[10px] font-black",
+                      "h-7 w-7 shrink-0 rounded-lg flex items-center justify-center text-[13px] font-black",
                       isSelected ? "bg-gold-gradient text-black" : "bg-white/5 text-white/40"
                     )}>
                       {getInitial(displayName)}
@@ -410,7 +410,7 @@ export default function Conversations() {
                             : "bg-blue-400"
                         )} />
                       </div>
-                      <p className="text-[9px] text-white/30 font-mono truncate mt-0.5">
+                      <p className="text-[14px] text-white/30 font-mono truncate mt-0.5">
                         {phone ? `...${phone.slice(-8)}` : (chat.origin || "DIRECT")}
                       </p>
                     </div>
@@ -438,14 +438,14 @@ export default function Conversations() {
                     </h2>
                     <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                       <div className={cn(
-                        "px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border shrink-0",
+                        "px-2 py-0.5 rounded-full text-[14px] font-black uppercase tracking-widest border shrink-0",
                         isHumanMode
                           ? "border-amber-500/20 text-amber-400 bg-amber-500/5"
                           : "border-blue-500/20 text-blue-400 bg-blue-500/5 animate-pulse"
                       )}>
                         {isHumanMode ? "MODO HUMANO" : "IA ASSISTENTE"}
                       </div>
-                      <span className="text-[9px] text-white/20 font-mono truncate">
+                      <span className="text-[14px] text-white/20 font-mono truncate">
                         {selectedChat.phone || selectedChat.telefone || "—"}
                       </span>
                     </div>
@@ -456,13 +456,13 @@ export default function Conversations() {
                   <PremiumButton
                     variant="outline"
                     onClick={() => navigate(`/calendar?leadId=${selectedChat.id}`)}
-                    className="py-1.5 px-3 text-[9px]"
+                    className="py-1.5 px-3 text-[14px]"
                   >
                     AGENDAR
                   </PremiumButton>
                   <PremiumButton
                     onClick={handleAutomationToggle}
-                    className="py-1.5 px-3 text-[9px]"
+                    className="py-1.5 px-3 text-[14px]"
                     disabled={isUpdatingAutomation}
                   >
                     {isUpdatingAutomation ? "..." : isHumanMode ? "LIGAR IA" : "PAUSAR IA"}
@@ -483,8 +483,8 @@ export default function Conversations() {
                   <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3 opacity-30">
                     <User className="h-10 w-10 text-white" />
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.3em] text-white">Sem mensagens</p>
-                      <p className="text-[9px] text-white/50 mt-1">As mensagens aparecerão aqui quando sincronizadas pelo n8n</p>
+                      <p className="text-[13px] font-black uppercase tracking-[0.3em] text-white">Sem mensagens</p>
+                      <p className="text-[14px] text-white/50 mt-1">As mensagens aparecerão aqui quando sincronizadas pelo n8n</p>
                     </div>
                   </div>
                 ) : messages.map((msg, i) => {
@@ -492,7 +492,7 @@ export default function Conversations() {
                   const isSys = msg.type === "system";
                   if (isSys) return (
                     <div key={msg.id} className="flex justify-center">
-                      <span className="text-[9px] font-black uppercase tracking-[0.4em] text-white/10 bg-white/[0.02] px-5 py-1.5 rounded-full border border-white/5">
+                      <span className="text-[14px] font-black uppercase tracking-[0.4em] text-white/10 bg-white/[0.02] px-5 py-1.5 rounded-full border border-white/5">
                         {msg.text}
                       </span>
                     </div>
@@ -506,7 +506,7 @@ export default function Conversations() {
                       className={cn("flex flex-col gap-1", isOut ? "items-end" : "items-start")}
                     >
                       <div className={cn(
-                        "text-[9px] font-bold uppercase tracking-widest px-2 flex items-center gap-1",
+                        "text-[14px] font-bold uppercase tracking-widest px-2 flex items-center gap-1",
                         isOut ? "text-gold/50" : "text-white/20"
                       )}>
                         {isOut && <Zap className="h-2.5 w-2.5" />}
@@ -520,7 +520,7 @@ export default function Conversations() {
                       )}>
                         <p className="font-light whitespace-pre-wrap break-words">{msg.text}</p>
                         <div className="mt-2 flex justify-end">
-                          <span className="text-[9px] font-mono text-white/15">{msg.time}</span>
+                          <span className="text-[14px] font-mono text-white/15">{msg.time}</span>
                         </div>
                       </div>
                     </motion.div>
@@ -567,7 +567,7 @@ export default function Conversations() {
           ) : (
             <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-20">
               <MessageSquare className="h-10 w-10 text-white" />
-              <p className="text-[9px] font-black uppercase tracking-[0.3em] text-white">Selecione um diálogo</p>
+              <p className="text-[14px] font-black uppercase tracking-[0.3em] text-white">Selecione um diálogo</p>
             </div>
           )}
         </div>

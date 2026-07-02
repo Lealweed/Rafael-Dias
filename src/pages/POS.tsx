@@ -583,14 +583,14 @@ export default function POS() {
                 <ShoppingBag className="h-4.5 w-4.5 text-gold" />
                 PDV - Frente de Caixa
               </h2>
-              <p className="text-[9px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Turno de caixa ativo</p>
+              <p className="text-[14px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Turno de caixa ativo</p>
             </div>
             
             {/* Catalog toggle tabs */}
             <div className="flex bg-white/[0.02] border border-white/5 p-1 rounded-lg">
               <button
                 onClick={() => setSelectedTab("services")}
-                className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all ${
+                className={`px-3 py-1 rounded-md text-[13px] font-black uppercase tracking-wider transition-all ${
                   selectedTab === "services" 
                     ? "bg-gold/10 text-gold border border-gold/20" 
                     : "text-white/40 hover:text-white/80"
@@ -600,7 +600,7 @@ export default function POS() {
               </button>
               <button
                 onClick={() => setSelectedTab("products")}
-                className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all ${
+                className={`px-3 py-1 rounded-md text-[13px] font-black uppercase tracking-wider transition-all ${
                   selectedTab === "products" 
                     ? "bg-gold/10 text-gold border border-gold/20" 
                     : "text-white/40 hover:text-white/80"
@@ -640,18 +640,18 @@ export default function POS() {
                     <div className="flex justify-between items-start gap-1">
                       <h4 className="text-xs font-bold text-white line-clamp-2 leading-snug">{item.name}</h4>
                       {selectedTab === "products" && (
-                        <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full ${
+                        <span className={`text-[13px] font-black uppercase px-2 py-0.5 rounded-full ${
                           isOutOfStock ? "bg-red-500/10 text-red-400 border border-red-500/20" : "bg-gold/5 text-gold/80 border border-gold/10"
                         }`}>
                           Estoque: {item.stock_quantity}
                         </span>
                       )}
                     </div>
-                    {item.description && <p className="text-[10px] text-white/35 line-clamp-1 font-light">{item.description}</p>}
+                    {item.description && <p className="text-[13px] text-white/35 line-clamp-1 font-light">{item.description}</p>}
                   </div>
 
                   <div className="flex justify-between items-baseline mt-4 border-t border-white/[0.02] pt-2">
-                    <span className="text-[8px] font-bold text-white/30 uppercase tracking-widest">Preço</span>
+                    <span className="text-[13px] font-bold text-white/30 uppercase tracking-widest">Preço</span>
                     <span className="text-xs font-display text-gold font-bold">{formatCurrency(item.price)}</span>
                   </div>
                 </div>
@@ -674,12 +674,12 @@ export default function POS() {
         <div className="p-4 border-b border-white/5 space-y-4">
           <div className="flex justify-between items-center">
             <h3 className="text-xs uppercase tracking-widest text-white/60 font-black">Sacola de Venda</h3>
-            <span className="text-[10px] bg-white/5 text-white/70 px-2 py-0.5 rounded-md font-bold">{cart.length} itens</span>
+            <span className="text-[13px] bg-white/5 text-white/70 px-2 py-0.5 rounded-md font-bold">{cart.length} itens</span>
           </div>
 
           {/* Seller Assignment */}
           <div className="space-y-1">
-            <label className="text-[8px] font-black uppercase tracking-wider text-white/40 block">Vendedor Responsável</label>
+            <label className="text-[13px] font-black uppercase tracking-wider text-white/40 block">Vendedor Responsável</label>
             <select
               value={selectedSeller}
               onChange={(e) => setSelectedSeller(e.target.value)}
@@ -694,7 +694,7 @@ export default function POS() {
 
           {/* Patient Selection & Search */}
           <div className="space-y-2 relative">
-            <label className="text-[8px] font-black uppercase tracking-wider text-white/40 block">Paciente / Cliente</label>
+            <label className="text-[13px] font-black uppercase tracking-wider text-white/40 block">Paciente / Cliente</label>
             
             {selectedPatient ? (
               <div className="flex items-center justify-between bg-gold/5 border border-gold/15 p-2.5 rounded-xl">
@@ -702,7 +702,7 @@ export default function POS() {
                   <UserCheck className="h-4 w-4 text-gold" />
                   <div className="text-left">
                     <p className="text-xs font-bold text-white leading-tight">{selectedPatient.full_name}</p>
-                    <p className="text-[9px] text-gold/60">{selectedPatient.phone}</p>
+                    <p className="text-[14px] text-gold/60">{selectedPatient.phone}</p>
                   </div>
                 </div>
                 <button 
@@ -731,7 +731,7 @@ export default function POS() {
                         className="p-3 text-left hover:bg-white/[0.02] cursor-pointer"
                       >
                         <p className="text-xs font-bold text-white">{p.full_name}</p>
-                        <p className="text-[9px] text-white/40">{p.phone} | {p.email || "Sem e-mail"}</p>
+                        <p className="text-[14px] text-white/40">{p.phone} | {p.email || "Sem e-mail"}</p>
                       </div>
                     ))}
                   </div>
@@ -747,13 +747,13 @@ export default function POS() {
             <div key={`${item.id}-${item.type}`} className="border-b border-white/[0.02] pb-3 space-y-2">
               <div className="flex justify-between items-start gap-2">
                 <div className="space-y-0.5 text-left">
-                  <span className={`text-[8px] font-black uppercase px-2 py-0.5 rounded-full inline-block mb-1 ${
+                  <span className={`text-[13px] font-black uppercase px-2 py-0.5 rounded-full inline-block mb-1 ${
                     item.type === "service" ? "bg-purple-500/10 text-purple-400 border border-purple-500/10" : "bg-blue-500/10 text-blue-400 border border-blue-500/10"
                   }`}>
                     {item.type === "service" ? "Serviço" : "Produto"}
                   </span>
                   <h4 className="text-xs font-bold text-white leading-snug">{item.name}</h4>
-                  <p className="text-[9px] text-white/40">{formatCurrency(item.unit_price)} por unidade</p>
+                  <p className="text-[14px] text-white/40">{formatCurrency(item.unit_price)} por unidade</p>
                 </div>
                 
                 <button 
@@ -771,7 +771,7 @@ export default function POS() {
                   <select
                     value={item.professional_id}
                     onChange={(e) => updateItemProfessional(index, e.target.value)}
-                    className="bg-transparent border-0 text-[10px] text-gold font-bold outline-none flex-1"
+                    className="bg-transparent border-0 text-[13px] text-gold font-bold outline-none flex-1"
                   >
                     <option value="" className="bg-black text-white/50">Vincular executor...</option>
                     {profiles.map(p => (
@@ -850,7 +850,7 @@ export default function POS() {
             </div>
 
             <div className="border-t border-white/5 pt-2.5 flex justify-between items-center text-sm font-bold">
-              <span className="text-gold/80 font-black uppercase text-[10px] tracking-wider">Total Líquido:</span>
+              <span className="text-gold/80 font-black uppercase text-[13px] tracking-wider">Total Líquido:</span>
               <span className="text-glow-gold font-display text-white">{formatCurrency(totalAmount)}</span>
             </div>
           </div>
@@ -861,7 +861,7 @@ export default function POS() {
               placeholder="Notas internas da venda (opcional)..."
               value={saleNotes}
               onChange={(e) => setSaleNotes(e.target.value)}
-              className="w-full bg-white/[0.01] border border-white/5 rounded-xl px-3 py-2 text-[10px] text-white placeholder:text-white/20 outline-none focus:border-gold/30"
+              className="w-full bg-white/[0.01] border border-white/5 rounded-xl px-3 py-2 text-[13px] text-white placeholder:text-white/20 outline-none focus:border-gold/30"
             />
             <PremiumButton 
               onClick={openCheckoutDrawer} 
@@ -884,7 +884,7 @@ export default function POS() {
             <div className="p-4 border-b border-white/5 flex justify-between items-center">
               <div>
                 <h3 className="text-sm font-bold font-display text-white">Fechar Faturamento</h3>
-                <p className="text-[9px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Definir formas de pagamento</p>
+                <p className="text-[14px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Definir formas de pagamento</p>
               </div>
               <button 
                 onClick={() => setShowCheckout(false)}
@@ -907,7 +907,7 @@ export default function POS() {
               {/* Painel Esquerdo: Divisão de Pagamentos */}
               <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Método de Pagamento</label>
+                  <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Método de Pagamento</label>
                   <select
                     value={currentMethod}
                     onChange={(e) => setCurrentMethod(e.target.value)}
@@ -923,7 +923,7 @@ export default function POS() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Valor a Lançar R$</label>
+                  <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Valor a Lançar R$</label>
                   <input
                     type="number"
                     step="0.01"
@@ -936,7 +936,7 @@ export default function POS() {
 
                 {["cartao_credito", "boleto"].includes(currentMethod) && (
                   <div className="space-y-1.5">
-                    <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Número de Parcelas</label>
+                    <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Número de Parcelas</label>
                     <select
                       value={currentInstallments}
                       onChange={(e) => setCurrentInstallments(Number(e.target.value))}
@@ -949,7 +949,7 @@ export default function POS() {
                   </div>
                 )}
 
-                <PremiumButton onClick={addPayment} variant="outline" className="w-full py-2.5 text-[9px] uppercase tracking-widest font-black">
+                <PremiumButton onClick={addPayment} variant="outline" className="w-full py-2.5 text-[14px] uppercase tracking-widest font-black">
                   Registrar Pagamento
                 </PremiumButton>
               </div>
@@ -957,17 +957,17 @@ export default function POS() {
               {/* Painel Direito: Resumo de Captura */}
               <div className="flex flex-col justify-between bg-white/[0.01] border border-white/5 p-4 rounded-xl space-y-4">
                 <div className="space-y-3">
-                  <h4 className="text-[9px] font-black uppercase text-white/40 tracking-wider">Pagamentos Adicionados</h4>
+                  <h4 className="text-[14px] font-black uppercase text-white/40 tracking-wider">Pagamentos Adicionados</h4>
                   
                   {payments.length === 0 ? (
-                    <p className="text-[10px] text-white/20 italic text-center py-8">Nenhum pagamento registrado ainda.</p>
+                    <p className="text-[13px] text-white/20 italic text-center py-8">Nenhum pagamento registrado ainda.</p>
                   ) : (
                     <div className="space-y-2">
                       {payments.map((p, idx) => (
                         <div key={idx} className="flex justify-between items-center text-xs bg-white/[0.02] border border-white/5 p-2 rounded-lg">
                           <div className="text-left">
                             <p className="font-bold text-white capitalize">{p.method.replace("_", " ")}</p>
-                            <p className="text-[8px] text-white/40 uppercase font-black tracking-wider">
+                            <p className="text-[13px] text-white/40 uppercase font-black tracking-wider">
                               {p.installments > 1 ? `${p.installments} parcelas` : "À vista"}
                             </p>
                           </div>
@@ -987,15 +987,15 @@ export default function POS() {
                 </div>
                 {/* File Upload for Receipt */}
                 <div className="border-t border-white/5 pt-3 space-y-1.5 text-left">
-                  <label className="text-[9px] font-black uppercase tracking-wider text-white/50 block">Anexar Comprovante (Opcional)</label>
+                  <label className="text-[14px] font-black uppercase tracking-wider text-white/50 block">Anexar Comprovante (Opcional)</label>
                   {receiptUrl ? (
                     <div className="flex items-center justify-between bg-gold/5 border border-gold/15 p-2 rounded-xl text-xs">
-                      <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-gold/80 hover:text-gold truncate max-w-[200px] font-mono text-[9px] underline">
+                      <a href={receiptUrl} target="_blank" rel="noreferrer" className="text-gold/80 hover:text-gold truncate max-w-[200px] font-mono text-[14px] underline">
                         {receiptUrl.split("/").pop()}
                       </a>
                       <button 
                         onClick={() => setReceiptUrl("")}
-                        className="text-white/40 hover:text-red-400 p-1 text-[9px] font-bold"
+                        className="text-white/40 hover:text-red-400 p-1 text-[14px] font-bold"
                         type="button"
                       >
                         Remover
@@ -1011,10 +1011,10 @@ export default function POS() {
                           if (file) handleReceiptUpload(file);
                         }}
                         disabled={uploadingReceipt}
-                        className="w-full bg-white/[0.01] border border-white/5 text-[9px] text-white/40 file:bg-white/5 file:border-0 file:text-[9px] file:text-white file:px-2.5 file:py-1.5 file:rounded-lg file:mr-2 file:cursor-pointer rounded-xl px-2 py-1 outline-none"
+                        className="w-full bg-white/[0.01] border border-white/5 text-[14px] text-white/40 file:bg-white/5 file:border-0 file:text-[14px] file:text-white file:px-2.5 file:py-1.5 file:rounded-lg file:mr-2 file:cursor-pointer rounded-xl px-2 py-1 outline-none"
                       />
                       {uploadingReceipt && (
-                        <p className="text-[9px] text-gold animate-pulse mt-1 font-bold">Carregando comprovante...</p>
+                        <p className="text-[14px] text-gold animate-pulse mt-1 font-bold">Carregando comprovante...</p>
                       )}
                     </div>
                   )}
@@ -1063,25 +1063,25 @@ export default function POS() {
                 <CheckCircle className="h-6 w-6" />
               </div>
               <h3 className="text-base font-bold font-display text-white mt-1">Faturamento Concluído!</h3>
-              <p className="text-[8px] uppercase tracking-wider text-white/30 font-bold">Comprovante de Caixa Emitido</p>
+              <p className="text-[13px] uppercase tracking-wider text-white/30 font-bold">Comprovante de Caixa Emitido</p>
             </div>
 
             {/* Receipt Details */}
             <div className="bg-[#121212] border border-white/5 rounded-xl p-4 space-y-3.5 text-xs text-left font-mono">
-              <div className="border-b border-white/5 border-dashed pb-2.5 flex justify-between items-center text-[10px] text-white/40">
+              <div className="border-b border-white/5 border-dashed pb-2.5 flex justify-between items-center text-[13px] text-white/40">
                 <span>Venda ID:</span>
                 <span>#{completedSale.id.substring(0, 8)}</span>
               </div>
               
               <div className="space-y-1.5">
-                <p className="text-[10px] text-white/40">Paciente:</p>
+                <p className="text-[13px] text-white/40">Paciente:</p>
                 <p className="font-bold text-white font-body">{completedSale.patient_name}</p>
               </div>
 
               <div className="space-y-1.5">
-                <p className="text-[10px] text-white/40">Formas de Captura:</p>
+                <p className="text-[13px] text-white/40">Formas de Captura:</p>
                 {completedSale.payments.map((p: any, idx: number) => (
-                  <div key={idx} className="flex justify-between items-center font-body text-[11px] text-white/80">
+                  <div key={idx} className="flex justify-between items-center font-body text-[13px] text-white/80">
                     <span className="capitalize">{p.method.replace("_", " ")} {p.installments > 1 ? `(${p.installments}x)` : ""}</span>
                     <span className="font-bold">{formatCurrency(p.amount)}</span>
                   </div>
@@ -1098,7 +1098,7 @@ export default function POS() {
               <PremiumButton 
                 onClick={() => setCompletedSale(null)}
                 variant="primary" 
-                className="flex-1 py-2.5 text-[9px] uppercase tracking-widest font-black"
+                className="flex-1 py-2.5 text-[14px] uppercase tracking-widest font-black"
               >
                 Nova Venda
               </PremiumButton>

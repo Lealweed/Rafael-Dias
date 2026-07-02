@@ -379,7 +379,7 @@ export default function Home() {
             </div>
           </motion.div>
           
-          <div className="hidden lg:flex items-center gap-12 text-[9px] uppercase tracking-[0.3em] font-bold">
+          <div className="hidden lg:flex items-center gap-12 text-[14px] uppercase tracking-[0.3em] font-bold">
             {["Serviços", "Resultados", "Método", "Depoimentos"].map((item, i) => (
               <motion.a 
                 key={item} 
@@ -474,7 +474,7 @@ export default function Home() {
                   setMobileMenuOpen(false);
                   openBookingModal("Mobile Menu");
                 }}
-                className="w-full py-4 text-[10px] tracking-[0.25em] shadow-gold"
+                className="w-full py-4 text-[13px] tracking-[0.25em] shadow-gold"
               >
                 Agendar Avaliação VIP
               </PremiumButton>
@@ -528,7 +528,7 @@ export default function Home() {
             </p>
 
             <div className="flex flex-wrap gap-10 pt-6">
-              <PremiumButton onClick={() => openBookingModal("Hero")} className="px-14 py-6 text-[10px]">
+              <PremiumButton onClick={() => openBookingModal("Hero")} className="px-14 py-6 text-[13px]">
                 Agendar Consulta VIP
               </PremiumButton>
             </div>
@@ -566,7 +566,7 @@ export default function Home() {
                 "{patients[0]?.comment || "O Dr. Rafael Dias mudou minha percepção sobre estética. Naturalidade em cada detalhe, um verdadeiro artista."}"
               </p>
               <div className="mt-6 pt-6 border-t border-white/10 flex items-center gap-4">
-                <div className="h-8 w-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center overflow-hidden font-display text-[10px] text-gold shrink-0">
+                <div className="h-8 w-8 rounded-full bg-gold/10 border border-gold/20 flex items-center justify-center overflow-hidden font-display text-[13px] text-gold shrink-0">
                   {patients[0]?.avatar ? (
                     <img 
                       src={patients[0].avatar} 
@@ -578,8 +578,8 @@ export default function Home() {
                   )}
                 </div>
                 <div>
-                  <p className="text-[10px] font-bold uppercase tracking-widest text-gold">{patients[0]?.name || "Letícia Oliveira"}</p>
-                  <p className="text-[8px] text-white/30 uppercase tracking-tighter">{patients[0]?.role || "Influenciadora Digital"}</p>
+                  <p className="text-[13px] font-bold uppercase tracking-widest text-gold">{patients[0]?.name || "Letícia Oliveira"}</p>
+                  <p className="text-[13px] text-white/30 uppercase tracking-tighter">{patients[0]?.role || "Influenciadora Digital"}</p>
                 </div>
               </div>
             </motion.div>
@@ -596,7 +596,7 @@ export default function Home() {
             viewport={{ once: true, margin: "-100px" }}
             className="mb-24 space-y-6 max-w-2xl"
           >
-            <h4 className="text-[9px] uppercase tracking-[0.6em] font-bold text-gold">Premium Services</h4>
+            <h4 className="text-[14px] uppercase tracking-[0.6em] font-bold text-gold">Premium Services</h4>
             <h2 className="text-5xl md:text-8xl font-display font-light text-white leading-tight">
               Especialidades <br /> <span className="italic text-glow-gold">Esculpidas</span>
             </h2>
@@ -613,7 +613,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-20 items-center">
           <div className="lg:col-span-5 space-y-12">
             <div className="space-y-6">
-              <h4 className="text-[9px] uppercase tracking-[0.6em] font-bold text-gold">Clinical Evidence</h4>
+              <h4 className="text-[14px] uppercase tracking-[0.6em] font-bold text-gold">Clinical Evidence</h4>
               <h2 className="text-5xl md:text-7xl font-display font-light text-white leading-[0.85]">
                 Precisão <br /> <span className="italic">Visualizada</span>
               </h2>
@@ -639,7 +639,7 @@ export default function Home() {
                   <div className="flex justify-between items-center">
                     <div>
                       <p className="text-xs font-bold uppercase tracking-[0.2em] mb-1 group-hover:text-gold transition-colors">{p.name}</p>
-                      <p className="text-[10px] text-white/30 uppercase tracking-tighter">{p.role}</p>
+                      <p className="text-[13px] text-white/30 uppercase tracking-tighter">{p.role}</p>
                     </div>
                     {activePatient === i && <ArrowRight size={14} className="text-gold" />}
                   </div>
@@ -672,9 +672,9 @@ export default function Home() {
       {/* Testimonials: Peek Carousel */}
       <section id="depoimentos" className="py-40">
         <div className="max-w-7xl mx-auto px-6 mb-24 text-center space-y-8">
-          <h4 className="text-[9px] uppercase tracking-[0.6em] font-bold text-gold">The Inner Circle</h4>
+          <h4 className="text-[14px] uppercase tracking-[0.6em] font-bold text-gold">The Inner Circle</h4>
           <h2 className="text-5xl md:text-8xl font-display font-light text-white">Relatos de <span className="italic text-glow-gold">Excelência</span></h2>
-          <p className="text-white/20 text-[8px] tracking-[0.5em] uppercase font-medium">Trusted by high-standard professionals</p>
+          <p className="text-white/20 text-[13px] tracking-[0.5em] uppercase font-medium">Trusted by high-standard professionals</p>
         </div>
         
         <TestimonialCarousel testimonials={patients} />
@@ -696,7 +696,7 @@ export default function Home() {
             >
               Pronta para revelar <br /> sua <span className="italic text-gold text-glow-gold">radiância?</span>
             </motion.h2>
-            <PremiumButton onClick={() => openBookingModal("Footer CTA")} className="px-24 py-8 text-[11px] shadow-gold">
+            <PremiumButton onClick={() => openBookingModal("Footer CTA")} className="px-24 py-8 text-[13px] shadow-gold">
               Agendar Avaliação VIP
             </PremiumButton>
           </div>
@@ -719,8 +719,8 @@ export default function Home() {
             </div>
 
             <div className="space-y-10">
-              <h5 className="text-[10px] font-medium uppercase tracking-[0.4em] text-white/50">Menu</h5>
-              <ul className="space-y-5 text-[10px] uppercase tracking-[0.25em] text-white/30 font-medium">
+              <h5 className="text-[13px] font-medium uppercase tracking-[0.4em] text-white/50">Menu</h5>
+              <ul className="space-y-5 text-[13px] uppercase tracking-[0.25em] text-white/30 font-medium">
                 {["Serviços", "Resultados", "Método", "Equipe"].map(item => (
                   <li key={item}><a href="#" className="hover:text-gold transition-colors">{item}</a></li>
                 ))}
@@ -729,8 +729,8 @@ export default function Home() {
             </div>
 
             <div className="space-y-10">
-              <h5 className="text-[10px] font-medium uppercase tracking-[0.4em] text-white/50">Concierge</h5>
-              <ul className="space-y-5 text-[10px] uppercase tracking-[0.15em] text-white/30 font-light">
+              <h5 className="text-[13px] font-medium uppercase tracking-[0.4em] text-white/50">Concierge</h5>
+              <ul className="space-y-5 text-[13px] uppercase tracking-[0.15em] text-white/30 font-light">
                 <li className="flex items-center gap-3 text-white/60"><Phone size={14} className="text-gold/50" /> {siteSettings.home_footer_phone || "(94) 99999-9999"}</li>
                 <li>{siteSettings.home_footer_email || "contato@rafaeldias.com.br"}</li>
                 <li className="whitespace-pre-line">{siteSettings.home_footer_address || "Rua das Esmeraldas, 123 - Parauapebas - PA"}</li>
@@ -738,22 +738,22 @@ export default function Home() {
             </div>
 
             <div className="space-y-10">
-              <h5 className="text-[10px] font-medium uppercase tracking-[0.4em] text-white/50">Newsletter VIP</h5>
+              <h5 className="text-[13px] font-medium uppercase tracking-[0.4em] text-white/50">Newsletter VIP</h5>
               <div className="flex flex-col gap-6">
-                <p className="text-[11px] text-white/20 leading-relaxed font-light tracking-wide">Junte-se ao nosso círculo exclusivo para atualizações e insights estéticos.</p>
+                <p className="text-[13px] text-white/20 leading-relaxed font-light tracking-wide">Junte-se ao nosso círculo exclusivo para atualizações e insights estéticos.</p>
                 <div className="relative">
                   <input 
                     type="email" 
                     placeholder="Seu melhor e-mail" 
-                    className="w-full bg-transparent border-b border-white/10 pb-3 text-[11px] font-light focus:border-gold outline-none transition-all placeholder:text-white/10 text-white/60"
+                    className="w-full bg-transparent border-b border-white/10 pb-3 text-[13px] font-light focus:border-gold outline-none transition-all placeholder:text-white/10 text-white/60"
                   />
-                  <button className="absolute right-0 bottom-3 text-gold/60 text-[9px] font-bold uppercase tracking-[0.3em] hover:translate-x-1 transition-transform">Entrar</button>
+                  <button className="absolute right-0 bottom-3 text-gold/60 text-[14px] font-bold uppercase tracking-[0.3em] hover:translate-x-1 transition-transform">Entrar</button>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-32 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[9px] uppercase tracking-[0.4em] text-white/10 font-bold">
+          <div className="mt-32 pt-10 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-[14px] uppercase tracking-[0.4em] text-white/10 font-bold">
             <p>&copy; 2024 Instituto Rafael Dias. Definido pela Excelência.</p>
             <div className="flex gap-12">
               <a href="/privacy-policy" className="hover:text-white transition-colors">Privacidade</a>
@@ -796,7 +796,7 @@ export default function Home() {
                 {step === 1 && (
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Nome Completo</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Nome Completo</label>
                       <input
                         type="text"
                         required
@@ -808,7 +808,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">WhatsApp / Celular</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">WhatsApp / Celular</label>
                       <input
                         type="tel"
                         required
@@ -820,7 +820,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">E-mail</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">E-mail</label>
                       <input
                         type="email"
                         required
@@ -832,7 +832,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">CPF</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">CPF</label>
                       <input
                         type="text"
                         required
@@ -856,7 +856,7 @@ export default function Home() {
                 {step === 2 && (
                   <div className="space-y-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Selecione o Procedimento</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Selecione o Procedimento</label>
                       <select
                         value={treatment}
                         onChange={(e) => setTreatment(e.target.value)}
@@ -873,7 +873,7 @@ export default function Home() {
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Escolha a Data</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Escolha a Data</label>
                       <input
                         type="date"
                         required
@@ -886,9 +886,9 @@ export default function Home() {
 
                     <div className="flex flex-col gap-1.5">
                       <div className="flex items-center justify-between">
-                        <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Horários Disponíveis</label>
+                        <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Horários Disponíveis</label>
                         {loadingCalendar && (
-                          <span className="flex items-center gap-1 text-[9px] text-[#E5C38C] animate-pulse">
+                          <span className="flex items-center gap-1 text-[14px] text-[#E5C38C] animate-pulse">
                             <Loader2 className="w-2.5 h-2.5 animate-spin" /> Verificando agenda...
                           </span>
                         )}
@@ -959,7 +959,7 @@ export default function Home() {
                 {step === 3 && (
                   <div className="space-y-4">
                     <div className="bg-[#07090E] border border-white/5 p-4 rounded-2xl space-y-3">
-                      <h4 className="text-[10px] font-bold uppercase tracking-wider text-[#E5C38C]">Resumo Financeiro da Consulta</h4>
+                      <h4 className="text-[13px] font-bold uppercase tracking-wider text-[#E5C38C]">Resumo Financeiro da Consulta</h4>
                       <div className="flex justify-between text-xs text-white/60">
                         <span>Valor Total da Consulta</span>
                         <span className="font-mono text-white font-semibold">R$ 300,00</span>
@@ -973,13 +973,13 @@ export default function Home() {
                         <span className="font-mono">R$ 150,00</span>
                       </div>
                       
-                      <div className="pt-2 border-t border-white/5 text-[9px] text-white/40 leading-relaxed">
+                      <div className="pt-2 border-t border-white/5 text-[14px] text-white/40 leading-relaxed">
                         ⚠️ **Nota de Dedução**: Caso você feche qualquer procedimento após a avaliação, os R$ 300,00 inteiros serão deduzidos do preço final do procedimento!
                       </div>
                     </div>
 
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Observações Especiais (Opcional)</label>
+                      <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Observações Especiais (Opcional)</label>
                       <textarea
                         value={notes}
                         onChange={(e) => setNotes(e.target.value)}

@@ -233,7 +233,7 @@ export default function Leads() {
   }, [leads, searchTerm]);
 
   const getBadge = (text: string, colorClass: string) => (
-    <span className={cn("rounded-full border px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest", colorClass)}>
+    <span className={cn("rounded-full border px-2.5 py-0.5 text-[14px] font-black uppercase tracking-widest", colorClass)}>
       {text}
     </span>
   );
@@ -273,13 +273,13 @@ export default function Leads() {
       {/* --- Header --- */}
       <section className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/5">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[8px] uppercase tracking-[0.15em] font-bold text-[#E5C38C] mb-1">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.15em] font-bold text-[#E5C38C] mb-1">
             <span>CRM Premium</span>
           </div>
           <h1 className="text-lg lg:text-xl font-bold tracking-tight text-white font-display">Base de Leads <span className="italic font-light text-gold/80">& Qualificação</span></h1>
           <p className="text-xs font-light text-white/30 mt-0.5">{leads.length} registros capturados via landing pages e n8n.</p>
         </div>
-        <PremiumButton onClick={() => setCreateModalOpen(true)} className="px-4 py-2 text-[9px]">
+        <PremiumButton onClick={() => setCreateModalOpen(true)} className="px-4 py-2 text-[14px]">
           + NOVO PACIENTE
         </PremiumButton>
       </section>
@@ -293,7 +293,7 @@ export default function Leads() {
                 key={tab}
                 onClick={() => setViewTab(tab)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.15em] transition-all duration-300 border",
+                  "px-3 py-1.5 rounded-full text-[14px] font-black uppercase tracking-[0.15em] transition-all duration-300 border",
                   viewTab === tab ? "bg-gold/10 border-gold/40 text-gold" : "border-transparent text-white/30 hover:text-white/60"
                 )}
               >
@@ -310,7 +310,7 @@ export default function Leads() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Buscar por nome ou telefone..." 
-                className="w-full bg-white/[0.02] border border-white/5 rounded-full py-2 pl-9 pr-4 text-[11px] text-white focus:outline-none focus:border-gold/30 transition-all" 
+                className="w-full bg-white/[0.02] border border-white/5 rounded-full py-2 pl-9 pr-4 text-[13px] text-white focus:outline-none focus:border-gold/30 transition-all" 
               />
             </div>
           </div>
@@ -325,7 +325,7 @@ export default function Leads() {
           {viewTab === "leads" && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[640px]">
-                <thead className="bg-black-matte/80 text-[9px] uppercase tracking-[0.2em] text-white/20 font-black">
+                <thead className="bg-black-matte/80 text-[14px] uppercase tracking-[0.2em] text-white/20 font-black">
                   <tr>
                     <th className="px-4 py-3">Paciente</th>
                     <th className="px-5 py-4">Interesse</th>
@@ -335,7 +335,7 @@ export default function Leads() {
                     <th className="px-5 py-4 text-right">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-[12px]">
+                <tbody className="divide-y divide-white/5 text-[14px]">
                   {loading ? (
                     <tr><td colSpan={6} className="text-center py-16 text-white/20 uppercase tracking-[0.5em] font-black animate-pulse">Sincronizando...</td></tr>
                   ) : filteredLeads.length === 0 ? (
@@ -348,14 +348,14 @@ export default function Leads() {
                     >
                       <td className="px-5 py-5">
                         <div className="font-bold text-white text-sm tracking-tight group-hover:text-gold transition-colors">{lead.full_name || lead.nome || "Anônimo"}</div>
-                        <div className="text-[10px] text-white/25 mt-0.5 font-mono">{lead.phone || lead.telefone} • {lead.origin || lead.origem || 'WEB'}</div>
+                        <div className="text-[13px] text-white/25 mt-0.5 font-mono">{lead.phone || lead.telefone} • {lead.origin || lead.origem || 'WEB'}</div>
                       </td>
                       <td className="px-5 py-5">
-                        <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-white/40 text-[10px] font-bold uppercase">{lead.interest || lead.interesse || 'Avaliação'}</span>
+                        <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-white/40 text-[13px] font-bold uppercase">{lead.interest || lead.interesse || 'Avaliação'}</span>
                       </td>
                       <td className="px-5 py-5">{getStatusBadge(lead.conversation_status)}</td>
                       <td className="px-5 py-5 hidden lg:table-cell">{getTempBadge(lead.temperature || lead.temperatura)}</td>
-                      <td className="px-5 py-5 hidden lg:table-cell text-white/30 font-mono text-[11px]">há {formatTimeAgo(lead.last_interaction_at || lead.ultima_interacao_em || lead.updated_at || lead.created_at)}</td>
+                      <td className="px-5 py-5 hidden lg:table-cell text-white/30 font-mono text-[13px]">há {formatTimeAgo(lead.last_interaction_at || lead.ultima_interacao_em || lead.updated_at || lead.created_at)}</td>
                       <td className="px-5 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-30 group-hover:opacity-100 transition-all">
                           <button onClick={(e) => { e.stopPropagation(); navigate(`/conversations?leadId=${lead.id}`); }} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors"><Send className="h-3.5 w-3.5" /></button>
@@ -372,7 +372,7 @@ export default function Leads() {
           {viewTab === "online_bookings" && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-black-matte/80 text-[10px] uppercase tracking-[0.4em] text-white/20 font-black backdrop-blur-md">
+                <thead className="bg-black-matte/80 text-[13px] uppercase tracking-[0.4em] text-white/20 font-black backdrop-blur-md">
                   <tr>
                     <th className="px-10 py-6">Paciente / Cadastro</th>
                     <th className="px-10 py-6">Procedimento</th>
@@ -381,7 +381,7 @@ export default function Leads() {
                     <th className="px-10 py-6 text-right">Ação Financeira</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-[12px]">
+                <tbody className="divide-y divide-white/5 text-[14px]">
                   {appointmentsLoading ? (
                     <tr><td colSpan={5} className="text-center py-32 text-white/20 uppercase tracking-[0.5em] font-black animate-pulse">Buscando Agendamentos...</td></tr>
                   ) : onlineAppointments.length === 0 ? (
@@ -392,20 +392,20 @@ export default function Leads() {
                       <tr key={appt.id} className="hover:bg-gold/[0.01] transition-all">
                         <td className="px-10 py-8">
                           <div className="font-display font-bold text-white text-lg leading-tight">{appt.lead?.full_name || "Visitante Web"}</div>
-                          <div className="text-[10px] text-white/20 mt-1 font-mono tracking-widest uppercase">Cel: {appt.lead?.phone || "-"}</div>
+                          <div className="text-[13px] text-white/20 mt-1 font-mono tracking-widest uppercase">Cel: {appt.lead?.phone || "-"}</div>
                         </td>
                         <td className="px-10 py-8">
-                          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-white/50 text-[10px] font-bold uppercase tracking-wider">{appt.title}</span>
+                          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-white/50 text-[13px] font-bold uppercase tracking-wider">{appt.title}</span>
                         </td>
-                        <td className="px-10 py-8 font-mono text-[11px] text-gold/80">{new Date(appt.appointment_date).toLocaleString("pt-BR")}</td>
+                        <td className="px-10 py-8 font-mono text-[13px] text-gold/80">{new Date(appt.appointment_date).toLocaleString("pt-BR")}</td>
                         <td className="px-10 py-8">
                           {isPaidFull ? getBadge("Quitada (R$ 300)", "border-emerald-500/20 bg-emerald-500/10 text-emerald-400") : getBadge("Pago Sinal (R$ 150)", "border-amber-500/20 bg-amber-500/10 text-amber-400")}
                         </td>
                         <td className="px-10 py-8 text-right">
                           {!isPaidFull ? (
-                            <PremiumButton variant="outline" onClick={() => handleConfirmRemainingPayment(appt.id, appt.lead_id, appt.title)} className="py-2.5 px-6 text-[9px]">BAIXA PRESENCIAL</PremiumButton>
+                            <PremiumButton variant="outline" onClick={() => handleConfirmRemainingPayment(appt.id, appt.lead_id, appt.title)} className="py-2.5 px-6 text-[14px]">BAIXA PRESENCIAL</PremiumButton>
                           ) : (
-                            <span className="text-[10px] text-white/20 font-black uppercase tracking-widest italic">Processado</span>
+                            <span className="text-[13px] text-white/20 font-black uppercase tracking-widest italic">Processado</span>
                           )}
                         </td>
                       </tr>
@@ -439,7 +439,7 @@ export default function Leads() {
                   <h3 className="text-lg font-black text-white font-display tracking-tight truncate">{selectedLeadForDetails.full_name || "Paciente"}</h3>
                   <div className="flex items-center gap-3 mt-0.5">
                     <span className="text-xs text-white/40 font-mono">{selectedLeadForDetails.phone}</span>
-                    <span className="text-[10px] text-gold uppercase tracking-[0.3em] font-black">{selectedLeadForDetails.origin || "INTERNAL"}</span>
+                    <span className="text-[13px] text-gold uppercase tracking-[0.3em] font-black">{selectedLeadForDetails.origin || "INTERNAL"}</span>
                   </div>
                 </div>
                 <button onClick={() => setSelectedLeadForDetails(null)} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-all hover:rotate-90 shrink-0">
@@ -454,7 +454,7 @@ export default function Leads() {
                       key={tab} 
                       onClick={() => setDetailTab(tab)}
                       className={cn(
-                        "pb-4 text-[10px] font-black uppercase tracking-[0.3em] transition-all relative",
+                        "pb-4 text-[13px] font-black uppercase tracking-[0.3em] transition-all relative",
                         detailTab === tab ? "text-gold" : "text-white/20 hover:text-white/40"
                       )}
                     >
@@ -468,10 +468,10 @@ export default function Leads() {
                   {detailTab === "prontuario" && (
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gold/60 flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> Evolução Estética do Paciente</label>
+                        <label className="text-[13px] font-black uppercase tracking-[0.3em] text-gold/60 flex items-center gap-2"><FileText className="h-3.5 w-3.5" /> Evolução Estética do Paciente</label>
                         <textarea value={evolutionNotes} onChange={(e) => setEvolutionNotes(e.target.value)} rows={7} className="w-full rounded-2xl border border-white/5 bg-white/[0.01] p-5 text-sm text-white focus:outline-none focus:border-gold/30 transition-all font-light leading-relaxed" placeholder="Descreva os avanços do protocolo..." />
                       </div>
-                      <PremiumButton onClick={handleSaveRecord} disabled={savingRecord} className="w-full py-4 text-[11px] tracking-[0.3em]">SALVAR PRONTUÁRIO</PremiumButton>
+                      <PremiumButton onClick={handleSaveRecord} disabled={savingRecord} className="w-full py-4 text-[13px] tracking-[0.3em]">SALVAR PRONTUÁRIO</PremiumButton>
                     </div>
                   )}
                   {/* ... Financeiro & Notificar refined similarly ... */}
@@ -497,22 +497,22 @@ export default function Leads() {
 
             <form onSubmit={handleCreateLead} className="space-y-8 relative z-10">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gold/60 ml-4">Nome Completo</label>
+                <label className="text-[13px] font-black uppercase tracking-[0.3em] text-gold/60 ml-4">Nome Completo</label>
                 <input type="text" required value={newLeadName} onChange={(e) => setNewLeadName(e.target.value)} className="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-8 py-5 text-sm text-white focus:outline-none focus:border-gold/30 transition-all shadow-inner" placeholder="Identificação do paciente" />
               </div>
               <div className="grid grid-cols-2 gap-8">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gold/60 ml-4">WhatsApp</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.3em] text-gold/60 ml-4">WhatsApp</label>
                   <input type="tel" required value={newLeadPhone} onChange={(e) => setNewLeadPhone(e.target.value)} className="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-8 py-5 text-sm text-white focus:outline-none focus:border-gold/30 transition-all shadow-inner" placeholder="(00) 00000-0000" />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-[0.3em] text-gold/60 ml-4">Qualificação</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.3em] text-gold/60 ml-4">Qualificação</label>
                   <select value={newLeadTemp} onChange={(e) => setNewLeadTemp(e.target.value)} className="w-full rounded-2xl border border-white/5 bg-white/[0.02] px-8 py-5 text-sm text-white focus:outline-none appearance-none cursor-pointer">
                     <option value="cold">Frio</option><option value="warm">Morno</option><option value="hot">Quente</option>
                   </select>
                 </div>
               </div>
-              <PremiumButton type="submit" disabled={creatingLead} className="w-full py-6 text-[12px] tracking-[0.5em] mt-4">FINALIZAR CADASTRO PREMIUM</PremiumButton>
+              <PremiumButton type="submit" disabled={creatingLead} className="w-full py-6 text-[14px] tracking-[0.5em] mt-4">FINALIZAR CADASTRO PREMIUM</PremiumButton>
             </form>
           </motion.div>
         </div>

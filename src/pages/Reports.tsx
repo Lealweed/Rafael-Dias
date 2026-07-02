@@ -121,7 +121,7 @@ export default function Reports() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5 shrink-0">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[10px] uppercase tracking-[0.2em] font-bold text-[#E5C38C] mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.2em] font-bold text-[#E5C38C] mb-2">
             <Sparkles className="h-3 w-3" />
             <span>Métricas Avançadas</span>
           </div>
@@ -172,7 +172,7 @@ export default function Reports() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-6 rounded-3xl backdrop-blur-xl shadow-premium relative overflow-hidden group hover:border-[#D4AF37]/20 transition-all duration-300">
               <div className="flex items-center gap-3 text-white/50">
                 <Users className="w-5 h-5 text-blue-400" />
-                <h3 className="text-[10px] font-bold uppercase tracking-wider">Total de Leads</h3>
+                <h3 className="text-[13px] font-bold uppercase tracking-wider">Total de Leads</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-white font-display">{stats.totalLeads}</span>
@@ -183,7 +183,7 @@ export default function Reports() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-6 rounded-3xl backdrop-blur-xl shadow-premium relative overflow-hidden group hover:border-[#D4AF37]/20 transition-all duration-300">
               <div className="flex items-center gap-3 text-white/50">
                 <TrendingUp className="w-5 h-5 text-green-400" />
-                <h3 className="text-[10px] font-bold uppercase tracking-wider">Taxa de Conversão</h3>
+                <h3 className="text-[13px] font-bold uppercase tracking-wider">Taxa de Conversão</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-white font-display">{stats.conversionRate}%</span>
@@ -194,7 +194,7 @@ export default function Reports() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-6 rounded-3xl backdrop-blur-xl shadow-premium relative overflow-hidden group hover:border-[#D4AF37]/20 transition-all duration-300">
               <div className="flex items-center gap-3 text-white/50">
                 <Clock className="w-5 h-5 text-orange-400" />
-                <h3 className="text-[10px] font-bold uppercase tracking-wider">SLA de Resposta</h3>
+                <h3 className="text-[13px] font-bold uppercase tracking-wider">SLA de Resposta</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-white font-display">{stats.slaMed}</span>
@@ -205,7 +205,7 @@ export default function Reports() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-6 rounded-3xl backdrop-blur-xl shadow-premium relative overflow-hidden group hover:border-[#D4AF37]/20 transition-all duration-300">
               <div className="flex items-center gap-3 text-white/50">
                 <BarChart3 className="w-5 h-5 text-purple-400" />
-                <h3 className="text-[10px] font-bold uppercase tracking-wider">Follow-ups Realizados</h3>
+                <h3 className="text-[13px] font-bold uppercase tracking-wider">Follow-ups Realizados</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
                 <span className="text-4xl font-bold text-white font-display">{stats.followUpsDone}</span>
@@ -296,7 +296,7 @@ export default function Reports() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-xs font-mono font-bold text-white">{orig.value}</span>
-                        <span className="text-[10px] font-mono text-white/30">({percent}%)</span>
+                        <span className="text-[13px] font-mono text-white/30">({percent}%)</span>
                       </div>
                     </div>
                   );

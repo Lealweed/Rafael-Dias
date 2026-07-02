@@ -412,7 +412,7 @@ export default function ConfigPage() {
           <h1 className="text-xl font-light tracking-tight text-white font-serif">
             Configurações & <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#E5C38C] via-[#D4AF37] to-[#B8860B]">Mídias</span>
           </h1>
-          <p className="text-[10px] uppercase tracking-[0.15em] text-[#E5C38C] font-semibold mt-0.5">
+          <p className="text-[13px] uppercase tracking-[0.15em] text-[#E5C38C] font-semibold mt-0.5">
             Personalize imagens, vídeos da landing page e monitore as integrações do sistema.
           </p>
         </div>
@@ -423,7 +423,7 @@ export default function ConfigPage() {
               fetchSettings();
               setStatusMessage(null);
             }}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-[#0E1118]/80 text-[10px] font-semibold text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/40 transition-all shadow-sm active:scale-95"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-white/10 bg-[#0E1118]/80 text-[13px] font-semibold text-[#E5C38C] hover:bg-white/5 hover:border-[#D4AF37]/40 transition-all shadow-sm active:scale-95"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             <span>Sincronizar</span>
@@ -431,7 +431,7 @@ export default function ConfigPage() {
           <button
             onClick={handleSave}
             disabled={saving || settingsLoading}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-[10px] font-bold text-[#0B0D12] hover:shadow-[0_4px_20px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 active:scale-95 shadow-md"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gradient-to-tr from-[#D4AF37] via-[#E5C38C] to-[#B8860B] text-[13px] font-bold text-[#0B0D12] hover:shadow-[0_4px_20px_rgba(212,175,55,0.3)] transition-all disabled:opacity-50 active:scale-95 shadow-md"
           >
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             <span>Salvar Tudo</span>
@@ -531,14 +531,14 @@ export default function ConfigPage() {
                                   <span className="text-sm font-semibold tracking-wide text-[#E5C38C] font-serif">
                                     {MEDIA_LABELS[key] || key}
                                   </span>
-                                  <span className="text-[10px] text-white/30 font-mono tracking-wider block mt-0.5">
+                                  <span className="text-[13px] text-white/30 font-mono tracking-wider block mt-0.5">
                                     Parâmetro: {key}
                                   </span>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => handleRestoreDefault(key)}
-                                  className="flex items-center justify-center h-8 px-3 rounded-lg border border-white/10 bg-[#0E1118]/80 text-white/50 hover:bg-white/5 hover:text-white transition-all active:scale-95 text-[10px] gap-1"
+                                  className="flex items-center justify-center h-8 px-3 rounded-lg border border-white/10 bg-[#0E1118]/80 text-white/50 hover:bg-white/5 hover:text-white transition-all active:scale-95 text-[13px] gap-1"
                                   title="Restaurar valor padrão"
                                 >
                                   <RotateCcw className="w-3 h-3" />
@@ -592,7 +592,7 @@ export default function ConfigPage() {
                               {isVideo && (
                                 <div className="flex flex-col items-center justify-center h-full w-full bg-[#0E1118] p-4 text-center">
                                   <Film className="w-8 h-8 text-[#E5C38C] mb-2 animate-pulse" />
-                                  <span className="text-[10px] text-white/50 font-mono tracking-widest uppercase truncate max-w-full">
+                                  <span className="text-[13px] text-white/50 font-mono tracking-widest uppercase truncate max-w-full">
                                     Vídeo Ativo
                                   </span>
                                 </div>
@@ -600,7 +600,7 @@ export default function ConfigPage() {
                               {!isImage && !isVideo && (
                                 <div className="flex flex-col items-center gap-2">
                                   <ImageIcon className="w-8 h-8 text-white/20" />
-                                  <span className="text-[9px] text-white/30 font-semibold tracking-wider">SEM PREVIEW</span>
+                                  <span className="text-[14px] text-white/30 font-semibold tracking-wider">SEM PREVIEW</span>
                                 </div>
                               )}
                             </div>
@@ -612,18 +612,18 @@ export default function ConfigPage() {
                                   <span className="text-sm font-semibold tracking-wide text-[#E5C38C] font-serif">
                                     {MEDIA_LABELS[key] || key}
                                   </span>
-                                  <span className="text-[9px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-white/50 font-mono uppercase">
+                                  <span className="text-[14px] px-2 py-0.5 rounded-full border border-white/10 bg-white/[0.03] text-white/50 font-mono uppercase">
                                     {isVideo ? "Vídeo" : "Imagem"}
                                   </span>
                                 </div>
-                                <span className="text-[10px] text-white/30 font-mono tracking-wider block mt-1">
+                                <span className="text-[13px] text-white/30 font-mono tracking-wider block mt-1">
                                   Parâmetro: {key}
                                 </span>
                               </div>
 
                               {/* Direct URL input */}
                               <div className="flex flex-col gap-2">
-                                <label className="text-[10px] text-white/40 font-semibold uppercase tracking-wider">
+                                <label className="text-[13px] text-white/40 font-semibold uppercase tracking-wider">
                                   Link da Mídia / URL
                                 </label>
                                 <div className="flex items-center gap-2">
@@ -723,16 +723,16 @@ export default function ConfigPage() {
                 <div className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-[#07090E]/60">
                   <div>
                     <p className="text-xs font-bold text-white uppercase tracking-wider">Servidor Backend</p>
-                    <p className="text-[10px] text-white/40 mt-0.5">Status do Express/Vite</p>
+                    <p className="text-[13px] text-white/40 mt-0.5">Status do Express/Vite</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {healthStatus?.status === "ok" ? (
-                      <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Online</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider">
                         <XCircle className="w-3 h-3" />
                         <span>Offline</span>
                       </div>
@@ -743,16 +743,16 @@ export default function ConfigPage() {
                 <div className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-[#07090E]/60">
                   <div>
                     <p className="text-xs font-bold text-white uppercase tracking-wider">Banco Supabase</p>
-                    <p className="text-[10px] text-white/40 mt-0.5">Variáveis e conexão</p>
+                    <p className="text-[13px] text-white/40 mt-0.5">Variáveis e conexão</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {healthStatus?.supabase === "configured" ? (
-                      <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Ativo</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider">
                         <XCircle className="w-3 h-3" />
                         <span>Inativo</span>
                       </div>
@@ -763,16 +763,16 @@ export default function ConfigPage() {
                 <div className="flex items-center justify-between p-4 rounded-2xl border border-white/5 bg-[#07090E]/60">
                   <div>
                     <p className="text-xs font-bold text-white uppercase tracking-wider">Fluxos n8n</p>
-                    <p className="text-[10px] text-white/40 mt-0.5">Webhook da clínica</p>
+                    <p className="text-[13px] text-white/40 mt-0.5">Webhook da clínica</p>
                   </div>
                   <div className="flex items-center gap-2">
                     {healthStatus?.n8n === "configured" ? (
-                      <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-green-400 bg-green-500/10 border border-green-500/20 px-2.5 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider">
                         <CheckCircle2 className="w-3 h-3" />
                         <span>Conectado</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider">
+                      <div className="flex items-center gap-1.5 text-red-400 bg-red-500/10 border border-red-500/20 px-2.5 py-1 rounded-full text-[13px] font-bold uppercase tracking-wider">
                         <XCircle className="w-3 h-3" />
                         <span>Incompleto</span>
                       </div>
@@ -797,7 +797,7 @@ export default function ConfigPage() {
             ) : (
               <form onSubmit={handleUpdateGoals} className="space-y-4">
                 <div className="space-y-1">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Meta de Agendados (Mensal)</label>
+                  <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Meta de Agendados (Mensal)</label>
                   <input
                     type="number"
                     value={goalAppointments}
@@ -808,7 +808,7 @@ export default function ConfigPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Meta de Novos Leads (Mensal)</label>
+                  <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Meta de Novos Leads (Mensal)</label>
                   <input
                     type="number"
                     value={goalLeads}
@@ -819,7 +819,7 @@ export default function ConfigPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[10px] text-white/50 uppercase tracking-widest font-semibold">Meta de Faturamento R$ (Mensal)</label>
+                  <label className="text-[13px] text-white/50 uppercase tracking-widest font-semibold">Meta de Faturamento R$ (Mensal)</label>
                   <input
                     type="number"
                     value={goalRevenue}

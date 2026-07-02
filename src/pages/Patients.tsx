@@ -493,7 +493,7 @@ export default function Patients() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[10px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[13px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
               <Sparkles className="h-3 w-3" />
               <span>Portal de Clientes</span>
             </div>
@@ -526,7 +526,7 @@ export default function Patients() {
                 />
               </div>
             </div>
-            <div className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/20">
+            <div className="text-[13px] font-bold uppercase tracking-[0.3em] text-white/20">
               Total: <span className="text-[#E5C38C] font-mono">{filteredPatients.length}</span> ativos
             </div>
           </div>
@@ -534,7 +534,7 @@ export default function Patients() {
           {/* Table */}
           <div className="flex-1 overflow-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-[#0E1118]/90 text-[9px] uppercase tracking-[0.3em] text-white/30 sticky top-0 border-b border-white/5 z-10 backdrop-blur-md">
+              <thead className="bg-[#0E1118]/90 text-[14px] uppercase tracking-[0.3em] text-white/30 sticky top-0 border-b border-white/5 z-10 backdrop-blur-md">
                 <tr>
                   <th className="px-8 py-5 font-bold">Paciente / Identidade</th>
                   <th className="px-8 py-5 font-bold">Credencial</th>
@@ -544,7 +544,7 @@ export default function Patients() {
                   <th className="px-8 py-5 font-bold text-right">Ações de Controle</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-[11px] text-white/60">
+              <tbody className="divide-y divide-white/5 text-[13px] text-white/60">
                 {loading ? (
                   <tr>
                     <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs animate-pulse">Sincronizando Base de Pacientes...</td>
@@ -557,37 +557,37 @@ export default function Patients() {
                   <tr key={patient.id} className="hover:bg-white/[0.02] transition-all group border-l-2 border-transparent hover:border-[#D4AF37]">
                     <td className="px-8 py-5">
                       <div className="font-serif font-bold text-white text-[15px] tracking-tight">{patient.full_name || patient.nome}</div>
-                      <div className="text-[10px] text-white/20 mt-1 font-mono tracking-widest uppercase">{patient.phone || patient.telefone}</div>
+                      <div className="text-[13px] text-white/20 mt-1 font-mono tracking-widest uppercase">{patient.phone || patient.telefone}</div>
                     </td>
                     <td className="px-8 py-5">
                       <span className="px-3 py-1 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#E5C38C] font-bold font-mono tracking-widest">{patient.portal_password || "Sem senha"}</span>
                     </td>
                     <td className="px-8 py-5">
                       {patient.portal_access_active ? (
-                        <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[8px] font-bold text-teal-400 uppercase tracking-widest">Ativo</span>
+                        <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[13px] font-bold text-teal-400 uppercase tracking-widest">Ativo</span>
                       ) : (
-                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[8px] font-bold text-red-400 uppercase tracking-widest">Bloqueado</span>
+                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[13px] font-bold text-red-400 uppercase tracking-widest">Bloqueado</span>
                       )}
                     </td>
                     <td className="px-8 py-5">
                       {patient.whatsapp_reminders ? (
-                        <span className="text-emerald-400 font-bold font-mono tracking-widest text-[10px]">ATIVO</span>
+                        <span className="text-emerald-400 font-bold font-mono tracking-widest text-[13px]">ATIVO</span>
                       ) : (
-                        <span className="text-white/20 font-bold font-mono tracking-widest text-[10px]">DESATIVADO</span>
+                        <span className="text-white/20 font-bold font-mono tracking-widest text-[13px]">DESATIVADO</span>
                       )}
                     </td>
                     <td className="px-8 py-5">
                       {patient.is_vip ? (
-                        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[8px] font-bold text-[#E5C38C] uppercase tracking-widest shadow-gold">VIP</span>
+                        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[13px] font-bold text-[#E5C38C] uppercase tracking-widest shadow-gold">VIP</span>
                       ) : (
-                        <span className="text-white/30 uppercase tracking-widest text-[9px] font-bold">Padrão</span>
+                        <span className="text-white/30 uppercase tracking-widest text-[14px] font-bold">Padrão</span>
                       )}
                     </td>
                     <td className="px-8 py-5 text-right">
                       <div className="flex items-center justify-end gap-3">
                          <button
                            onClick={() => setSelectedPatientForDetails(patient)}
-                           className="px-4 py-1.5 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[9px] font-bold text-[#E5C38C] uppercase tracking-widest hover:bg-[#D4AF37]/30 transition-all shadow-gold"
+                           className="px-4 py-1.5 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[14px] font-bold text-[#E5C38C] uppercase tracking-widest hover:bg-[#D4AF37]/30 transition-all shadow-gold"
                          >
                            Ficha Clínica & Finanças
                          </button>
@@ -618,7 +618,7 @@ export default function Patients() {
                 </div>
                 <div>
                   <h3 className="text-base font-bold text-white font-serif">{selectedPatientForDetails.full_name}</h3>
-                  <span className="text-[10px] text-white/40 font-mono">{selectedPatientForDetails.phone}</span>
+                  <span className="text-[13px] text-white/40 font-mono">{selectedPatientForDetails.phone}</span>
                 </div>
               </div>
               <button 
@@ -693,7 +693,7 @@ export default function Patients() {
                       )}
                     </div>
                     <div className="flex-1 space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Foto de Perfil (URL)</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Foto de Perfil (URL)</label>
                       <input
                         type="text"
                         value={editPatientAvatarUrl}
@@ -706,7 +706,7 @@ export default function Patients() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Nome Completo</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Nome Completo</label>
                       <input
                         type="text"
                         value={editPatientName}
@@ -715,7 +715,7 @@ export default function Patients() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">CPF</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">CPF</label>
                       <input
                         type="text"
                         value={editPatientCpf}
@@ -737,7 +737,7 @@ export default function Patients() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">WhatsApp</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">WhatsApp</label>
                       <div className="flex gap-2">
                         <input
                           type="tel"
@@ -748,7 +748,7 @@ export default function Patients() {
                         <button
                           type="button"
                           onClick={() => navigate(`/conversations?leadId=${selectedPatientForDetails.id}`)}
-                          className="px-4 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold border border-gold/20 text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-1 shrink-0 transition-all active:scale-95 cursor-pointer"
+                          className="px-4 rounded-xl bg-gold/10 hover:bg-gold/20 text-gold border border-gold/20 text-[14px] font-black uppercase tracking-widest flex items-center justify-center gap-1 shrink-0 transition-all active:scale-95 cursor-pointer"
                         >
                           <Send className="h-3 w-3" />
                           <span>Chat</span>
@@ -756,7 +756,7 @@ export default function Patients() {
                       </div>
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700] flex items-center gap-1"><Instagram className="h-3 w-3 text-gold" /> Instagram</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700] flex items-center gap-1"><Instagram className="h-3 w-3 text-gold" /> Instagram</label>
                       <input
                         type="text"
                         value={editPatientInstagram}
@@ -769,7 +769,7 @@ export default function Patients() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Número de Confiança</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Número de Confiança</label>
                       <input
                         type="tel"
                         value={editPatientTrustPhone}
@@ -779,7 +779,7 @@ export default function Patients() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Senha do Portal (4 a 6 dígitos)</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Senha do Portal (4 a 6 dígitos)</label>
                       <input
                         type="password"
                         maxLength={6}
@@ -791,7 +791,7 @@ export default function Patients() {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Endereço</label>
+                    <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Endereço</label>
                     <input
                       type="text"
                       value={editPatientAddress}
@@ -803,7 +803,7 @@ export default function Patients() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Procedimento Principal</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-[#ffd700]">Procedimento Principal</label>
                       <input
                         type="text"
                         value={editPatientInterest}
@@ -812,7 +812,7 @@ export default function Patients() {
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-red-400">Alergias / Restrições Médicas</label>
+                      <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-red-400">Alergias / Restrições Médicas</label>
                       <input
                         type="text"
                         value={editPatientAllergies}
@@ -825,7 +825,7 @@ export default function Patients() {
 
                   {/* Checklist Options */}
                   <div className="space-y-2 pt-2 border-t border-white/5">
-                    <label className="block text-[8px] font-black uppercase tracking-[0.2em] text-white/30">Configurações de Acesso e Perfil</label>
+                    <label className="block text-[13px] font-black uppercase tracking-[0.2em] text-white/30">Configurações de Acesso e Perfil</label>
                     <div className="flex flex-col gap-1.5">
                       <button
                         type="button"
@@ -871,7 +871,7 @@ export default function Patients() {
               {detailTab === "prontuario" && (
                 <div className="space-y-5">
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Evolução Estética</label>
+                    <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Evolução Estética</label>
                     <textarea
                       value={evolutionNotes}
                       onChange={(e) => setEvolutionNotes(e.target.value)}
@@ -882,7 +882,7 @@ export default function Patients() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Cuidados Pós-Procedimento (Visível no Portal)</label>
+                    <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Cuidados Pós-Procedimento (Visível no Portal)</label>
                     <textarea
                       value={postRecommendations}
                       onChange={(e) => setPostRecommendations(e.target.value)}
@@ -894,10 +894,10 @@ export default function Patients() {
 
                   {/* Facial Mapping */}
                   <div className="space-y-3">
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40">Mapeamento Facial / Corporal</label>
+                    <label className="block text-[13px] font-bold uppercase tracking-widest text-white/40">Mapeamento Facial / Corporal</label>
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <span className="text-[10px] text-white/50 block mb-1">Testa / Glabela</span>
+                        <span className="text-[13px] text-white/50 block mb-1">Testa / Glabela</span>
                         <input
                           type="text"
                           value={facialMapping.testa || ""}
@@ -907,7 +907,7 @@ export default function Patients() {
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-white/50 block mb-1">Olhos / Periombital</span>
+                        <span className="text-[13px] text-white/50 block mb-1">Olhos / Periombital</span>
                         <input
                           type="text"
                           value={facialMapping.olhos || ""}
@@ -917,7 +917,7 @@ export default function Patients() {
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-white/50 block mb-1">Lábios / Malar</span>
+                        <span className="text-[13px] text-white/50 block mb-1">Lábios / Malar</span>
                         <input
                           type="text"
                           value={facialMapping.labios || ""}
@@ -927,7 +927,7 @@ export default function Patients() {
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-white/50 block mb-1">Mandíbula / Mento</span>
+                        <span className="text-[13px] text-white/50 block mb-1">Mandíbula / Mento</span>
                         <input
                           type="text"
                           value={facialMapping.mandibula || ""}
@@ -941,7 +941,7 @@ export default function Patients() {
 
                   {/* Before / After Photos */}
                   <div className="space-y-3">
-                    <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Imagens de Evolução (Antes/Depois)</label>
+                    <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Imagens de Evolução (Antes/Depois)</label>
                     
                     <div className="flex flex-col gap-2.5">
                       <div className="flex gap-2">
@@ -961,16 +961,16 @@ export default function Patients() {
                       </div>
                       
                       <div className="relative text-left">
-                        <span className="text-[10px] text-white/40 block mb-1.5 font-bold uppercase tracking-wider">Ou faça upload da imagem diretamente:</span>
+                        <span className="text-[13px] text-white/40 block mb-1.5 font-bold uppercase tracking-wider">Ou faça upload da imagem diretamente:</span>
                         <input
                           type="file"
                           accept="image/*"
                           onChange={handlePhotoUpload}
                           disabled={uploadingPhoto}
-                          className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/50 file:bg-white/5 file:border-0 file:text-[10px] file:text-white file:px-2.5 file:py-1 file:rounded-md file:mr-2 file:cursor-pointer outline-none focus:border-[#ffd700]"
+                          className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-3 py-2.5 text-xs text-white/50 file:bg-white/5 file:border-0 file:text-[13px] file:text-white file:px-2.5 file:py-1 file:rounded-md file:mr-2 file:cursor-pointer outline-none focus:border-[#ffd700]"
                         />
                         {uploadingPhoto && (
-                          <p className="text-[9px] text-[#ffd700] animate-pulse mt-1.5 font-bold">Enviando imagem para o prontuário...</p>
+                          <p className="text-[14px] text-[#ffd700] animate-pulse mt-1.5 font-bold">Enviando imagem para o prontuário...</p>
                         )}
                       </div>
                     </div>
@@ -1007,11 +1007,11 @@ export default function Patients() {
                 <div className="space-y-6">
                   {/* Novo Contrato */}
                   <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 space-y-4">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-white/60">Registrar Novo Contrato Estético</h4>
+                    <h4 className="text-[13px] font-bold uppercase tracking-widest text-white/60">Registrar Novo Contrato Estético</h4>
                     
                     <div className="space-y-3">
                       <div>
-                        <span className="text-[10px] text-white/40 block mb-1">Descrição do Contrato / Protocolo</span>
+                        <span className="text-[13px] text-white/40 block mb-1">Descrição do Contrato / Protocolo</span>
                         <input
                           type="text"
                           value={newContractDesc}
@@ -1022,7 +1022,7 @@ export default function Patients() {
                       </div>
                       <div className="grid grid-cols-3 gap-3">
                         <div>
-                          <span className="text-[10px] text-white/40 block mb-1">Valor Total (R$)</span>
+                          <span className="text-[13px] text-white/40 block mb-1">Valor Total (R$)</span>
                           <input
                             type="number"
                             value={newContractVal}
@@ -1032,7 +1032,7 @@ export default function Patients() {
                           />
                         </div>
                         <div>
-                          <span className="text-[10px] text-white/40 block mb-1">Método</span>
+                          <span className="text-[13px] text-white/40 block mb-1">Método</span>
                           <select
                             value={newContractMethod}
                             onChange={(e) => setNewContractMethod(e.target.value)}
@@ -1045,7 +1045,7 @@ export default function Patients() {
                           </select>
                         </div>
                         <div>
-                          <span className="text-[10px] text-white/40 block mb-1">Parcelas</span>
+                          <span className="text-[13px] text-white/40 block mb-1">Parcelas</span>
                           <select
                             value={newContractInstallments}
                             onChange={(e) => setNewContractInstallments(e.target.value)}
@@ -1071,7 +1071,7 @@ export default function Patients() {
 
                   {/* Listagem de Contratos existentes */}
                   <div className="space-y-4">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Contratos e Cobranças Ativas</h4>
+                    <h4 className="text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Contratos e Cobranças Ativas</h4>
                     
                     {financials.length > 0 ? (
                       <div className="space-y-4">
@@ -1080,10 +1080,10 @@ export default function Patients() {
                             <div className="flex justify-between items-start">
                               <div>
                                 <h5 className="font-bold text-white text-xs">{fin.description}</h5>
-                                <span className="text-[8px] text-white/30 font-mono">ID: {fin.id.slice(0, 8)}</span>
+                                <span className="text-[13px] text-white/30 font-mono">ID: {fin.id.slice(0, 8)}</span>
                               </div>
                               <div className="text-right">
-                                <span className="text-[10px] text-white/40 block">Total</span>
+                                <span className="text-[13px] text-white/40 block">Total</span>
                                 <span className="font-bold text-[#ffd700] text-xs">R$ {parseFloat(fin.total_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                               </div>
                             </div>
@@ -1091,7 +1091,7 @@ export default function Patients() {
                             {/* Parcelas */}
                             <div className="space-y-1.5 pt-2 border-t border-white/5">
                               {Array.isArray(fin.installments) && fin.installments.map((inst: any, idx: number) => (
-                                <div key={idx} className="flex justify-between items-center text-[10px] py-1 border-b border-white/[0.02]">
+                                <div key={idx} className="flex justify-between items-center text-[13px] py-1 border-b border-white/[0.02]">
                                   <span>{inst.number}ª Parcela ({new Date(inst.due_date).toLocaleDateString("pt-BR")})</span>
                                   <div className="flex items-center gap-3">
                                     <span className="font-bold text-white font-mono">R$ {parseFloat(inst.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
@@ -1124,11 +1124,11 @@ export default function Patients() {
               {detailTab === "notificar" && (
                 <div className="space-y-4">
                   <div className="rounded-2xl border border-white/5 bg-white/[0.01] p-5 space-y-4">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Enviar Notificação ao Paciente</h4>
+                    <h4 className="text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Enviar Notificação ao Paciente</h4>
                     
                     <div className="space-y-3">
                       <div>
-                        <span className="text-[10px] text-white/40 block mb-1">Título da Notificação</span>
+                        <span className="text-[13px] text-white/40 block mb-1">Título da Notificação</span>
                         <input
                           type="text"
                           value={notifTitle}
@@ -1138,7 +1138,7 @@ export default function Patients() {
                         />
                       </div>
                       <div>
-                        <span className="text-[10px] text-white/40 block mb-1">Mensagem explicativa</span>
+                        <span className="text-[13px] text-white/40 block mb-1">Mensagem explicativa</span>
                         <textarea
                           value={notifMsg}
                           onChange={(e) => setNotifMsg(e.target.value)}
@@ -1163,11 +1163,11 @@ export default function Patients() {
                   <div className="p-5 rounded-2xl border border-white/5 bg-white/[0.01] flex justify-between items-center">
                     <div>
                       <h4 className="text-xs font-bold text-white">Disparo Rápido WhatsApp</h4>
-                      <p className="text-[10px] text-white/40 mt-1">Aciona a automação do n8n para enviar orientações no chat do paciente.</p>
+                      <p className="text-[13px] text-white/40 mt-1">Aciona a automação do n8n para enviar orientações no chat do paciente.</p>
                     </div>
                     <button
                       onClick={() => alert("WhatsApp de pós-procedimento disparado via n8n!")}
-                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-2 text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/25 transition-all"
+                      className="inline-flex items-center gap-2 rounded-xl border border-emerald-500/25 bg-emerald-500/10 px-4 py-2 text-[13px] font-bold text-emerald-400 hover:bg-emerald-500/25 transition-all"
                     >
                       <PhoneCall className="h-3.5 w-3.5" />
                       Disparar WhatsApp
@@ -1198,7 +1198,7 @@ export default function Patients() {
             <form onSubmit={handleRegisterPatient} className="flex-1 min-h-0 overflow-y-auto px-6 py-5 space-y-4">
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Nome Completo</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Nome Completo</label>
                   <input
                     type="text"
                     required
@@ -1210,7 +1210,7 @@ export default function Patients() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Telefone (WhatsApp)</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Telefone (WhatsApp)</label>
                   <input
                     type="tel"
                     required
@@ -1224,7 +1224,7 @@ export default function Patients() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Senha do Portal (4 a 6 dígitos)</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Senha do Portal (4 a 6 dígitos)</label>
                   <input
                     type="password"
                     maxLength={6}
@@ -1237,7 +1237,7 @@ export default function Patients() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Procedimento Principal</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Procedimento Principal</label>
                   <input
                     type="text"
                     value={newPatientInterest}
@@ -1250,7 +1250,7 @@ export default function Patients() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">CPF (Opcional)</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">CPF (Opcional)</label>
                   <input
                     type="text"
                     value={newPatientCpf}
@@ -1261,7 +1261,7 @@ export default function Patients() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-red-400">Alergias / Restrições Médicas</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-red-400">Alergias / Restrições Médicas</label>
                   <input
                     type="text"
                     value={newPatientAllergies}
@@ -1274,7 +1274,7 @@ export default function Patients() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Foto de Perfil (URL)</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Foto de Perfil (URL)</label>
                   <input
                     type="text"
                     value={newPatientAvatarUrl}
@@ -1285,7 +1285,7 @@ export default function Patients() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700] flex items-center gap-1"><Instagram className="h-3 w-3 text-gold" /> Instagram</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700] flex items-center gap-1"><Instagram className="h-3 w-3 text-gold" /> Instagram</label>
                   <input
                     type="text"
                     value={newPatientInstagram}
@@ -1298,7 +1298,7 @@ export default function Patients() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Número de Confiança</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Número de Confiança</label>
                   <input
                     type="tel"
                     value={newPatientTrustPhone}
@@ -1309,7 +1309,7 @@ export default function Patients() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="block text-[10px] font-bold uppercase tracking-widest text-[#ffd700]">Endereço</label>
+                  <label className="block text-[13px] font-bold uppercase tracking-widest text-[#ffd700]">Endereço</label>
                   <input
                     type="text"
                     value={newPatientAddress}
@@ -1322,7 +1322,7 @@ export default function Patients() {
 
               {/* Checklist Options */}
               <div className="space-y-2.5 pt-2 border-t border-white/5">
-                <label className="block text-[10px] font-bold uppercase tracking-widest text-white/40">Configurações de Acesso e Perfil</label>
+                <label className="block text-[13px] font-bold uppercase tracking-widest text-white/40">Configurações de Acesso e Perfil</label>
                 
                 <div className="flex flex-col gap-2">
                   <button

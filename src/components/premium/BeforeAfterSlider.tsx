@@ -58,7 +58,7 @@ export function BeforeAfterSlider({ beforeImage, afterImage, markers = [] }: Bef
         alt="Before"
         className="absolute inset-0 w-full h-full object-cover grayscale opacity-60"
       />
-      <div className="absolute bottom-6 left-6 z-20 glass px-4 py-1.5 rounded-full text-[10px] font-mono tracking-widest text-white/50">
+      <div className="absolute bottom-6 left-6 z-20 glass px-4 py-1.5 rounded-full text-[13px] font-mono tracking-widest text-white/50">
         CLINICAL BASE
       </div>
 
@@ -73,7 +73,7 @@ export function BeforeAfterSlider({ beforeImage, afterImage, markers = [] }: Bef
           className="absolute inset-y-0 left-0 h-full object-cover"
           style={{ width: containerRef.current?.offsetWidth || "100%", maxWidth: "none" }}
         />
-        <div className="absolute bottom-6 right-6 z-20 glass-gold px-4 py-1.5 rounded-full text-[10px] font-mono tracking-widest text-gold whitespace-nowrap">
+        <div className="absolute bottom-6 right-6 z-20 glass-gold px-4 py-1.5 rounded-full text-[13px] font-mono tracking-widest text-gold whitespace-nowrap">
           OPTIMIZED PROTOCOL
         </div>
       </div>
@@ -113,8 +113,8 @@ export function BeforeAfterSlider({ beforeImage, afterImage, markers = [] }: Bef
               <div className="relative h-2 w-2 rounded-full bg-gold shadow-[0_0_10px_#D4AF37]" />
               
               <div className="absolute left-4 top-1/2 -translate-y-1/2 glass px-3 py-1.5 rounded border-gold/30 opacity-0 group-hover/marker:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
-                <p className="text-[10px] font-bold text-gold uppercase tracking-wider">{marker.label}</p>
-                <p className="text-[8px] text-white/50 mt-0.5">{marker.desc}</p>
+                <p className="text-[13px] font-bold text-gold uppercase tracking-wider">{marker.label}</p>
+                <p className="text-[13px] text-white/50 mt-0.5">{marker.desc}</p>
               </div>
             </div>
           </motion.div>

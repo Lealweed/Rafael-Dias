@@ -339,21 +339,21 @@ export default function Pipeline() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5 bg-gold/5 px-3 py-1 rounded-full border border-gold/20">
               <Sparkles className="h-2.5 w-2.5 text-gold" />
-              <span className="text-[8px] uppercase tracking-[0.2em] font-black text-gold">Pipeline de Alta Fidelidade</span>
+              <span className="text-[13px] uppercase tracking-[0.2em] font-black text-gold">Pipeline de Alta Fidelidade</span>
             </div>
-            <p className="text-[11px] font-light text-white/30 max-w-xs">Distribuição inteligente de leads por estágio de conversão.</p>
+            <p className="text-[13px] font-light text-white/30 max-w-xs">Distribuição inteligente de leads por estágio de conversão.</p>
           </div>
         </div>
         <div className="flex gap-2">
-          <PremiumButton variant="outline" className="px-4 py-1.5 text-[8px] tracking-widest">CONFIGURAR</PremiumButton>
-          <PremiumButton onClick={() => handleOpenCreateModal()} className="px-5 py-1.5 text-[8px] tracking-widest">+ NOVO LEAD</PremiumButton>
+          <PremiumButton variant="outline" className="px-4 py-1.5 text-[13px] tracking-widest">CONFIGURAR</PremiumButton>
+          <PremiumButton onClick={() => handleOpenCreateModal()} className="px-5 py-1.5 text-[13px] tracking-widest">+ NOVO LEAD</PremiumButton>
         </div>
       </section>
 
       {/* --- Kanban Stage Grid (Compact) --- */}
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4 snap-x min-h-[400px] h-full scrollbar-hide">
         {loading ? (
-          <div className="w-full flex items-center justify-center text-[9px] font-black uppercase tracking-[0.3em] text-white/20 animate-pulse">Sincronizando Funil...</div>
+          <div className="w-full flex items-center justify-center text-[14px] font-black uppercase tracking-[0.3em] text-white/20 animate-pulse">Sincronizando Funil...</div>
         ) : stages.map((stage, i) => (
           <div 
             key={stage.id} 
@@ -367,7 +367,7 @@ export default function Pipeline() {
                 <div className={cn("w-1.5 h-1.5 rounded-full", stage.color)} />
                 <h3 className="font-display font-black text-white text-xs tracking-tight uppercase">{stage.title}</h3>
               </div>
-              <span className="text-[8px] font-mono text-gold/40 font-black">{stage.items.length}</span>
+              <span className="text-[13px] font-mono text-gold/40 font-black">{stage.items.length}</span>
             </div>
 
             {/* Draggable List (Compact) */}
@@ -388,20 +388,20 @@ export default function Pipeline() {
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[8px] font-black text-gold/80 uppercase tracking-widest bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-full">{item.interest}</span>
-                      {item.temperature === "hot" && <span className="text-[8px] font-black text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Quente</span>}
-                      {item.temperature === "warm" && <span className="text-[8px] font-black text-white/50 bg-white/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Morno</span>}
-                      {item.temperature === "cold" && <span className="text-[8px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Frio</span>}
+                      <span className="text-[13px] font-black text-gold/80 uppercase tracking-widest bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-full">{item.interest}</span>
+                      {item.temperature === "hot" && <span className="text-[13px] font-black text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Quente</span>}
+                      {item.temperature === "warm" && <span className="text-[13px] font-black text-white/50 bg-white/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Morno</span>}
+                      {item.temperature === "cold" && <span className="text-[13px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Frio</span>}
                     </div>
                     
                     <div className="flex items-center justify-between pt-2 border-t border-white/5">
                       <div className="flex flex-col">
-                        <span className="text-[8px] uppercase tracking-[0.2em] font-black text-white/20">Responsável</span>
-                        <span className="text-[8px] text-white/40 font-bold">{item.owner}</span>
+                        <span className="text-[13px] uppercase tracking-[0.2em] font-black text-white/20">Responsável</span>
+                        <span className="text-[13px] text-white/40 font-bold">{item.owner}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[8px] uppercase tracking-[0.2em] font-black text-white/20">Última Int.</span>
-                        <span className="text-[8px] text-gold/60 font-mono font-bold block">{item.time}</span>
+                        <span className="text-[13px] uppercase tracking-[0.2em] font-black text-white/20">Última Int.</span>
+                        <span className="text-[13px] text-gold/60 font-mono font-bold block">{item.time}</span>
                       </div>
                     </div>
                   </div>
@@ -411,7 +411,7 @@ export default function Pipeline() {
               {stage.items.length === 0 && (
                 <div className="h-28 border border-dashed border-white/5 rounded-xl flex flex-col items-center justify-center bg-white/[0.01] opacity-20 space-y-1.5">
                   <Sparkles className="h-4 w-4" />
-                  <span className="text-[8px] uppercase tracking-[0.3em] font-black">Estágio Vazio</span>
+                  <span className="text-[13px] uppercase tracking-[0.3em] font-black">Estágio Vazio</span>
                 </div>
               )}
             </div>
@@ -420,7 +420,7 @@ export default function Pipeline() {
             <div className="p-2.5 bg-black-void/20 border-t border-white/5">
               <button 
                 onClick={() => handleOpenCreateModal(stage.id)}
-                className="w-full py-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-[8px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-all cursor-pointer"
+                className="w-full py-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-[13px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-all cursor-pointer"
               >
                 + ADD TO {stage.id.toUpperCase()}
               </button>
@@ -447,7 +447,7 @@ export default function Pipeline() {
 
               <form onSubmit={handleCreateLead} className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Nome Completo</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Nome Completo</label>
                   <input 
                     type="text" 
                     required 
@@ -459,7 +459,7 @@ export default function Pipeline() {
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">WhatsApp</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">WhatsApp</label>
                   <input 
                     type="tel" 
                     required 
@@ -471,7 +471,7 @@ export default function Pipeline() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Procedimento de Interesse</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Procedimento de Interesse</label>
                   <input 
                     type="text" 
                     value={newInterest} 
@@ -483,7 +483,7 @@ export default function Pipeline() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Qualificação</label>
+                    <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Qualificação</label>
                     <select 
                       value={newTemp} 
                       onChange={(e) => setNewTemp(e.target.value)} 
@@ -495,7 +495,7 @@ export default function Pipeline() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Estágio Inicial</label>
+                    <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Estágio Inicial</label>
                     <select 
                       value={newStatus} 
                       onChange={(e) => setNewStatus(e.target.value)} 
@@ -509,7 +509,7 @@ export default function Pipeline() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Responsável</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Responsável</label>
                   <input 
                     type="text" 
                     value={newOwner} 
@@ -519,7 +519,7 @@ export default function Pipeline() {
                   />
                 </div>
 
-                <PremiumButton type="submit" disabled={creatingLead} className="w-full py-2.5 text-[9px] font-black uppercase tracking-widest mt-2">
+                <PremiumButton type="submit" disabled={creatingLead} className="w-full py-2.5 text-[14px] font-black uppercase tracking-widest mt-2">
                   {creatingLead ? "CADASTRANDO..." : "CADASTRAR LEAD"}
                 </PremiumButton>
               </form>
@@ -543,7 +543,7 @@ export default function Pipeline() {
 
               <form onSubmit={handleUpdateLead} className="space-y-3">
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Nome Completo</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Nome Completo</label>
                   <input 
                     type="text" 
                     required 
@@ -555,7 +555,7 @@ export default function Pipeline() {
                 </div>
                 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">WhatsApp</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">WhatsApp</label>
                   <input 
                     type="tel" 
                     required 
@@ -567,7 +567,7 @@ export default function Pipeline() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Procedimento de Interesse</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Procedimento de Interesse</label>
                   <input 
                     type="text" 
                     value={editInterest} 
@@ -579,7 +579,7 @@ export default function Pipeline() {
 
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Qualificação</label>
+                    <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Qualificação</label>
                     <select 
                       value={editTemp} 
                       onChange={(e) => setEditTemp(e.target.value)} 
@@ -591,7 +591,7 @@ export default function Pipeline() {
                     </select>
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Estágio Atual</label>
+                    <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Estágio Atual</label>
                     <select 
                       value={editStatus} 
                       onChange={(e) => setEditStatus(e.target.value)} 
@@ -605,7 +605,7 @@ export default function Pipeline() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Responsável</label>
+                  <label className="text-[13px] font-black uppercase tracking-[0.2em] text-gold/60 ml-2">Responsável</label>
                   <input 
                     type="text" 
                     value={editOwner} 
@@ -625,7 +625,7 @@ export default function Pipeline() {
                     <Trash2 className="h-3.5 w-3.5" />
                     <span>Excluir</span>
                   </button>
-                  <PremiumButton type="submit" disabled={savingLead || deletingLead} className="flex-1 py-2.5 text-[9px] font-black uppercase tracking-widest">
+                  <PremiumButton type="submit" disabled={savingLead || deletingLead} className="flex-1 py-2.5 text-[14px] font-black uppercase tracking-widest">
                     {savingLead ? "SALVANDO..." : "SALVAR ALTERAÇÕES"}
                   </PremiumButton>
                 </div>

@@ -68,7 +68,7 @@ export function TestimonialCarousel({ testimonials }: TestimonialCarouselProps) 
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-white uppercase tracking-widest">{t.name}</h4>
-                    <p className="text-[10px] text-gold/60 uppercase tracking-tighter">{t.role}</p>
+                    <p className="text-[13px] text-gold/60 uppercase tracking-tighter">{t.role}</p>
                   </div>
                 </div>
               </div>

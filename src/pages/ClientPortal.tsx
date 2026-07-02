@@ -246,7 +246,7 @@ export default function ClientPortal() {
               <img src="/assets/logo.jpg" alt="Logo" className="h-full w-full object-cover" />
             </div>
             <h1 className="text-2xl font-light tracking-[0.3em] font-serif text-white uppercase">Área do Paciente</h1>
-            <p className="text-[9px] text-[#D4AF37] tracking-[0.5em] uppercase font-bold mt-2">Exclusividade & Cuidado</p>
+            <p className="text-[14px] text-[#D4AF37] tracking-[0.5em] uppercase font-bold mt-2">Exclusividade & Cuidado</p>
           </div>
 
           <form onSubmit={handleLogin} className="space-y-6">
@@ -269,7 +269,7 @@ export default function ClientPortal() {
                 className="block w-full rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-3 text-sm text-white placeholder-white/20 focus:border-[#ffd700] focus:outline-none focus:ring-1 focus:ring-[#ffd700] transition-all"
                 placeholder="(94) 99999-9999"
               />
-              <p className="text-[10px] text-white/30">Use o número de WhatsApp informado em seu atendimento.</p>
+              <p className="text-[13px] text-white/30">Use o número de WhatsApp informado em seu atendimento.</p>
             </div>
 
             <div className="space-y-2">
@@ -314,13 +314,13 @@ export default function ClientPortal() {
             </div>
             <div>
               <h1 className="text-xs font-bold tracking-widest font-serif text-[#ffd700]">Portal do Paciente</h1>
-              <p className="text-[8px] text-white/30 tracking-widest uppercase font-mono">Instituto Rafael Dias</p>
+              <p className="text-[13px] text-white/30 tracking-widest uppercase font-mono">Instituto Rafael Dias</p>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <span className="text-[10px] text-white/40 block">Olá, bem-vindo(a)</span>
+              <span className="text-[13px] text-white/40 block">Olá, bem-vindo(a)</span>
               <span className="text-xs font-bold text-white">{patientData.full_name || patientData.nome}</span>
             </div>
             <button 
@@ -351,7 +351,7 @@ export default function ClientPortal() {
                 </div>
                 
                 {/* Upload Avatar Overlay */}
-                <label className="absolute inset-0 flex items-center justify-center bg-black/75 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[9px] text-[#ffd700] font-bold select-none text-center px-1">
+                <label className="absolute inset-0 flex items-center justify-center bg-black/75 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer text-[14px] text-[#ffd700] font-bold select-none text-center px-1">
                   <span>Alterar Foto</span>
                   <input 
                     type="file" 
@@ -363,8 +363,8 @@ export default function ClientPortal() {
               </div>
               
               <h3 className="font-serif text-lg font-bold text-white leading-tight tracking-wide">{patientData.full_name || patientData.nome}</h3>
-              <span className="text-[10px] text-[#D4AF37] font-bold uppercase tracking-[0.2em] mt-2">Paciente VIP</span>
-              <span className="text-[9px] text-white/20 font-mono mt-1 tracking-widest">{patientData.phone || patientData.telefone}</span>
+              <span className="text-[13px] text-[#D4AF37] font-bold uppercase tracking-[0.2em] mt-2">Paciente VIP</span>
+              <span className="text-[14px] text-white/20 font-mono mt-1 tracking-widest">{patientData.phone || patientData.telefone}</span>
             </div>
 
             {/* Navigation Tab pills - Responsive for mobile */}
@@ -379,7 +379,7 @@ export default function ClientPortal() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center justify-between px-4 py-3 md:px-5 md:py-4 rounded-2xl text-[9px] md:text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500 group whitespace-nowrap shrink-0 ${
+                  className={`flex items-center justify-between px-4 py-3 md:px-5 md:py-4 rounded-2xl text-[14px] md:text-[13px] font-bold uppercase tracking-[0.2em] transition-all duration-500 group whitespace-nowrap shrink-0 ${
                     activeTab === tab.id
                       ? "bg-gradient-to-r from-[#D4AF37] to-[#E5C38C] text-[#0D0D0F] shadow-lg scale-[1.02]"
                       : "text-white/40 hover:text-white hover:bg-white/5 border border-transparent hover:border-white/5"
@@ -390,7 +390,7 @@ export default function ClientPortal() {
                     <span>{tab.label}</span>
                   </div>
                   {tab.count !== undefined && tab.count > 0 && (
-                    <span className={`rounded-full px-1.5 py-0.5 text-[8px] font-bold ml-2 shadow-sm ${
+                    <span className={`rounded-full px-1.5 py-0.5 text-[13px] font-bold ml-2 shadow-sm ${
                       activeTab === tab.id ? "bg-[#0D0D0F] text-[#ffd700]" : "bg-[#ffd700] text-[#0D0D0F]"
                     }`}>
                       {tab.count}
@@ -403,24 +403,24 @@ export default function ClientPortal() {
 
           {/* Ficha Médica / Cadastral do Cliente */}
           <div className="rounded-3xl border border-white/5 bg-[#0E1118]/60 p-6 flex flex-col gap-4 backdrop-blur-3xl shadow-2xl text-left">
-            <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-[#E5C38C]">Ficha do Paciente</h4>
+            <h4 className="text-[13px] uppercase tracking-[0.3em] font-bold text-[#E5C38C]">Ficha do Paciente</h4>
             
             <div className="space-y-3">
               <div>
-                <p className="text-[9px] text-white/30 uppercase font-mono">Procedimento de Interesse</p>
+                <p className="text-[14px] text-white/30 uppercase font-mono">Procedimento de Interesse</p>
                 <p className="text-xs font-semibold text-white/70">{patientData.interest || "Harmonização Facial"}</p>
               </div>
 
               <div>
-                <p className="text-[9px] text-white/30 uppercase font-mono">Restrições & Alergias</p>
+                <p className="text-[14px] text-white/30 uppercase font-mono">Restrições & Alergias</p>
                 <p className={`text-xs font-semibold ${patientData.allergies_restrictions ? "text-amber-400" : "text-white/70"}`}>
                   {patientData.allergies_restrictions || "Nenhuma restrição informada"}
                 </p>
               </div>
 
               <div>
-                <p className="text-[9px] text-white/30 uppercase font-mono">Tipo de Cadastro</p>
-                <span className="inline-block px-2.5 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[8px] font-bold text-[#E5C38C] uppercase tracking-widest mt-1">
+                <p className="text-[14px] text-white/30 uppercase font-mono">Tipo de Cadastro</p>
+                <span className="inline-block px-2.5 py-0.5 rounded bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[13px] font-bold text-[#E5C38C] uppercase tracking-widest mt-1">
                   {patientData.is_vip ? "Paciente VIP" : "Paciente Standard"}
                 </span>
               </div>
@@ -437,7 +437,7 @@ export default function ClientPortal() {
               <div className="space-y-10 animate-fade-in text-left">
                 <div className="border-b border-white/5 pb-6">
                   <h2 className="text-3xl font-serif font-light text-white tracking-wide">Minha <span className="italic text-[#D4AF37]">Agenda</span></h2>
-                  <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] mt-2">Suas consultas e solicitações de retorno no Instituto Rafael Dias.</p>
+                  <p className="text-[13px] text-white/40 uppercase tracking-[0.3em] mt-2">Suas consultas e solicitações de retorno no Instituto Rafael Dias.</p>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -445,13 +445,13 @@ export default function ClientPortal() {
                   <div className="glass-dark border border-white/5 rounded-3xl p-6 space-y-4 bg-[#0E1118]/50">
                     <div>
                       <h4 className="text-xs uppercase tracking-widest font-black text-gold">Solicitar Retorno</h4>
-                      <p className="text-[9px] text-white/30 uppercase font-mono tracking-wider mt-1">Preencha a data e horário preferencial para seu retorno estético.</p>
+                      <p className="text-[14px] text-white/30 uppercase font-mono tracking-wider mt-1">Preencha a data e horário preferencial para seu retorno estético.</p>
                     </div>
 
                     <form onSubmit={handleRequestRetorno} className="space-y-4">
                       <div className="grid grid-cols-2 gap-3">
                         <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-wider text-white/50 block">Data do Retorno</label>
+                          <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Data do Retorno</label>
                           <input
                             type="date"
                             required
@@ -461,7 +461,7 @@ export default function ClientPortal() {
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <label className="text-[8px] font-black uppercase tracking-wider text-white/50 block">Horário</label>
+                          <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Horário</label>
                           <input
                             type="time"
                             required
@@ -473,7 +473,7 @@ export default function ClientPortal() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <label className="text-[8px] font-black uppercase tracking-wider text-white/50 block">Alguma observação?</label>
+                        <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Alguma observação?</label>
                         <textarea
                           value={retornoNotes}
                           onChange={(e) => setRetornoNotes(e.target.value)}
@@ -495,7 +495,7 @@ export default function ClientPortal() {
 
                   {/* Lista de Agendamentos / Solicitações */}
                   <div className="space-y-4">
-                    <h4 className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/40">Suas Consultas & Retornos</h4>
+                    <h4 className="text-[13px] uppercase tracking-[0.3em] font-bold text-white/40">Suas Consultas & Retornos</h4>
                     
                     {appointments.length === 0 ? (
                       <div className="text-center py-20 border border-dashed border-white/10 rounded-[32px] bg-white/[0.01]">
@@ -508,7 +508,7 @@ export default function ClientPortal() {
                           <div key={apt.id} className="p-5 rounded-2xl border border-white/5 bg-white/[0.02] space-y-2 hover:bg-white/[0.03] transition-colors">
                             <div className="flex justify-between items-center">
                               <span className="text-xs font-bold text-white">{apt.title}</span>
-                              <span className={`px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider ${
+                              <span className={`px-2 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider ${
                                 apt.status === 'pending'
                                   ? 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/15'
                                   : apt.status === 'canceled'
@@ -518,7 +518,7 @@ export default function ClientPortal() {
                                 {apt.status === 'pending' ? 'Pendente' : apt.status === 'canceled' ? 'Cancelado' : 'Confirmado'}
                               </span>
                             </div>
-                            <div className="text-[11px] text-white/60 font-light space-y-0.5">
+                            <div className="text-[13px] text-white/60 font-light space-y-0.5">
                               <p>Data: {new Date(apt.appointment_date).toLocaleDateString("pt-BR", { day: '2-digit', month: 'long', year: 'numeric' })}</p>
                               <p>Horário: {new Date(apt.appointment_date).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}</p>
                               {apt.notes && <p className="text-white/40 italic mt-1 font-sans">Obs: "{apt.notes}"</p>}
@@ -537,7 +537,7 @@ export default function ClientPortal() {
               <div className="space-y-10 animate-fade-in">
                 <div className="border-b border-white/5 pb-6">
                   <h2 className="text-3xl font-serif font-light text-white tracking-wide">Gestão <span className="italic text-[#D4AF37]">Financeira</span></h2>
-                  <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] mt-2">Acompanhe seus contratos, boletos e parcelamento.</p>
+                  <p className="text-[13px] text-white/40 uppercase tracking-[0.3em] mt-2">Acompanhe seus contratos, boletos e parcelamento.</p>
                 </div>
 
                 {financials.length > 0 ? (
@@ -548,18 +548,18 @@ export default function ClientPortal() {
                           <div className="space-y-2">
                             <h4 className="font-serif font-bold text-white text-xl tracking-tight">{fin.description}</h4>
                             <div className="flex items-center gap-3">
-                              <span className="text-[9px] px-2 py-0.5 rounded-md bg-[#D4AF37]/10 text-[#E5C38C] font-bold uppercase tracking-widest">{fin.payment_method}</span>
-                              <span className="text-[9px] text-white/20 font-mono">Contrato ID: {fin.id.slice(0, 8)}</span>
+                              <span className="text-[14px] px-2 py-0.5 rounded-md bg-[#D4AF37]/10 text-[#E5C38C] font-bold uppercase tracking-widest">{fin.payment_method}</span>
+                              <span className="text-[14px] text-white/20 font-mono">Contrato ID: {fin.id.slice(0, 8)}</span>
                             </div>
                           </div>
                           <div className="text-left md:text-right">
-                            <span className="text-[10px] text-[#D4AF37] uppercase tracking-[0.3em] block mb-1">Valor do Protocolo</span>
+                            <span className="text-[13px] text-[#D4AF37] uppercase tracking-[0.3em] block mb-1">Valor do Protocolo</span>
                             <span className="font-serif font-bold text-white text-3xl tracking-tight">R$ {parseFloat(fin.total_value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                           </div>
                         </div>
 
                         <div className="space-y-4">
-                          <h5 className="text-[10px] uppercase tracking-[0.3em] font-bold text-white/30">Cronograma de Parcelamento</h5>
+                          <h5 className="text-[13px] uppercase tracking-[0.3em] font-bold text-white/30">Cronograma de Parcelamento</h5>
                           <div className="grid gap-3">
                             {Array.isArray(fin.installments) && fin.installments.map((inst: any, idx: number) => (
                               <div key={idx} className="flex justify-between items-center p-5 rounded-2xl bg-black/40 border border-white/5 hover:border-[#D4AF37]/30 transition-all group/inst">
@@ -571,17 +571,17 @@ export default function ClientPortal() {
                                   </div>
                                   <div>
                                     <p className="text-xs font-bold text-white uppercase tracking-wider">Parcela {inst.number}</p>
-                                    <p className="text-[10px] text-white/30 font-light mt-0.5">Vencimento: {new Date(inst.due_date).toLocaleDateString("pt-BR")}</p>
+                                    <p className="text-[13px] text-white/30 font-light mt-0.5">Vencimento: {new Date(inst.due_date).toLocaleDateString("pt-BR")}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-center gap-6">
                                   <span className="font-bold text-white font-mono tracking-tight">R$ {parseFloat(inst.value).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</span>
                                   {inst.status === "pago" ? (
-                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[8px] font-bold uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-teal-400 text-[13px] font-bold uppercase tracking-widest">
                                       <CheckCircle2 className="h-3 w-3" /> Liquidada
                                     </div>
                                   ) : (
-                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[8px] font-bold uppercase tracking-widest">
+                                    <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/20 text-amber-400 text-[13px] font-bold uppercase tracking-widest">
                                       <AlertCircle className="h-3 w-3" /> Aguardando
                                     </div>
                                   )}
@@ -607,7 +607,7 @@ export default function ClientPortal() {
               <div className="space-y-10 animate-fade-in">
                 <div className="border-b border-white/5 pb-6 text-left">
                   <h2 className="text-3xl font-serif font-light text-white tracking-wide">Jornada <span className="italic text-[#D4AF37]">Clínica</span></h2>
-                  <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] mt-2">Recomendações e histórico clínico disponibilizados pelo Dr. Rafael.</p>
+                  <p className="text-[13px] text-white/40 uppercase tracking-[0.3em] mt-2">Recomendações e histórico clínico disponibilizados pelo Dr. Rafael.</p>
                 </div>
 
                 {record ? (
@@ -615,7 +615,7 @@ export default function ClientPortal() {
                     {/* Evolution Notes */}
                     {record.evolution_notes && (
                       <div className="space-y-4">
-                        <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-[#ffd700]">Resumo do Atendimento</h4>
+                        <h4 className="text-[13px] uppercase tracking-[0.4em] font-bold text-[#ffd700]">Resumo do Atendimento</h4>
                         <div className="p-8 rounded-[32px] border border-white/5 bg-white/[0.02] text-sm text-white/70 leading-relaxed font-light whitespace-pre-line shadow-inner">
                           {record.evolution_notes}
                         </div>
@@ -625,11 +625,11 @@ export default function ClientPortal() {
                     {/* Post recommendations */}
                     {record.post_recommendations && (
                       <div className="space-y-4">
-                        <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-emerald-400">Diretrizes Pós-Procedimento</h4>
+                        <h4 className="text-[13px] uppercase tracking-[0.4em] font-bold text-emerald-400">Diretrizes Pós-Procedimento</h4>
                         <div className="p-8 rounded-[32px] border border-emerald-500/10 bg-emerald-500/5 text-sm text-emerald-300/80 leading-relaxed font-light whitespace-pre-line shadow-lg">
                           <div className="flex gap-4 mb-4">
                             <Heart className="h-5 w-5 text-emerald-400 shrink-0" />
-                            <p className="font-bold text-emerald-400 uppercase tracking-widest text-[10px]">Cuidado Recomendado</p>
+                            <p className="font-bold text-emerald-400 uppercase tracking-widest text-[13px]">Cuidado Recomendado</p>
                           </div>
                           {record.post_recommendations}
                         </div>
@@ -639,11 +639,11 @@ export default function ClientPortal() {
                     {/* Mapping */}
                     {record.facial_mapping && Object.keys(record.facial_mapping).length > 0 && (
                       <div className="space-y-4">
-                        <h4 className="text-[10px] uppercase tracking-[0.4em] font-bold text-white/40">Notas de Mapeamento</h4>
+                        <h4 className="text-[13px] uppercase tracking-[0.4em] font-bold text-white/40">Notas de Mapeamento</h4>
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                           {Object.entries(record.facial_mapping).map(([key, val]: any) => (
                             <div key={key} className="flex justify-between items-center p-5 rounded-2xl border border-white/5 bg-black/20">
-                              <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest">{key}</span>
+                              <span className="text-[13px] font-bold text-white/40 uppercase tracking-widest">{key}</span>
                               <span className="text-xs font-semibold text-white tracking-wide">{val}</span>
                             </div>
                           ))}
@@ -665,7 +665,7 @@ export default function ClientPortal() {
               <div className="space-y-10 animate-fade-in text-left">
                 <div className="border-b border-white/5 pb-6">
                   <h2 className="text-3xl font-serif font-light text-white tracking-wide">Central de <span className="italic text-[#D4AF37]">Avisos</span></h2>
-                  <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] mt-2">Comunicados exclusivos da equipe Rafael Dias.</p>
+                  <p className="text-[13px] text-white/40 uppercase tracking-[0.3em] mt-2">Comunicados exclusivos da equipe Rafael Dias.</p>
                 </div>
 
                 {notifications.length > 0 ? (
@@ -683,7 +683,7 @@ export default function ClientPortal() {
                         <div className="space-y-3">
                           <h4 className={`font-bold text-sm tracking-tight ${notif.read ? "text-white/60" : "text-[#E5C38C]"}`}>{notif.title}</h4>
                           <p className="text-sm font-light text-white/60 leading-relaxed">{notif.message}</p>
-                          <span className="text-[9px] text-white/20 font-mono tracking-widest block pt-2">{new Date(notif.created_at).toLocaleString("pt-BR")}</span>
+                          <span className="text-[14px] text-white/20 font-mono tracking-widest block pt-2">{new Date(notif.created_at).toLocaleString("pt-BR")}</span>
                         </div>
                         {!notif.read && (
                           <div className="h-2 w-2 rounded-full bg-[#D4AF37] shrink-0 mt-2 animate-pulse shadow-gold" />
@@ -705,7 +705,7 @@ export default function ClientPortal() {
               <div className="space-y-10 animate-fade-in text-left">
                 <div className="border-b border-white/5 pb-6">
                   <h2 className="text-3xl font-serif font-light text-white tracking-wide">Fale com a <span className="italic text-[#D4AF37]">Concierge</span></h2>
-                  <p className="text-[10px] text-white/40 uppercase tracking-[0.3em] mt-2">Envie mensagens diretamente para nossa recepção (Limite: 3 mensagens).</p>
+                  <p className="text-[13px] text-white/40 uppercase tracking-[0.3em] mt-2">Envie mensagens diretamente para nossa recepção (Limite: 3 mensagens).</p>
                 </div>
 
                 <div className="glass-dark border border-white/5 rounded-3xl p-6 flex flex-col gap-6 bg-[#0E1118]/50">
@@ -724,7 +724,7 @@ export default function ClientPortal() {
                           }`}
                         >
                           <p className="leading-relaxed whitespace-pre-wrap">{m.content}</p>
-                          <span className="text-[8px] text-white/30 mt-2 block font-mono">
+                          <span className="text-[13px] text-white/30 mt-2 block font-mono">
                             {new Date(m.created_at).toLocaleString("pt-BR", { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}
                           </span>
                         </div>
@@ -734,7 +734,7 @@ export default function ClientPortal() {
 
                   {/* Send Form */}
                   <form onSubmit={handleSendMessage} className="border-t border-white/5 pt-4 space-y-4">
-                    <div className="flex justify-between items-center text-[10px] uppercase tracking-wider text-white/40">
+                    <div className="flex justify-between items-center text-[13px] uppercase tracking-wider text-white/40">
                       <span>Mensagens enviadas: <span className="font-mono text-gold font-bold">{messages.filter(m => m.direction === 'inbound').length}/3</span></span>
                     </div>
 
@@ -770,7 +770,7 @@ export default function ClientPortal() {
       </main>
 
       {/* FOOTER */}
-      <footer className="relative z-10 bg-[#0D0D0F] border-t border-white/5 py-8 text-[#E3D5C1]/40 text-center text-[10px] tracking-widest uppercase">
+      <footer className="relative z-10 bg-[#0D0D0F] border-t border-white/5 py-8 text-[#E3D5C1]/40 text-center text-[13px] tracking-widest uppercase">
         <span>© 2026 RD Estética • Beleza e Rejuvenescimento</span>
       </footer>
 

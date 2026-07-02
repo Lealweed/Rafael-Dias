@@ -351,16 +351,16 @@ export default function Cashier() {
           <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 px-4 py-2 rounded-xl backdrop-blur-md">
             <Unlock className="h-4 w-4 text-emerald-400 animate-pulse" />
             <div className="text-left">
-              <p className="text-[10px] font-black uppercase text-emerald-400 tracking-wider">Caixa Aberto</p>
-              <p className="text-[9px] text-white/40">{currentSession.opened_by_profile?.full_name || "Operador"}</p>
+              <p className="text-[13px] font-black uppercase text-emerald-400 tracking-wider">Caixa Aberto</p>
+              <p className="text-[14px] text-white/40">{currentSession.opened_by_profile?.full_name || "Operador"}</p>
             </div>
           </div>
         ) : (
           <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl backdrop-blur-md">
             <Lock className="h-4 w-4 text-red-400" />
             <div className="text-left">
-              <p className="text-[10px] font-black uppercase text-red-400 tracking-wider">Caixa Fechado</p>
-              <p className="text-[9px] text-white/40">Abra o caixa para operar o PDV</p>
+              <p className="text-[13px] font-black uppercase text-red-400 tracking-wider">Caixa Fechado</p>
+              <p className="text-[14px] text-white/40">Abra o caixa para operar o PDV</p>
             </div>
           </div>
         )}
@@ -397,7 +397,7 @@ export default function Cashier() {
 
             <form onSubmit={handleOpenSession} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-white/50">Valor de Abertura (Dinheiro Físico)</label>
+                <label className="text-[13px] font-black uppercase tracking-wider text-white/50">Valor de Abertura (Dinheiro Físico)</label>
                 <div className="relative flex items-center">
                   <span className="absolute left-4 text-xs text-gold/60 font-bold">R$</span>
                   <input
@@ -414,7 +414,7 @@ export default function Cashier() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-wider text-white/50">Observações de Abertura</label>
+                <label className="text-[13px] font-black uppercase tracking-wider text-white/50">Observações de Abertura</label>
                 <textarea
                   value={openingNotes}
                   onChange={(e) => setOpeningNotes(e.target.value)}
@@ -439,37 +439,37 @@ export default function Cashier() {
             {/* KPI Cards Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="glass-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between min-h-[90px]">
-                <span className="text-[8px] font-black uppercase text-white/40 tracking-wider">Abertura</span>
+                <span className="text-[13px] font-black uppercase text-white/40 tracking-wider">Abertura</span>
                 <div className="mt-1">
                   <span className="text-sm font-display text-white font-bold block">{formatCurrency(Number(currentSession.opening_balance))}</span>
-                  <span className="text-[8px] text-white/30 uppercase tracking-widest block mt-0.5">Fundo Inicial</span>
+                  <span className="text-[13px] text-white/30 uppercase tracking-widest block mt-0.5">Fundo Inicial</span>
                 </div>
               </div>
 
               <div className="glass-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between min-h-[90px]">
-                <span className="text-[8px] font-black uppercase text-white/40 tracking-wider">Vendas em Dinheiro</span>
+                <span className="text-[13px] font-black uppercase text-white/40 tracking-wider">Vendas em Dinheiro</span>
                 <div className="mt-1">
                   <span className="text-sm font-display text-emerald-400 font-bold block">+{formatCurrency(totalVendasDinheiro)}</span>
-                  <span className="text-[8px] text-white/30 uppercase tracking-widest block mt-0.5">Gaveta Física</span>
+                  <span className="text-[13px] text-white/30 uppercase tracking-widest block mt-0.5">Gaveta Física</span>
                 </div>
               </div>
 
               <div className="glass-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between min-h-[90px]">
-                <span className="text-[8px] font-black uppercase text-white/40 tracking-wider">Entradas / Saídas</span>
+                <span className="text-[13px] font-black uppercase text-white/40 tracking-wider">Entradas / Saídas</span>
                 <div className="mt-1">
                   <div className="flex items-center gap-1.5">
                     <span className="text-xs text-white/60 font-bold">+{totalSuprimentos}</span>
                     <span className="text-xs text-red-400 font-bold">-{totalSangrias}</span>
                   </div>
-                  <span className="text-[8px] text-white/30 uppercase tracking-widest block mt-0.5">Suprim / Sangria</span>
+                  <span className="text-[13px] text-white/30 uppercase tracking-widest block mt-0.5">Suprim / Sangria</span>
                 </div>
               </div>
 
               <div className="glass-dark p-4 rounded-xl border border-white/5 ring-1 ring-gold/20 flex flex-col justify-between min-h-[90px]">
-                <span className="text-[8px] font-black uppercase text-gold/80 tracking-wider">Esperado em Dinheiro</span>
+                <span className="text-[13px] font-black uppercase text-gold/80 tracking-wider">Esperado em Dinheiro</span>
                 <div className="mt-1">
                   <span className="text-sm font-display text-glow-gold font-bold block">{formatCurrency(expectedCashInDrawer)}</span>
-                  <span className="text-[8px] text-gold/40 uppercase tracking-widest block mt-0.5">Total na Gaveta</span>
+                  <span className="text-[13px] text-gold/40 uppercase tracking-widest block mt-0.5">Total na Gaveta</span>
                 </div>
               </div>
             </div>
@@ -488,7 +488,7 @@ export default function Cashier() {
                   { label: "Outro", key: "outro", color: "text-white/60" }
                 ].map((item) => (
                   <div key={item.key} className="bg-white/[0.01] border border-white/5 rounded-xl p-3 text-center">
-                    <p className="text-[8px] font-black uppercase text-white/30 tracking-wider">{item.label}</p>
+                    <p className="text-[13px] font-black uppercase text-white/30 tracking-wider">{item.label}</p>
                     <p className={`text-xs font-bold font-display mt-1 ${item.color}`}>
                       {formatCurrency(paymentsSum[item.key] || 0)}
                     </p>
@@ -497,7 +497,7 @@ export default function Cashier() {
               </div>
 
               <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
-                <span className="text-white/40 uppercase tracking-widest font-black text-[9px]">Faturamento Total Bruto</span>
+                <span className="text-white/40 uppercase tracking-widest font-black text-[14px]">Faturamento Total Bruto</span>
                 <span className="text-sm font-display text-glow-gold font-bold">{formatCurrency(totalSalesAllMethods)}</span>
               </div>
             </div>
@@ -510,7 +510,7 @@ export default function Cashier() {
                   <button
                     type="button"
                     onClick={() => setActionType("suprimento")}
-                    className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all ${
+                    className={`px-3 py-1 rounded-md text-[13px] font-black uppercase tracking-wider transition-all ${
                       actionType === "suprimento" 
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" 
                         : "text-white/40 hover:text-white/80 border border-transparent"
@@ -521,7 +521,7 @@ export default function Cashier() {
                   <button
                     type="button"
                     onClick={() => setActionType("sangria")}
-                    className={`px-3 py-1 rounded-md text-[8px] font-black uppercase tracking-wider transition-all ${
+                    className={`px-3 py-1 rounded-md text-[13px] font-black uppercase tracking-wider transition-all ${
                       actionType === "sangria" 
                         ? "bg-red-500/10 text-red-400 border border-red-500/20" 
                         : "text-white/40 hover:text-white/80 border border-transparent"
@@ -534,7 +534,7 @@ export default function Cashier() {
 
               <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end text-left">
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-wider text-white/50">Valor R$</label>
+                  <label className="text-[13px] font-black uppercase tracking-wider text-white/50">Valor R$</label>
                   <input
                     type="number"
                     step="0.01"
@@ -548,7 +548,7 @@ export default function Cashier() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-wider text-white/50">Motivo / Descrição</label>
+                  <label className="text-[13px] font-black uppercase tracking-wider text-white/50">Motivo / Descrição</label>
                   <input
                     type="text"
                     required
@@ -560,11 +560,11 @@ export default function Cashier() {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-[8px] font-black uppercase tracking-wider text-white/50 block">Comprovante (Opcional)</label>
+                  <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Comprovante (Opcional)</label>
                   {txReceiptUrl ? (
-                    <div className="bg-gold/5 border border-gold/15 p-2.5 rounded-xl text-[10px] text-gold truncate">
+                    <div className="bg-gold/5 border border-gold/15 p-2.5 rounded-xl text-[13px] text-gold truncate">
                       Anexado!
-                      <button type="button" onClick={() => setTxReceiptUrl("")} className="text-white/40 hover:text-red-400 ml-2 font-bold uppercase text-[9px]">Remover</button>
+                      <button type="button" onClick={() => setTxReceiptUrl("")} className="text-white/40 hover:text-red-400 ml-2 font-bold uppercase text-[14px]">Remover</button>
                     </div>
                   ) : (
                     <div className="relative">
@@ -576,14 +576,14 @@ export default function Cashier() {
                           if (file) handleTxReceiptUpload(file);
                         }}
                         disabled={uploadingTxReceipt}
-                        className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-2 py-2 text-[9px] text-white/40 file:bg-white/5 file:border-0 file:text-[8px] file:text-white file:px-1.5 file:py-0.5 file:rounded file:cursor-pointer outline-none"
+                        className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-2 py-2 text-[14px] text-white/40 file:bg-white/5 file:border-0 file:text-[13px] file:text-white file:px-1.5 file:py-0.5 file:rounded file:cursor-pointer outline-none"
                       />
-                      {uploadingTxReceipt && <span className="text-[8px] text-gold block animate-pulse mt-0.5 font-bold">Enviando...</span>}
+                      {uploadingTxReceipt && <span className="text-[13px] text-gold block animate-pulse mt-0.5 font-bold">Enviando...</span>}
                     </div>
                   )}
                 </div>
 
-                <PremiumButton type="submit" variant="outline" className="py-2.5 text-[9px] uppercase tracking-wider font-black">
+                <PremiumButton type="submit" variant="outline" className="py-2.5 text-[14px] uppercase tracking-wider font-black">
                   Registrar {actionType === "suprimento" ? "Entrada" : "Saída"}
                 </PremiumButton>
               </form>
@@ -599,7 +599,7 @@ export default function Cashier() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-xs border-collapse">
                     <thead>
-                      <tr className="border-b border-white/5 text-white/40 uppercase tracking-widest text-[8px]">
+                      <tr className="border-b border-white/5 text-white/40 uppercase tracking-widest text-[13px]">
                         <th className="py-2">Hora</th>
                         <th className="py-2">Tipo</th>
                         <th className="py-2">Descrição</th>
@@ -612,13 +612,13 @@ export default function Cashier() {
                           <td className="py-2.5 text-white/50">{new Date(tx.created_at).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</td>
                           <td className="py-2.5">
                             {tx.type === "suprimento" && (
-                              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider">Suprimento</span>
+                              <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider">Suprimento</span>
                             )}
                             {tx.type === "sangria" && (
-                              <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider">Sangria</span>
+                              <span className="bg-red-500/10 text-red-400 border border-red-500/20 px-2 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider">Sangria</span>
                             )}
                             {tx.type === "sale_cash" && (
-                              <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[8px] font-black uppercase tracking-wider">Venda Dinheiro</span>
+                              <span className="bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full text-[13px] font-black uppercase tracking-wider">Venda Dinheiro</span>
                             )}
                           </td>
                           <td className="py-2.5 text-white/80 font-light max-w-[200px] truncate">
@@ -629,7 +629,7 @@ export default function Cashier() {
                                   href={tx.receipt_url} 
                                   target="_blank" 
                                   rel="noreferrer" 
-                                  className="text-gold hover:underline text-[9px] font-black shrink-0 uppercase tracking-widest"
+                                  className="text-gold hover:underline text-[14px] font-black shrink-0 uppercase tracking-widest"
                                   title="Ver comprovante"
                                 >
                                   [Recibo]
@@ -657,7 +657,7 @@ export default function Cashier() {
             <div className="glass-dark p-6 rounded-2xl border border-white/5 space-y-6 sticky top-6">
               <div className="space-y-1">
                 <h3 className="text-sm font-bold font-display text-white">Fechamento de Caixa</h3>
-                <p className="text-[10px] text-white/40 uppercase tracking-widest font-bold">Encerrar sessão de trabalho</p>
+                <p className="text-[13px] text-white/40 uppercase tracking-widest font-bold">Encerrar sessão de trabalho</p>
               </div>
 
               <div className="bg-white/[0.01] border border-white/5 rounded-xl p-4 space-y-3">
@@ -673,7 +673,7 @@ export default function Cashier() {
 
               <form onSubmit={handleCloseSession} className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 block">Saldo Declarado (Físico em Dinheiro)</label>
+                  <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Saldo Declarado (Físico em Dinheiro)</label>
                   <div className="relative flex items-center">
                     <span className="absolute left-4 text-xs text-gold/60 font-bold">R$</span>
                     <input
@@ -688,7 +688,7 @@ export default function Cashier() {
                     />
                   </div>
                   {declaredBalance && (
-                    <div className={`text-[10px] font-black uppercase px-3 py-1.5 rounded-lg tracking-wider ${
+                    <div className={`text-[13px] font-black uppercase px-3 py-1.5 rounded-lg tracking-wider ${
                       Number(declaredBalance) === expectedCashInDrawer
                         ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/10"
                         : "bg-red-500/10 text-red-400 border border-red-500/10"
@@ -705,15 +705,15 @@ export default function Cashier() {
                 </div>
 
                 <div className="space-y-2 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 block">Comprovante de Fechamento (Opcional)</label>
+                  <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Comprovante de Fechamento (Opcional)</label>
                   {closeReceiptUrl ? (
                     <div className="flex items-center justify-between bg-gold/5 border border-gold/15 p-2 rounded-xl text-xs">
-                      <a href={closeReceiptUrl} target="_blank" rel="noreferrer" className="text-gold/80 hover:text-gold truncate max-w-[150px] font-mono text-[9px] underline">
+                      <a href={closeReceiptUrl} target="_blank" rel="noreferrer" className="text-gold/80 hover:text-gold truncate max-w-[150px] font-mono text-[14px] underline">
                         {closeReceiptUrl.split("/").pop()}
                       </a>
                       <button 
                         onClick={() => setCloseReceiptUrl("")}
-                        className="text-white/40 hover:text-red-400 p-1 text-[9px] font-bold"
+                        className="text-white/40 hover:text-red-400 p-1 text-[14px] font-bold"
                         type="button"
                       >
                         Remover
@@ -729,17 +729,17 @@ export default function Cashier() {
                           if (file) handleCloseReceiptUpload(file);
                         }}
                         disabled={uploadingCloseReceipt}
-                        className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-2 py-1.5 text-[9px] text-white/40 file:bg-white/5 file:border-0 file:text-[9px] file:text-white file:px-2 file:py-1 file:rounded file:cursor-pointer outline-none"
+                        className="w-full bg-white/[0.01] border border-white/10 rounded-xl px-2 py-1.5 text-[14px] text-white/40 file:bg-white/5 file:border-0 file:text-[14px] file:text-white file:px-2 file:py-1 file:rounded file:cursor-pointer outline-none"
                       />
                       {uploadingCloseReceipt && (
-                        <p className="text-[9px] text-gold animate-pulse mt-1 font-bold">Carregando comprovante...</p>
+                        <p className="text-[14px] text-gold animate-pulse mt-1 font-bold">Carregando comprovante...</p>
                       )}
                     </div>
                   )}
                 </div>
 
                 <div className="space-y-2 text-left">
-                  <label className="text-[10px] font-black uppercase tracking-wider text-white/50 block">Notas de Fechamento</label>
+                  <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Notas de Fechamento</label>
                   <textarea
                     value={closingNotes}
                     onChange={(e) => setClosingNotes(e.target.value)}

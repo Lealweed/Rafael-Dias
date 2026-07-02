@@ -177,7 +177,7 @@ export default function Login() {
             </form>
 
             {/* Links da Política */}
-            <div className="mt-8 flex items-center justify-center gap-4 text-[10px] uppercase tracking-wider font-semibold text-white/30">
+            <div className="mt-8 flex items-center justify-center gap-4 text-[13px] uppercase tracking-wider font-semibold text-white/30">
               <Link to="/privacy-policy" className="hover:text-[#E5C38C] transition-colors">
                 Privacidade
               </Link>

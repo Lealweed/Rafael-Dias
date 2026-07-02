@@ -1,6 +1,8 @@
-import { getServiceSupabase } from '../_lib/crm.js';
+import { getServiceSupabase, normalizePhone } from './_lib/crm.js';
 
-// Default campaigns to seed in case table is empty
+// ====================================================
+// Sync Handler Config & Constants
+// ====================================================
 const MOCK_SEED_CAMPAIGNS = [
   {
     name: "Campanha Carrossel Botox 2026",
@@ -55,9 +57,34 @@ const MOCK_SEED_CAMPAIGNS = [
   }
 ];
 
-export default async function handler(req: any, res: any) {
-  if (req.method !== 'POST') {
+// ----------------------------------------------------
+// Webhook Logic
+// ----------------------------------------------------
+async function handleWebhook(req: any, res: any) {
+  const method = req.method;
+
+  if (method === 'GET') {
+    const hubMode = req.query['hub.mode'];
+    const hubChallenge = req.query['hub.challenge'];
+    const hubVerifyToken = req.query['hub.verify_token'];
+    const expectedToken = process.env.MARKETING_WEBHOOK_TOKEN || 'rd_live_83726a19f';
+
+    if (hubMode === 'subscribe' && hubVerifyToken === expectedToken) {
+      console.log('Meta Webhook verified successfully.');
+      return res.status(200).send(hubChallenge);
+    }
+    return res.status(403).json({ error: 'Verification token mismatch' });
+  }
+
+  if (method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const token = req.query.token || req.body.google_key || req.headers['x-webhook-token'];
+  const expectedToken = process.env.MARKETING_WEBHOOK_TOKEN || 'rd_live_83726a19f';
+
+  if (token !== expectedToken) {
+    return res.status(401).json({ error: 'Unauthorized: Invalid token' });
   }
 
   const supabase = getServiceSupabase();
@@ -65,11 +92,157 @@ export default async function handler(req: any, res: any) {
     return res.status(500).json({ error: 'Supabase service role client not initialized' });
   }
 
-  // Meta API Credentials
+  const platform = req.query.platform || (req.body.google_key ? 'google' : 'meta');
+  let fullName = '';
+  let phone = '';
+  let email = '';
+  let utmSource = platform;
+  let utmCampaign = '';
+  let utmMedium = 'lead_form';
+
+  try {
+    if (platform === 'google') {
+      const userColumnData = req.body.user_column_data || [];
+      userColumnData.forEach((col: any) => {
+        const name = String(col.column_name).toUpperCase();
+        if (name.includes('FULL NAME') || name.includes('NAME')) {
+          fullName = col.string_value;
+        } else if (name.includes('PHONE NUMBER') || name.includes('PHONE')) {
+          phone = col.string_value;
+        } else if (name.includes('EMAIL')) {
+          email = col.string_value;
+        }
+      });
+      utmCampaign = req.body.campaign_id ? `Campaign_${req.body.campaign_id}` : 'Google Ads Form';
+      
+    } else {
+      const entry = req.body.entry || [];
+      if (entry.length > 0 && entry[0].changes && entry[0].changes.length > 0) {
+        const changeValue = entry[0].changes[0].value;
+        const leadgenId = changeValue.leadgen_id;
+        utmCampaign = changeValue.adgroup_id ? `AdGroup_${changeValue.adgroup_id}` : 'Meta Ads Form';
+
+        const metaAccessToken = process.env.META_ACCESS_TOKEN;
+        if (metaAccessToken && leadgenId) {
+          const metaUrl = `https://graph.facebook.com/v19.0/${leadgenId}?access_token=${metaAccessToken}`;
+          const response = await fetch(metaUrl);
+          const resData = await response.json() as any;
+          const fieldData = resData?.field_data || [];
+          
+          fieldData.forEach((field: any) => {
+            const fieldName = String(field.name).toLowerCase();
+            const val = field.values?.[0] || '';
+            if (fieldName.includes('full_name') || fieldName.includes('name')) {
+              fullName = val;
+            } else if (fieldName.includes('phone') || fieldName.includes('whatsapp')) {
+              phone = val;
+            } else if (fieldName.includes('email')) {
+              email = val;
+            }
+          });
+        } else {
+          fullName = req.body.full_name || req.body.name || '';
+          phone = req.body.phone || req.body.phone_number || '';
+          email = req.body.email || '';
+          if (req.body.utm_campaign) utmCampaign = req.body.utm_campaign;
+        }
+      } else {
+        fullName = req.body.full_name || req.body.name || '';
+        phone = req.body.phone || req.body.phone_number || '';
+        email = req.body.email || '';
+        if (req.body.utm_campaign) utmCampaign = req.body.utm_campaign;
+      }
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+    if (!normalizedPhone) {
+      return res.status(400).json({ error: 'Missing or invalid phone number in payload' });
+    }
+
+    if (utmCampaign) {
+      const { data: matchedCampaign } = await supabase
+        .from('marketing_campaigns')
+        .select('name')
+        .or(`name.ilike.%${utmCampaign}%,id.eq.${utmCampaign}`)
+        .limit(1)
+        .maybeSingle();
+      if (matchedCampaign) {
+        utmCampaign = matchedCampaign.name;
+      }
+    }
+
+    const { data: existingLead } = await supabase
+      .from('leads')
+      .select('id')
+      .eq('phone', normalizedPhone)
+      .limit(1)
+      .maybeSingle();
+
+    let leadResult;
+    if (existingLead) {
+      leadResult = await supabase
+        .from('leads')
+        .update({
+          utm_source: utmSource,
+          utm_medium: utmMedium,
+          utm_campaign: utmCampaign || 'Tráfego Pago',
+          email: email || undefined,
+          origin: platform === 'google' ? 'google_ads' : 'meta_ads',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', existingLead.id)
+        .select('id, full_name, phone, email, origin, utm_source, utm_campaign')
+        .single();
+    } else {
+      leadResult = await supabase
+        .from('leads')
+        .insert({
+          full_name: fullName || `Lead ${utmSource}`,
+          phone: normalizedPhone,
+          email: email || null,
+          origin: platform === 'google' ? 'google_ads' : 'meta_ads',
+          utm_source: utmSource,
+          utm_medium: utmMedium,
+          utm_campaign: utmCampaign || 'Tráfego Pago',
+          conversation_status: 'novo',
+          temperature: 'warm',
+          last_interaction_at: new Date().toISOString()
+        })
+        .select('id, full_name, phone, email, origin, utm_source, utm_campaign')
+        .single();
+    }
+
+    if (leadResult.error) {
+      throw leadResult.error;
+    }
+
+    return res.status(200).json({
+      ok: true,
+      lead_id: leadResult.data.id,
+      name: leadResult.data.full_name,
+      phone: leadResult.data.phone,
+      utm_source: utmSource,
+      utm_campaign: utmCampaign
+    });
+
+  } catch (err: any) {
+    console.error('Error processing marketing webhook:', err);
+    return res.status(500).json({ error: 'Internal server error', details: err?.message });
+  }
+}
+
+// ----------------------------------------------------
+// Sync Logic
+// ----------------------------------------------------
+async function handleSync(req: any, res: any) {
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase service role client not initialized' });
+  }
+
   const metaAccessToken = process.env.META_ACCESS_TOKEN;
   const metaAdAccountId = process.env.META_AD_ACCOUNT_ID;
 
-  // Google API Credentials
   const googleDevToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
   const googleClientId = process.env.GOOGLE_ADS_CLIENT_ID;
   const googleClientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
@@ -82,9 +255,6 @@ export default async function handler(req: any, res: any) {
   const syncLog: string[] = [];
 
   try {
-    // ----------------------------------------------------
-    // CASE A: Sync Real Meta Ads Campaigns
-    // ----------------------------------------------------
     if (hasMetaCreds) {
       try {
         const cleanAcctId = String(metaAdAccountId).replace('act_', '');
@@ -100,14 +270,13 @@ export default async function handler(req: any, res: any) {
           const clicks = Number(item.clicks || 0);
           const impressions = Number(item.impressions || 0);
 
-          // Update marketing_campaigns
           const { error } = await supabase
             .from('marketing_campaigns')
             .upsert({
               name: campName,
               platform: 'meta_ads',
               status: 'active',
-              budget: 50.00, // Default budget wrapper
+              budget: 50.00,
               impressions,
               clicks,
               cost,
@@ -123,12 +292,8 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    // ----------------------------------------------------
-    // CASE B: Sync Real Google Ads Campaigns
-    // ----------------------------------------------------
     if (hasGoogleCreds) {
       try {
-        // 1. Get OAuth Access Token via native fetch
         const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -144,7 +309,6 @@ export default async function handler(req: any, res: any) {
         const accessToken = tokenData?.access_token;
         if (!accessToken) throw new Error('OAuth authentication token failed');
 
-        // 2. Query campaigns and metrics
         const cleanCustomerId = String(googleCustomerId).replace(/-/g, '');
         const queryUrl = `https://googleads.googleapis.com/v15/customers/${cleanCustomerId}/googleAds:search`;
         
@@ -168,9 +332,8 @@ export default async function handler(req: any, res: any) {
           const status = row.campaign?.status === 'ENABLED' ? 'active' : 'paused';
           const impressions = Number(row.metrics?.impressions || 0);
           const clicks = Number(row.metrics?.clicks || 0);
-          const cost = Number(row.metrics?.costMicros || 0) / 1000000; // Convert micros to currency unit
+          const cost = Number(row.metrics?.costMicros || 0) / 1000000;
 
-          // Update marketing_campaigns
           const { error } = await supabase
             .from('marketing_campaigns')
             .upsert({
@@ -193,18 +356,13 @@ export default async function handler(req: any, res: any) {
       }
     }
 
-    // ----------------------------------------------------
-    // CASE C: Run Simulation/Mock Sync (Fallbacks)
-    // ----------------------------------------------------
     if (!hasMetaCreds && !hasGoogleCreds) {
-      // 1. Fetch campaigns from DB
       let { data: campaigns, error: fetchErr } = await supabase
         .from('marketing_campaigns')
         .select('*');
 
       if (fetchErr) throw fetchErr;
 
-      // 2. Seed default mockup campaigns if table is empty
       if (!campaigns || campaigns.length === 0) {
         const { data: inserted, error: insertErr } = await supabase
           .from('marketing_campaigns')
@@ -216,11 +374,10 @@ export default async function handler(req: any, res: any) {
         syncLog.push("Seeded marketing_campaigns with 5 default simulation campaigns.");
       }
 
-      // 3. Add randomized variations to simulate active daily traffic
       for (const camp of campaigns) {
         if (camp.status === 'active') {
-          const newClicks = Math.floor(Math.random() * 8) + 2; // +2 to +9 clicks
-          const newImpressions = newClicks * (Math.floor(Math.random() * 15) + 12); // CTR around 6-8%
+          const newClicks = Math.floor(Math.random() * 8) + 2;
+          const newImpressions = newClicks * (Math.floor(Math.random() * 15) + 12);
           const avgCpc = camp.clicks > 0 ? (camp.cost / camp.clicks) : (Math.random() * 1.5 + 0.8);
           const addedCost = Number((newClicks * avgCpc).toFixed(2));
 
@@ -252,4 +409,36 @@ export default async function handler(req: any, res: any) {
     console.error('Error syncing marketing campaigns:', err);
     return res.status(500).json({ error: 'Internal server error during sync', details: err?.message });
   }
+}
+
+// ----------------------------------------------------
+// Main Router Export
+// ----------------------------------------------------
+export default async function handler(req: any, res: any) {
+  // Determine action from URL path or query params
+  const url = String(req.url || '').toLowerCase();
+  
+  if (url.includes('/webhook')) {
+    return handleWebhook(req, res);
+  } else if (url.includes('/sync')) {
+    return handleSync(req, res);
+  }
+  
+  // Try checking req.path for express fallback
+  const path = String(req.path || '').toLowerCase();
+  if (path.includes('/webhook')) {
+    return handleWebhook(req, res);
+  } else if (path.includes('/sync')) {
+    return handleSync(req, res);
+  }
+
+  // Fallback for query param (e.g. ?type=webhook)
+  const type = String(req.query?.type || req.body?.type || '').toLowerCase();
+  if (type === 'webhook') {
+    return handleWebhook(req, res);
+  } else if (type === 'sync') {
+    return handleSync(req, res);
+  }
+
+  return res.status(404).json({ error: 'Marketing endpoint not found' });
 }

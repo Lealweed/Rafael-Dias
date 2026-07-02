@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/api/marketing/:path*",
+      "destination": "/api/marketing"
+    },
+    {
+      "source": "/api/stripe/:path*",
+      "destination": "/api/stripe"
+    },
+    {
       "source": "/api/:path*",
       "destination": "/api/:path*"
     },

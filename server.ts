@@ -11,12 +11,10 @@ import proposalDocHandler from "./api/n8n/proposal-doc.js";
 import siteSettingsRouter from "./api/site-settings";
 import leadsOpsHandler from "./api/leads/ops.js";
 import appointmentsHandler from "./api/automation/appointments.js";
-import stripeCheckoutHandler from "./api/stripe/checkout.js";
-import stripeWebhookHandler from "./api/stripe/webhook.js";
+import stripeHandler from "./api/stripe.js";
 import portalDataHandler from "./api/portal/data.js";
 import healthHandler from "./api/health.js";
-import marketingWebhookHandler from "./api/marketing/webhook.js";
-import marketingSyncHandler from "./api/marketing/sync.js";
+import marketingHandler from "./api/marketing.js";
 
 async function startServer() {
   const app = express();
@@ -85,13 +83,13 @@ async function startServer() {
   app.use("/api/site-settings", siteSettingsRouter);
   app.all("/api/leads/ops", leadsOpsHandler);
   app.all("/api/automation/appointments", appointmentsHandler);
-  app.post("/api/stripe/checkout", stripeCheckoutHandler as any);
-  app.post("/api/stripe/webhook", stripeWebhookHandler as any);
+  app.post("/api/stripe/checkout", stripeHandler as any);
+  app.post("/api/stripe/webhook", stripeHandler as any);
   app.post("/api/portal/data", portalDataHandler);
   // /api/portal/read-notification is now handled by portalDataHandler with action='read-notification'
   app.post("/api/portal/read-notification", portalDataHandler);
-  app.all("/api/marketing/webhook", marketingWebhookHandler);
-  app.post("/api/marketing/sync", marketingSyncHandler);
+  app.all("/api/marketing/webhook", marketingHandler);
+  app.post("/api/marketing/sync", marketingHandler);
 
   // Vite middleware
   if (process.env.NODE_ENV !== "production") {

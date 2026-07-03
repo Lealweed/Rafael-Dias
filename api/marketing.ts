@@ -240,14 +240,35 @@ async function handleSync(req: any, res: any) {
     return res.status(500).json({ error: 'Supabase service role client not initialized' });
   }
 
-  const metaAccessToken = process.env.META_ACCESS_TOKEN;
-  const metaAdAccountId = process.env.META_AD_ACCOUNT_ID;
+  // Fetch dynamic credentials from database, fallback to environment variables
+  let metaAccessToken = process.env.META_ACCESS_TOKEN;
+  let metaAdAccountId = process.env.META_AD_ACCOUNT_ID;
+  let googleDevToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
+  let googleClientId = process.env.GOOGLE_ADS_CLIENT_ID;
+  let googleClientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
+  let googleRefreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
+  let googleCustomerId = process.env.GOOGLE_ADS_CUSTOMER_ID;
 
-  const googleDevToken = process.env.GOOGLE_ADS_DEVELOPER_TOKEN;
-  const googleClientId = process.env.GOOGLE_ADS_CLIENT_ID;
-  const googleClientSecret = process.env.GOOGLE_ADS_CLIENT_SECRET;
-  const googleRefreshToken = process.env.GOOGLE_ADS_REFRESH_TOKEN;
-  const googleCustomerId = process.env.GOOGLE_ADS_CUSTOMER_ID;
+  try {
+    const { data: dbSettings } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'marketing_credentials')
+      .maybeSingle();
+
+    if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+      const val = dbSettings.value as any;
+      if (val.meta_access_token) metaAccessToken = val.meta_access_token;
+      if (val.meta_ad_account_id) metaAdAccountId = val.meta_ad_account_id;
+      if (val.google_developer_token) googleDevToken = val.google_developer_token;
+      if (val.google_client_id) googleClientId = val.google_client_id;
+      if (val.google_client_secret) googleClientSecret = val.google_client_secret;
+      if (val.google_refresh_token) googleRefreshToken = val.google_refresh_token;
+      if (val.google_customer_id) googleCustomerId = val.google_customer_id;
+    }
+  } catch (err) {
+    console.error('Error fetching credentials from site_settings:', err);
+  }
 
   const hasMetaCreds = Boolean(metaAccessToken && metaAdAccountId);
   const hasGoogleCreds = Boolean(googleDevToken && googleClientId && googleClientSecret && googleRefreshToken && googleCustomerId);

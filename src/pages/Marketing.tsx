@@ -46,6 +46,20 @@ export default function Marketing() {
     conversionsCount: 0
   });
 
+  const [showConfig, setShowConfig] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error" | "info", text: string } | null>(null);
+
+  // API Credentials States
+  const [metaAccessToken, setMetaAccessToken] = useState("");
+  const [metaAdAccountId, setMetaAdAccountId] = useState("");
+  const [googleDevToken, setGoogleDevToken] = useState("");
+  const [googleClientId, setGoogleClientId] = useState("");
+  const [googleClientSecret, setGoogleClientSecret] = useState("");
+  const [googleRefreshToken, setGoogleRefreshToken] = useState("");
+  const [googleCustomerId, setGoogleCustomerId] = useState("");
+  const [savingCreds, setSavingCreds] = useState(false);
+
   const WEBHOOK_META = "https://rafael-dias-api.vercel.app/api/marketing/webhook?platform=meta&token=rd_live_83726a19f";
   const WEBHOOK_GOOGLE = "https://rafael-dias-api.vercel.app/api/marketing/webhook?platform=google&token=rd_live_83726a19f";
 
@@ -115,10 +129,82 @@ export default function Marketing() {
         conversionsCount
       });
 
+      // 4. Fetch Credentials
+      const { data: dbSettings } = await supabase
+        .from("site_settings")
+        .select("value")
+        .eq("key", "marketing_credentials")
+        .maybeSingle();
+
+      if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+        const val = dbSettings.value as any;
+        setMetaAccessToken(val.meta_access_token || "");
+        setMetaAdAccountId(val.meta_ad_account_id || "");
+        setGoogleDevToken(val.google_developer_token || "");
+        setGoogleClientId(val.google_client_id || "");
+        setGoogleClientSecret(val.google_client_secret || "");
+        setGoogleRefreshToken(val.google_refresh_token || "");
+        setGoogleCustomerId(val.google_customer_id || "");
+      }
+
     } catch (err) {
       console.error("Error fetching marketing data:", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSaveCredentials = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingCreds(true);
+    setSyncMessage(null);
+    try {
+      const payload = {
+        meta_access_token: metaAccessToken.trim(),
+        meta_ad_account_id: metaAdAccountId.trim(),
+        google_developer_token: googleDevToken.trim(),
+        google_client_id: googleClientId.trim(),
+        google_client_secret: googleClientSecret.trim(),
+        google_refresh_token: googleRefreshToken.trim(),
+        google_customer_id: googleCustomerId.trim()
+      };
+
+      const { error } = await supabase
+        .from("site_settings")
+        .upsert({
+          key: "marketing_credentials",
+          value: payload,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'key' });
+
+      if (error) throw error;
+      setSyncMessage({ type: "success", text: "Credenciais de API salvas com sucesso!" });
+    } catch (err: any) {
+      console.error("Error saving API credentials:", err);
+      setSyncMessage({ type: "error", text: `Erro ao salvar credenciais: ${err.message}` });
+    } finally {
+      setSavingCreds(false);
+    }
+  };
+
+  const handleTriggerSync = async () => {
+    setSyncing(true);
+    setSyncMessage(null);
+    try {
+      const res = await fetch("/api/marketing?type=sync", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro de servidor na sincronização");
+
+      setSyncMessage({ 
+        type: "success", 
+        text: `Sincronização concluída: ${data.logs?.join(" ") || "Campanhas atualizadas."}` 
+      });
+      await fetchMarketingData();
+    } catch (err: any) {
+      console.error("Error triggering campaigns sync:", err);
+      setSyncMessage({ type: "error", text: `Falha na sincronização: ${err.message}` });
+    } finally {
+      setSyncing(false);
     }
   };
 
@@ -177,13 +263,35 @@ export default function Marketing() {
           <p className="text-sm text-white/40 font-light">Métricas integradas do Google Ads e Meta Ads do Instituto Rafael Dias.</p>
         </div>
 
-        <button 
-          onClick={fetchMarketingData} 
-          className="flex items-center gap-2 bg-[#0B0D12]/60 border border-white/5 px-4 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:border-gold/30 hover:bg-white/5 transition-all duration-300"
-        >
-          <RefreshCw className="h-3.5 w-3.5" />
-          Recarregar Painel
-        </button>
+        <div className="flex items-center gap-3">
+          <button 
+            onClick={handleTriggerSync}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-gold/10 border border-gold/20 hover:bg-gold/20 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-[#E5C38C] hover:shadow-gold disabled:opacity-50 transition-all duration-300 cursor-pointer"
+          >
+            {syncing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="h-3.5 w-3.5" />
+            )}
+            <span>Sincronizar Métricas</span>
+          </button>
+          
+          <button 
+            onClick={() => setShowConfig(!showConfig)}
+            className="flex items-center gap-2 bg-[#0B0D12]/60 border border-white/5 px-4 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:border-gold/30 hover:bg-white/5 transition-all duration-300 cursor-pointer"
+          >
+            <span>Configurar APIs</span>
+          </button>
+
+          <button 
+            onClick={fetchMarketingData} 
+            className="flex items-center gap-2 bg-[#0B0D12]/60 border border-white/5 px-4 py-2 rounded-xl text-xs text-white/60 hover:text-white hover:border-gold/30 hover:bg-white/5 transition-all duration-300 cursor-pointer"
+          >
+            <RefreshCw className="h-3.5 w-3.5" />
+            Recarregar Painel
+          </button>
+        </div>
       </div>
 
       {loading ? (
@@ -406,6 +514,146 @@ export default function Marketing() {
               </table>
             </div>
           </div>
+
+          {/* Sync & Feedback Notifications */}
+          {syncMessage && (
+            <div className={`p-4 rounded-2xl flex items-center justify-between border backdrop-blur-xl ${
+              syncMessage.type === "success" 
+                ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" 
+                : "bg-red-500/10 border-red-500/20 text-red-400"
+            }`}>
+              <span className="text-xs font-bold uppercase tracking-wider">{syncMessage.text}</span>
+              <button onClick={() => setSyncMessage(null)} className="text-white/40 hover:text-white text-xs font-bold uppercase">Fechar</button>
+            </div>
+          )}
+
+          {/* CONFIGURATION PANEL */}
+          {showConfig && (
+            <div className="bg-[#0B0D12]/80 border border-gold/20 rounded-3xl p-6 backdrop-blur-xl flex flex-col gap-6 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-4 opacity-[0.02] pointer-events-none">
+                <Target className="h-32 w-32 text-gold" />
+              </div>
+
+              <div>
+                <h3 className="text-lg font-medium text-gold font-serif">Configuração de APIs (Meta & Google Ads)</h3>
+                <p className="text-xs text-white/40 mt-1">Insira as credenciais de desenvolvedor para que o CRM sincronize relatórios de cliques, impressões e custos automaticamente.</p>
+              </div>
+
+              <form onSubmit={handleSaveCredentials} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  
+                  {/* Meta Ads Credentials */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs uppercase tracking-widest text-pink-400 font-black border-b border-white/5 pb-2">Meta Ads (Facebook/Instagram)</h4>
+                    
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Access Token</label>
+                      <input 
+                        type="password"
+                        value={metaAccessToken}
+                        onChange={(e) => setMetaAccessToken(e.target.value)}
+                        placeholder="EAAB..."
+                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Ad Account ID</label>
+                      <input 
+                        type="text"
+                        value={metaAdAccountId}
+                        onChange={(e) => setMetaAdAccountId(e.target.value)}
+                        placeholder="act_123456789"
+                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Google Ads Credentials */}
+                  <div className="space-y-4">
+                    <h4 className="text-xs uppercase tracking-widest text-blue-400 font-black border-b border-white/5 pb-2">Google Ads API</h4>
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Developer Token</label>
+                        <input 
+                          type="password"
+                          value={googleDevToken}
+                          onChange={(e) => setGoogleDevToken(e.target.value)}
+                          placeholder="Dev Token"
+                          className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Customer ID (ID da Conta)</label>
+                        <input 
+                          type="text"
+                          value={googleCustomerId}
+                          onChange={(e) => setGoogleCustomerId(e.target.value)}
+                          placeholder="123-456-7890"
+                          className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Client ID</label>
+                        <input 
+                          type="text"
+                          value={googleClientId}
+                          onChange={(e) => setGoogleClientId(e.target.value)}
+                          placeholder="OAuth Client ID"
+                          className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Client Secret</label>
+                        <input 
+                          type="password"
+                          value={googleClientSecret}
+                          onChange={(e) => setGoogleClientSecret(e.target.value)}
+                          placeholder="OAuth Client Secret"
+                          className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-[13px] font-black uppercase tracking-wider text-white/50 block">Refresh Token</label>
+                      <input 
+                        type="password"
+                        value={googleRefreshToken}
+                        onChange={(e) => setGoogleRefreshToken(e.target.value)}
+                        placeholder="Refresh Token"
+                        className="w-full bg-white/[0.02] border border-white/10 rounded-xl px-3 py-2.5 text-white text-xs outline-none focus:border-gold/30"
+                      />
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4 border-t border-white/5">
+                  <button 
+                    type="button"
+                    onClick={() => setShowConfig(false)}
+                    className="px-5 py-2.5 rounded-xl border border-white/10 text-white/70 hover:text-white text-xs uppercase tracking-wider font-bold transition-all cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button 
+                    type="submit"
+                    disabled={savingCreds}
+                    className="px-5 py-2.5 rounded-xl bg-gold text-black shadow-gold hover:opacity-90 text-xs uppercase tracking-widest font-black transition-all disabled:opacity-50 cursor-pointer"
+                  >
+                    {savingCreds ? "Salvando..." : "Salvar Configurações"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          )}
 
           {/* INTEGRATION SETTINGS */}
           <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 backdrop-blur-xl flex flex-col gap-6">

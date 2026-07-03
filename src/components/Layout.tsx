@@ -115,7 +115,7 @@ export default function Layout() {
             <div className="flex items-center gap-1.5 mt-0.5">
               <div className="h-[1px] w-3 bg-gold/40" />
               <span className="text-[13px] uppercase tracking-[0.3em] text-gold/60 font-black">
-                Boutique Aesthetic Hub
+                Inteligência Estética
               </span>
             </div>
           </div>

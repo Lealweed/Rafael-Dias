@@ -129,7 +129,7 @@ function VIPSpotlight({ appointment }: any) {
       <div className="relative z-10">
           <div className="flex items-center gap-1.5 mb-2">
             <div className="h-[1px] w-4 bg-gold/40" />
-            <span className="text-[13px] uppercase tracking-[0.2em] font-bold text-gold">VIP Spotlight</span>
+            <span className="text-[13px] uppercase tracking-[0.2em] font-bold text-gold">Destaque VIP</span>
         </div>
         
         <AnimatePresence mode="wait">
@@ -266,6 +266,13 @@ export default function Dashboard() {
     return Math.round(((stats.newLeadsToday - stats.newLeadsYesterday) / stats.newLeadsYesterday) * 100);
   }, [stats.newLeadsToday, stats.newLeadsYesterday]);
 
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 12) return "Bom Dia";
+    if (hour >= 12 && hour < 18) return "Boa Tarde";
+    return "Boa Noite";
+  };
+
   return (
     <div className="flex-1 overflow-y-auto p-4 lg:p-6 w-full h-full flex flex-col space-y-6 top-spotlight pb-12">
       
@@ -278,7 +285,7 @@ export default function Dashboard() {
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="text-xl md:text-2xl font-display leading-[1.1] text-white tracking-tighter"
           >
-            Good <span className="italic font-extralight text-gold/80">Morning</span>, <br />
+            {getGreeting().split(" ")[0]} <span className="italic font-extralight text-gold/80">{getGreeting().split(" ")[1]}</span>, <br />
             Dr. Rafael Dias
           </motion.h1>
           <motion.div 
@@ -289,7 +296,7 @@ export default function Dashboard() {
           >
             <div className="flex items-center gap-1.5 bg-gold/5 px-2.5 py-1 rounded-full border border-gold/20">
               <span className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-[13px] tracking-[0.2em] uppercase font-bold text-gold">Aesthetic intelligence active</span>
+              <span className="text-[13px] tracking-[0.2em] uppercase font-bold text-gold">Inteligência estética ativa</span>
             </div>
             <p className="text-[13px] font-light text-white/40 max-w-xs">
               Processamento centralizado de {stats.newLeadsToday} solicitações via n8n.
@@ -352,7 +359,7 @@ export default function Dashboard() {
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 space-y-3">
           <div className="flex items-center justify-between border-b border-white/5 pb-1.5">
-            <h3 className="text-sm font-display text-white">Stream de Leads <span className="text-gold/40 italic font-light ml-1 text-xs">Recent activity</span></h3>
+            <h3 className="text-sm font-display text-white">Stream de Leads <span className="text-gold/40 italic font-light ml-1 text-xs">Atividade recente</span></h3>
             <PremiumButton variant="ghost" onClick={() => navigate('/leads')} className="text-[13px] opacity-40">
               Ver Histórico Completo
             </PremiumButton>

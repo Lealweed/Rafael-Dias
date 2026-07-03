@@ -34,7 +34,7 @@ export default async function handler(req: any, res: any) {
     n8n: n8nConfigured ? 'configured' : 'missing',
   };
 
-  const checks = ['Usuarios', 'leads', 'messages', 'conversations', 'integration_events'];
+  const checks = ['leads', 'messages', 'conversations', 'integration_events'];
   out.tables = {};
 
   for (const t of checks) {

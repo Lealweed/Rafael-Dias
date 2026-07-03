@@ -134,7 +134,7 @@ export default function Layout() {
           <input
             name="search"
             type="text"
-            placeholder="Search patients, protocols or inquiries..."
+            placeholder="Buscar pacientes, protocolos ou consultas..."
             className="w-full bg-transparent text-[13px] outline-none placeholder:text-white/10 text-white font-light tracking-wide"
           />
         </form>
@@ -146,7 +146,7 @@ export default function Layout() {
               transition={{ duration: 2, repeat: Infinity }}
               className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]" 
             />
-            <span className="text-[13px] uppercase tracking-[0.2em] font-black text-gold/80">Automation Live</span>
+            <span className="text-[13px] uppercase tracking-[0.2em] font-black text-gold/80">Automação Ativa</span>
           </div>
           
           <Link 
@@ -160,7 +160,7 @@ export default function Layout() {
           <div className="flex items-center gap-3 group cursor-pointer" onClick={handleLogout}>
             <div className="text-right flex flex-col justify-center">
               <p className="text-[13px] font-bold text-white font-display tracking-tight uppercase group-hover:text-gold transition-colors">Dr. Rafael Dias</p>
-              <p className="text-[13px] text-white/30 font-black tracking-[0.15em] uppercase">Executive Director</p>
+              <p className="text-[13px] text-white/30 font-black tracking-[0.15em] uppercase">Diretor Executivo</p>
             </div>
             <div className="h-8 w-8 border border-white/10 flex items-center justify-center rounded-lg bg-black-matte text-white shadow-premium group-hover:border-gold/40 group-hover:shadow-gold transition-all duration-500 font-bold text-[13px]">
               RD
@@ -177,7 +177,7 @@ export default function Layout() {
             <Link to="/dashboard" className={navLinkClass("/dashboard")}>
               <div className="flex items-center gap-3">
                 <LayoutDashboard className={navIconClass("/dashboard")} />
-                <span>Overview</span>
+                <span>Painel Geral</span>
               </div>
               {location.pathname === "/dashboard" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-2 bottom-2 w-0.5 bg-gold rounded-r-full shadow-gold" />
@@ -197,7 +197,7 @@ export default function Layout() {
             <Link to="/patients" className={navLinkClass("/patients")}>
               <div className="flex items-center gap-5">
                 <UserCheck className={navIconClass("/patients")} />
-                <span>Patients</span>
+                <span>Pacientes</span>
               </div>
               {location.pathname === "/patients" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
@@ -207,7 +207,7 @@ export default function Layout() {
             <Link to="/conversations" className={navLinkClass("/conversations")}>
               <div className="flex items-center gap-5">
                 <MessageSquare className={navIconClass("/conversations")} />
-                <span>Conversations</span>
+                <span>Conversas</span>
               </div>
               <AnimatePresence>
                 {counters.conversations > 0 && (
@@ -228,7 +228,7 @@ export default function Layout() {
             <Link to="/pipeline" className={navLinkClass("/pipeline")}>
               <div className="flex items-center gap-5">
                 <Sparkles className={navIconClass("/pipeline")} />
-                <span>Sales Funnel</span>
+                <span>Funil de Vendas</span>
               </div>
               {location.pathname === "/pipeline" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
@@ -238,7 +238,7 @@ export default function Layout() {
             <Link to="/calendar" className={navLinkClass("/calendar")}>
               <div className="flex items-center gap-5">
                 <CalendarIcon className={navIconClass("/calendar")} />
-                <span>Calendar</span>
+                <span>Agenda</span>
               </div>
               {location.pathname === "/calendar" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
@@ -269,7 +269,7 @@ export default function Layout() {
             <Link to="/reports" className={navLinkClass("/reports")}>
               <div className="flex items-center gap-5">
                 <BarChart3 className={navIconClass("/reports")} />
-                <span>Intelligence</span>
+                <span>Relatórios</span>
               </div>
               {location.pathname === "/reports" && (
                 <motion.div layoutId="nav-glow" className="absolute left-0 top-3 bottom-3 w-1 bg-gold rounded-r-full shadow-gold" />
@@ -377,15 +377,15 @@ export default function Layout() {
         <div className="flex gap-8 items-center">
           <div className="flex items-center gap-2">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500/40" />
-            <span>Database Online</span>
+            <span>Banco de Dados Online</span>
           </div>
           <span className="text-gold/20 font-black">v1.2.0 • Premium Edition</span>
         </div>
         <div className="flex items-center gap-10">
           <span className="text-white/5 font-mono tracking-normal lowercase opacity-60">managed by n8n.io</span>
           <div className="flex gap-6">
-            <Link to="/privacy-policy" className="hover:text-gold/60 transition-colors">Privacy</Link>
-            <Link to="/terms-of-service" className="hover:text-gold/60 transition-colors">Terms</Link>
+            <Link to="/privacy-policy" className="hover:text-gold/60 transition-colors">Privacidade</Link>
+            <Link to="/terms-of-service" className="hover:text-gold/60 transition-colors">Termos</Link>
           </div>
           <span className="font-black text-white/5 italic">© 2026 Instituto Rafael Dias</span>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "../lib/supabase/client";
 import { 
   Calculator, 
@@ -324,7 +324,7 @@ export default function Cashier() {
 
   const expectedCashInDrawer = (Number(currentSession?.opening_balance) || 0) + totalVendasDinheiro + totalSuprimentos - totalSangrias;
   
-  const totalSalesAllMethods = Object.values(paymentsSum).reduce((sum, val) => sum + val, 0);
+  const totalSalesAllMethods = (Object.values(paymentsSum) as number[]).reduce((sum, val) => sum + val, 0);
 
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(val);

@@ -357,45 +357,7 @@ async function handleSync(req: any, res: any) {
     }
 
     if (!hasMetaCreds && !hasGoogleCreds) {
-      let { data: campaigns, error: fetchErr } = await supabase
-        .from('marketing_campaigns')
-        .select('*');
-
-      if (fetchErr) throw fetchErr;
-
-      if (!campaigns || campaigns.length === 0) {
-        const { data: inserted, error: insertErr } = await supabase
-          .from('marketing_campaigns')
-          .insert(MOCK_SEED_CAMPAIGNS)
-          .select('*');
-
-        if (insertErr) throw insertErr;
-        campaigns = inserted || [];
-        syncLog.push("Seeded marketing_campaigns with 5 default simulation campaigns.");
-      }
-
-      for (const camp of campaigns) {
-        if (camp.status === 'active') {
-          const newClicks = Math.floor(Math.random() * 8) + 2;
-          const newImpressions = newClicks * (Math.floor(Math.random() * 15) + 12);
-          const avgCpc = camp.clicks > 0 ? (camp.cost / camp.clicks) : (Math.random() * 1.5 + 0.8);
-          const addedCost = Number((newClicks * avgCpc).toFixed(2));
-
-          const { error } = await supabase
-            .from('marketing_campaigns')
-            .update({
-              impressions: camp.impressions + newImpressions,
-              clicks: camp.clicks + newClicks,
-              cost: Number(camp.cost) + addedCost,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', camp.id);
-
-          if (error) console.error(`Error updating simulation stats for campaign ${camp.name}:`, error);
-        }
-      }
-
-      syncLog.push("Simulation mode active (Credentials missing in .env). Applied random daily traffic variations (+10%).");
+      syncLog.push("Nenhuma credencial do Meta Ads ou Google Ads configurada. Sincronização ignorada (modo simulação desativado).");
     }
 
     return res.status(200).json({

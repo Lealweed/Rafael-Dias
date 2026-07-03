@@ -67,95 +67,7 @@ export default function Marketing() {
 
       if (campErr) throw campErr;
 
-      if (!dbCampaigns || dbCampaigns.length === 0) {
-        const SAMPLE_CAMPAIGNS: Campaign[] = [
-          {
-            id: "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
-            name: "Campanha Carrossel Botox 2026",
-            platform: "meta_ads",
-            status: "active",
-            budget: 50.00,
-            impressions: 24500,
-            clicks: 1220,
-            cost: 850.50,
-            start_date: "2026-06-01",
-            end_date: null,
-            lead_count: 3,
-            cpl: 283.50,
-            conversions: 2
-          },
-          {
-            id: "b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e",
-            name: "Bioestimuladores de ColÃ¡geno - VÃ­deo",
-            platform: "meta_ads",
-            status: "active",
-            budget: 75.00,
-            impressions: 18200,
-            clicks: 940,
-            cost: 620.00,
-            start_date: "2026-06-15",
-            end_date: null,
-            lead_count: 2,
-            cpl: 310.00,
-            conversions: 1
-          },
-          {
-            id: "c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f",
-            name: "Preenchimento Labial / MandÃ­bula - Pesquisa",
-            platform: "google_ads",
-            status: "active",
-            budget: 100.00,
-            impressions: 8900,
-            clicks: 1050,
-            cost: 1240.20,
-            start_date: "2026-06-05",
-            end_date: null,
-            lead_count: 3,
-            cpl: 413.40,
-            conversions: 3
-          },
-          {
-            id: "d4e5f6a7-b8c9-0d1e-2f3a-4b5c6d7e8f9a",
-            name: "ClÃ­nica HarmonizaÃ§Ã£o Facial Parauapebas",
-            platform: "google_ads",
-            status: "active",
-            budget: 80.00,
-            impressions: 12000,
-            clicks: 1350,
-            cost: 980.10,
-            start_date: "2026-06-01",
-            end_date: null,
-            lead_count: 3,
-            cpl: 326.70,
-            conversions: 2
-          },
-          {
-            id: "e5f6a7b8-c9d0-1e2f-3a4b-5c6d7e8f9a0b",
-            name: "RinomodelaÃ§Ã£o - Antes e Depois",
-            platform: "meta_ads",
-            status: "paused",
-            budget: 40.00,
-            impressions: 15000,
-            clicks: 650,
-            cost: 450.00,
-            start_date: "2026-05-10",
-            end_date: "2026-06-10",
-            lead_count: 1,
-            cpl: 450.00,
-            conversions: 1
-          }
-        ];
 
-        setCampaigns(SAMPLE_CAMPAIGNS);
-        setLeadsStats({
-          totalCampaignLeads: 12,
-          googleLeads: 6,
-          metaLeads: 6,
-          conversionsCount: 8
-        });
-        setLoading(false);
-        return;
-      }
 
       // 2. Fetch Leads with UTM tracking
       const { data: dbLeads, error: leadsErr } = await supabase
@@ -447,41 +359,49 @@ export default function Marketing() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/5 text-xs">
-                  {campaigns.map((c) => {
-                    const ctrVal = c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0;
-                    return (
-                      <tr key={c.id} className="hover:bg-white/[0.01] transition-colors">
-                        <td className="py-4 px-4 font-medium text-white font-display text-sm">{c.name}</td>
-                        <td className="py-4 px-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
-                            c.platform === 'google_ads' 
-                              ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' 
-                              : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'
-                          }`}>
-                            {c.platform === 'google_ads' ? 'Google' : 'Meta'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
-                            c.status === 'active' 
-                              ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
-                              : 'bg-white/5 border border-white/10 text-white/40'
-                          }`}>
-                            {c.status === 'active' ? 'Ativo' : 'Pausado'}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 font-mono text-white/80">R$ {Number(c.cost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
-                        <td className="py-4 px-4 font-mono">
-                          {c.clicks} <span className="text-white/30 text-[13px]">({ctrVal.toFixed(1)}%)</span>
-                        </td>
-                        <td className="py-4 px-4 text-center font-bold text-white">{c.lead_count}</td>
-                        <td className="py-4 px-4 font-mono font-medium text-gold">R$ {c.cpl}</td>
-                        <td className="py-4 px-4 text-center">
-                          <span className="font-bold text-emerald-400">{c.conversions}</span>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {campaigns.length === 0 ? (
+                    <tr>
+                      <td colSpan={8} className="py-8 text-center text-white/30 italic">
+                        Nenhuma campanha de marketing ativa encontrada.
+                      </td>
+                    </tr>
+                  ) : (
+                    campaigns.map((c) => {
+                      const ctrVal = c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0;
+                      return (
+                        <tr key={c.id} className="hover:bg-white/[0.01] transition-colors">
+                          <td className="py-4 px-4 font-medium text-white font-display text-sm">{c.name}</td>
+                          <td className="py-4 px-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
+                              c.platform === 'google_ads' 
+                                ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' 
+                                : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'
+                            }`}>
+                              {c.platform === 'google_ads' ? 'Google' : 'Meta'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
+                              c.status === 'active' 
+                                ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
+                                : 'bg-white/5 border border-white/10 text-white/40'
+                            }`}>
+                              {c.status === 'active' ? 'Ativo' : 'Pausado'}
+                            </span>
+                          </td>
+                          <td className="py-4 px-4 font-mono text-white/80">R$ {Number(c.cost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</td>
+                          <td className="py-4 px-4 font-mono">
+                            {c.clicks} <span className="text-white/30 text-[13px]">({ctrVal.toFixed(1)}%)</span>
+                          </td>
+                          <td className="py-4 px-4 text-center font-bold text-white">{c.lead_count}</td>
+                          <td className="py-4 px-4 font-mono font-medium text-gold">R$ {c.cpl}</td>
+                          <td className="py-4 px-4 text-center">
+                            <span className="font-bold text-emerald-400">{c.conversions}</span>
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
                 </tbody>
               </table>
             </div>

@@ -721,11 +721,48 @@ function analyzeAdCopy(adName: string, adBody: string) {
   let score = Math.max(3.5, Math.min(7.5, rawScore));
   score = Math.round(score * 10) / 10;
 
+  // Categorize for Script Blueprint
+  let theme = "Harmonização Natural (Autoridade & Posicionamento)";
+  let hook = "O segredo de um procedimento estético bonito é ninguém perceber que você fez, apenas notar que você está mais jovem.";
+  let pain = "O maior medo de quem procura harmonização é ficar com o rosto artificial ou com aquela aparência padronizada.";
+  let solution = "Aqui nós estudamos a anatomia individual de cada paciente. A técnica e a sofisticação andam juntas para realçar o que você já tem de melhor.";
+  let cta = "Envie uma mensagem pelo WhatsApp e agende seu horário para darmos início à sua transformação.";
+
+  const lowerName = adName.toLowerCase();
+  const lowerBody = text.toLowerCase();
+
+  if (lowerName.includes("boleto") || lowerBody.includes("boleto") || lowerBody.includes("pagamento") || lowerBody.includes("parcela")) {
+    theme = "Acessibilidade & Financiamento (Boleto da Beleza)";
+    hook = "Quer realizar seu procedimento estético mas o cartão de crédito está sem limite? Nós temos a solução ideal.";
+    pain = "Muitas pessoas adiam o autocuidado e o rejuvenescimento porque acham que o pagamento precisa ser à vista ou comprometer o limite do cartão de crédito.";
+    solution = "Criamos o Boleto da Beleza: uma modalidade de parcelamento próprio facilitado pela clínica, sem burocracia e com parcelas leves que cabem no seu orçamento.";
+    cta = "Clique em 'Saiba Mais' agora para fazer uma simulação rápida de parcelas pelo WhatsApp!";
+  } else if (lowerName.includes("orelha") || lowerName.includes("abano") || lowerBody.includes("orelha") || lowerBody.includes("abano")) {
+    theme = "Tratamento de Orelha de Abano (Autoconfiança)";
+    hook = "Suas orelhas te causam algum tipo de desconforto na hora de prender o cabelo ou tirar fotos?";
+    pain = "O incômodo com o formato ou a projeção das orelhas é muito comum e abala a autoconfiança de muitas pessoas desde a idade escolar.";
+    solution = "Dispomos de técnicas modernas, rápidas e seguras para remodelar e corrigir o posicionamento das orelhas de forma harmoniosa e definitiva.";
+    cta = "Toque no botão 'Fale Conosco' e agende uma conversa privada para planejar a sua mudança.";
+  } else if (lowerName.includes("emagrec") || lowerName.includes("colagen") || lowerName.includes("botox") || lowerBody.includes("colágen") || lowerBody.includes("botox") || lowerBody.includes("flacidez") || lowerBody.includes("preenchi")) {
+    theme = "Estética Avançada (Rejuvenescimento & Sustentação)";
+    hook = "Sentiu que seu rosto perdeu a sustentação e ficou com aspecto cansado após perder peso?";
+    pain = "O emagrecimento ou a passagem dos anos reduz a gordura estrutural e o colágeno facial, causando flacidez e aquele aspecto de 'rosto derretido'.";
+    solution = "Associando bioestimuladores de colágeno à reposição de volumes estratégicos com ácido hialurônico, devolvemos a firmeza natural do rosto sem exageros.";
+    cta = "Clique em 'Converse Conosco' e venha fazer uma análise personalizada da sua anatomia facial.";
+  }
+
   return {
     score,
     strengths: strengths.slice(0, 2),
     weaknesses: weaknesses.slice(0, 2),
-    suggestions: suggestions.slice(0, 2)
+    suggestions: suggestions.slice(0, 2),
+    scriptBlueprint: {
+      theme,
+      hook,
+      pain,
+      solution,
+      cta
+    }
   };
 }
 

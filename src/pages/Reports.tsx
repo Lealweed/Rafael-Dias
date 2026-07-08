@@ -125,7 +125,7 @@ export default function Reports() {
             <Sparkles className="h-3 w-3" />
             <span>Métricas Avançadas</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white font-display">Relatórios Comerciais</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-white font-body">Relatórios Comerciais</h1>
           <p className="text-sm text-white/40 font-light">Métricas de conversão, SLAs e origens de leads no período selecionado.</p>
         </div>
 

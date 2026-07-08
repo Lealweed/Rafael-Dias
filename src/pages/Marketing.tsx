@@ -311,7 +311,7 @@ export default function Marketing() {
             <Sparkles className="h-3 w-3" />
             <span>ROI & Performance</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white font-display">Campanhas Digitais</h1>
+          <h1 className="text-4xl font-bold tracking-tight text-white font-body">Campanhas Digitais</h1>
           <p className="text-sm text-white/40 font-light flex flex-col gap-1 mt-1">
             <span>Métricas integradas do Google Ads e Meta Ads do Instituto Rafael Dias.</span>
             {lastSyncTime && (
@@ -839,6 +839,7 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
   const [adsData, setAdsData] = useState<any[]>([]);
   const [adsLoading, setAdsLoading] = useState(true);
   const [selectedAdIndex, setSelectedAdIndex] = useState<number>(0);
+  const [activeModalTab, setActiveModalTab] = useState<'geral' | 'copy' | 'leads'>('geral');
 
   useEffect(() => {
     let active = true;
@@ -991,7 +992,48 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
           </div>
         </div>
 
-        {/* KPI Grid */}
+        {/* Modal Navigation Tabs */}
+        <div className="flex border-b border-white/5 pb-1 gap-4 shrink-0 font-body">
+          <button
+            onClick={() => setActiveModalTab('geral')}
+            className={`pb-2 text-xs font-bold uppercase tracking-wider transition-all relative cursor-pointer ${
+              activeModalTab === 'geral' ? 'text-white' : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            <span>Desempenho Geral</span>
+            {activeModalTab === 'geral' && (
+              <motion.div layoutId="modal-active-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-gold" />
+            )}
+          </button>
+          
+          <button
+            onClick={() => setActiveModalTab('copy')}
+            className={`pb-2 text-xs font-bold uppercase tracking-wider transition-all relative cursor-pointer ${
+              activeModalTab === 'copy' ? 'text-white' : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            <span>Copy & Roteiro</span>
+            {activeModalTab === 'copy' && (
+              <motion.div layoutId="modal-active-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-gold" />
+            )}
+          </button>
+
+          <button
+            onClick={() => setActiveModalTab('leads')}
+            className={`pb-2 text-xs font-bold uppercase tracking-wider transition-all relative cursor-pointer ${
+              activeModalTab === 'leads' ? 'text-white' : 'text-white/40 hover:text-white/70'
+            }`}
+          >
+            <span>Leads Capturados ({campaignLeads.length})</span>
+            {activeModalTab === 'leads' && (
+              <motion.div layoutId="modal-active-tab" className="absolute bottom-0 left-0 right-0 h-[2px] bg-gold" />
+            )}
+          </button>
+        </div>
+
+        {activeModalTab === 'geral' && (
+          <div className="flex flex-col gap-6">
+            {/* KPI Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
             <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Investimento</span>
@@ -1232,10 +1274,13 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
 
           </div>
         </div>
+      </div>
+    )}
 
-        {/* Ad Copy Analyzer & Creative Section */}
-        <div className="bg-white/[0.01] border border-white/5 p-6 rounded-3xl flex flex-col gap-4">
-          <div>
+    {/* Tab 2: Copy & Diagnóstico */}
+    {activeModalTab === 'copy' && (
+      <div className="bg-white/[0.01] border border-white/5 p-6 rounded-3xl flex flex-col gap-4 font-body">
+        <div>
             <h3 className="text-sm font-semibold text-white">Análise Estratégica de Copy & Criativos</h3>
             <p className="text-[11px] text-white/40 mt-0.5">Avaliação heurística do texto do anúncio, pontos de persuasão e conformidade regulatória.</p>
           </div>
@@ -1315,6 +1360,37 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
                         </p>
                       </div>
 
+                      {/* Video Roteiro Recomendado */}
+                      {selectedAd.analysis?.scriptBlueprint && (
+                        <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col gap-4">
+                          <span className="text-[10px] uppercase font-bold text-[#E5C38C] tracking-wider flex items-center gap-1.5 border-b border-white/5 pb-2">
+                            <span className="h-1.5 w-1.5 rounded-full bg-gold animate-pulse" />
+                            Roteiro de Vídeo Recomendado (Script Blueprint)
+                          </span>
+                          <div className="text-[11px] text-[#E5C38C] font-semibold font-body">
+                            Tema: {selectedAd.analysis.scriptBlueprint.theme}
+                          </div>
+                          <div className="space-y-3 font-sans">
+                            <div>
+                              <span className="text-[9px] font-bold text-gold uppercase tracking-wider block">1. Gancho (0s - 5s)</span>
+                              <p className="text-xs text-white/80 mt-0.5 italic">"{selectedAd.analysis.scriptBlueprint.hook}"</p>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-bold text-gold uppercase tracking-wider block">2. Conexão & Dor (5s - 15s)</span>
+                              <p className="text-xs text-white/80 mt-0.5 italic">"{selectedAd.analysis.scriptBlueprint.pain}"</p>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-bold text-gold uppercase tracking-wider block">3. Solução Estratégica (15s - 30s)</span>
+                              <p className="text-xs text-white/80 mt-0.5 italic">"{selectedAd.analysis.scriptBlueprint.solution}"</p>
+                            </div>
+                            <div>
+                              <span className="text-[9px] font-bold text-gold uppercase tracking-wider block">4. Chamada de Ação (30s+)</span>
+                              <p className="text-xs text-white/80 mt-0.5 italic">"{selectedAd.analysis.scriptBlueprint.cta}"</p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                     </div>
 
                     {/* Strengths and improvements */}
@@ -1360,10 +1436,12 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
             </div>
           )}
         </div>
+      )}
 
-        {/* Leads Table Section */}
-        <div className="flex-1 flex flex-col min-h-[250px]">
-          <h3 className="text-sm font-semibold text-white mb-3">Leads Capturados nesta Campanha ({campaignLeads.length})</h3>
+    {/* Tab 3: Leads Table Section */}
+    {activeModalTab === 'leads' && (
+      <div className="flex-1 flex flex-col min-h-[250px] font-body">
+        <h3 className="text-sm font-semibold text-white mb-3">Leads Capturados nesta Campanha ({campaignLeads.length})</h3>
           <div className="flex-1 border border-white/5 bg-white/[0.01] rounded-2xl overflow-hidden overflow-y-auto max-h-[300px]">
             {campaignLeads.length === 0 ? (
               <div className="h-full flex items-center justify-center py-12 text-white/30 italic text-xs">
@@ -1423,6 +1501,7 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
             )}
           </div>
         </div>
+      )}
       </motion.div>
     </div>
   );

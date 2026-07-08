@@ -555,7 +555,7 @@ export default function POS() {
           <AlertCircle className="h-8 w-8" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-xl font-bold font-display text-white">Caixa Fechado</h2>
+          <h2 className="text-xl font-bold font-body text-white">Caixa Fechado</h2>
           <p className="text-xs text-white/50 leading-relaxed">
             Para realizar vendas no Ponto de Venda (PDV), é obrigatório abrir um turno de caixa primeiro. Isso garante a auditoria de valores em dinheiro na clínica.
           </p>
@@ -579,7 +579,7 @@ export default function POS() {
         <div className="p-4 border-b border-white/5 space-y-3">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold font-display text-white flex items-center gap-2">
+              <h2 className="text-base font-bold font-body text-white flex items-center gap-2">
                 <ShoppingBag className="h-4.5 w-4.5 text-gold" />
                 PDV - Frente de Caixa
               </h2>
@@ -652,7 +652,7 @@ export default function POS() {
 
                   <div className="flex justify-between items-baseline mt-4 border-t border-white/[0.02] pt-2">
                     <span className="text-[13px] font-bold text-white/30 uppercase tracking-widest">Preço</span>
-                    <span className="text-xs font-display text-gold font-bold">{formatCurrency(item.price)}</span>
+                    <span className="text-xs font-body text-gold font-bold">{formatCurrency(item.price)}</span>
                   </div>
                 </div>
               );
@@ -851,7 +851,7 @@ export default function POS() {
 
             <div className="border-t border-white/5 pt-2.5 flex justify-between items-center text-sm font-bold">
               <span className="text-gold/80 font-black uppercase text-[13px] tracking-wider">Total Líquido:</span>
-              <span className="text-glow-gold font-display text-white">{formatCurrency(totalAmount)}</span>
+              <span className="text-glow-gold font-body text-white">{formatCurrency(totalAmount)}</span>
             </div>
           </div>
 
@@ -883,7 +883,7 @@ export default function POS() {
             {/* Modal Header */}
             <div className="p-4 border-b border-white/5 flex justify-between items-center">
               <div>
-                <h3 className="text-sm font-bold font-display text-white">Fechar Faturamento</h3>
+                <h3 className="text-sm font-bold font-body text-white">Fechar Faturamento</h3>
                 <p className="text-[14px] uppercase tracking-wider text-white/30 font-bold mt-0.5">Definir formas de pagamento</p>
               </div>
               <button 
@@ -1062,7 +1062,7 @@ export default function POS() {
               <div className="h-12 w-12 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                 <CheckCircle className="h-6 w-6" />
               </div>
-              <h3 className="text-base font-bold font-display text-white mt-1">Faturamento Concluído!</h3>
+              <h3 className="text-base font-bold font-body text-white mt-1">Faturamento Concluído!</h3>
               <p className="text-[13px] uppercase tracking-wider text-white/30 font-bold">Comprovante de Caixa Emitido</p>
             </div>
 
@@ -1090,7 +1090,7 @@ export default function POS() {
 
               <div className="border-t border-white/5 border-dashed pt-2.5 flex justify-between items-center text-sm font-bold">
                 <span className="text-white/40 text-xs font-body">Valor Pago:</span>
-                <span className="text-gold font-display">{formatCurrency(completedSale.total)}</span>
+                <span className="text-gold font-body">{formatCurrency(completedSale.total)}</span>
               </div>
             </div>
 

@@ -343,7 +343,7 @@ export default function Cashier() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/5 pb-5">
         <div>
-          <h1 className="text-2xl font-bold font-display text-glow-gold tracking-tight">Controle de Caixa</h1>
+          <h1 className="text-2xl font-bold font-body text-glow-gold tracking-tight">Controle de Caixa</h1>
           <p className="text-xs uppercase tracking-widest text-white/30 font-bold mt-1">Gestão de Turnos e Fluxo de Gaveta</p>
         </div>
 
@@ -391,7 +391,7 @@ export default function Cashier() {
             </div>
             
             <div className="space-y-1">
-              <h2 className="text-lg font-bold font-display text-white">Abertura de Caixa</h2>
+              <h2 className="text-lg font-bold font-body text-white">Abertura de Caixa</h2>
               <p className="text-xs text-white/40">Inicie um novo turno declarando o saldo inicial de gaveta (fundo de troco).</p>
             </div>
 
@@ -441,7 +441,7 @@ export default function Cashier() {
               <div className="glass-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between min-h-[90px]">
                 <span className="text-[13px] font-black uppercase text-white/40 tracking-wider">Abertura</span>
                 <div className="mt-1">
-                  <span className="text-sm font-display text-white font-bold block">{formatCurrency(Number(currentSession.opening_balance))}</span>
+                  <span className="text-sm font-body text-white font-bold block">{formatCurrency(Number(currentSession.opening_balance))}</span>
                   <span className="text-[13px] text-white/30 uppercase tracking-widest block mt-0.5">Fundo Inicial</span>
                 </div>
               </div>
@@ -449,7 +449,7 @@ export default function Cashier() {
               <div className="glass-dark p-4 rounded-xl border border-white/5 flex flex-col justify-between min-h-[90px]">
                 <span className="text-[13px] font-black uppercase text-white/40 tracking-wider">Vendas em Dinheiro</span>
                 <div className="mt-1">
-                  <span className="text-sm font-display text-emerald-400 font-bold block">+{formatCurrency(totalVendasDinheiro)}</span>
+                  <span className="text-sm font-body text-emerald-400 font-bold block">+{formatCurrency(totalVendasDinheiro)}</span>
                   <span className="text-[13px] text-white/30 uppercase tracking-widest block mt-0.5">Gaveta Física</span>
                 </div>
               </div>
@@ -468,7 +468,7 @@ export default function Cashier() {
               <div className="glass-dark p-4 rounded-xl border border-white/5 ring-1 ring-gold/20 flex flex-col justify-between min-h-[90px]">
                 <span className="text-[13px] font-black uppercase text-gold/80 tracking-wider">Esperado em Dinheiro</span>
                 <div className="mt-1">
-                  <span className="text-sm font-display text-glow-gold font-bold block">{formatCurrency(expectedCashInDrawer)}</span>
+                  <span className="text-sm font-body text-glow-gold font-bold block">{formatCurrency(expectedCashInDrawer)}</span>
                   <span className="text-[13px] text-gold/40 uppercase tracking-widest block mt-0.5">Total na Gaveta</span>
                 </div>
               </div>
@@ -489,7 +489,7 @@ export default function Cashier() {
                 ].map((item) => (
                   <div key={item.key} className="bg-white/[0.01] border border-white/5 rounded-xl p-3 text-center">
                     <p className="text-[13px] font-black uppercase text-white/30 tracking-wider">{item.label}</p>
-                    <p className={`text-xs font-bold font-display mt-1 ${item.color}`}>
+                    <p className={`text-xs font-bold font-body mt-1 ${item.color}`}>
                       {formatCurrency(paymentsSum[item.key] || 0)}
                     </p>
                   </div>
@@ -498,7 +498,7 @@ export default function Cashier() {
 
               <div className="border-t border-white/5 pt-3 flex justify-between items-center text-xs">
                 <span className="text-white/40 uppercase tracking-widest font-black text-[14px]">Faturamento Total Bruto</span>
-                <span className="text-sm font-display text-glow-gold font-bold">{formatCurrency(totalSalesAllMethods)}</span>
+                <span className="text-sm font-body text-glow-gold font-bold">{formatCurrency(totalSalesAllMethods)}</span>
               </div>
             </div>
 
@@ -656,7 +656,7 @@ export default function Cashier() {
           <div className="space-y-6">
             <div className="glass-dark p-6 rounded-2xl border border-white/5 space-y-6 sticky top-6">
               <div className="space-y-1">
-                <h3 className="text-sm font-bold font-display text-white">Fechamento de Caixa</h3>
+                <h3 className="text-sm font-bold font-body text-white">Fechamento de Caixa</h3>
                 <p className="text-[13px] text-white/40 uppercase tracking-widest font-bold">Encerrar sessão de trabalho</p>
               </div>
 

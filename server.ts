@@ -88,6 +88,7 @@ async function startServer() {
   app.post("/api/portal/data", portalDataHandler);
   // /api/portal/read-notification is now handled by portalDataHandler with action='read-notification'
   app.post("/api/portal/read-notification", portalDataHandler);
+  app.all("/api/marketing", marketingHandler);
   app.all("/api/marketing/webhook", marketingHandler);
   app.post("/api/marketing/sync", marketingHandler);
 

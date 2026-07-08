@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { 
   Target, 
   TrendingUp, 
@@ -37,6 +37,9 @@ export default function Marketing() {
   const supabase = useMemo(() => createClient(), []);
   
   const [loading, setLoading] = useState(true);
+  const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
+  const [backgroundSyncing, setBackgroundSyncing] = useState(false);
+  const autoSyncTriggered = useRef(false);
   const [copiedText, setCopiedText] = useState("");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [leadsStats, setLeadsStats] = useState({
@@ -67,6 +70,20 @@ export default function Marketing() {
     navigator.clipboard.writeText(text);
     setCopiedText(type);
     setTimeout(() => setCopiedText(""), 2000);
+  };
+
+  const triggerBackgroundSync = async () => {
+    setBackgroundSyncing(true);
+    try {
+      const res = await fetch("/api/marketing?type=sync", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Erro de sincronização");
+      await fetchMarketingData();
+    } catch (err) {
+      console.error("Error running background sync:", err);
+    } finally {
+      setBackgroundSyncing(false);
+    }
   };
 
   const fetchMarketingData = async () => {
@@ -136,6 +153,7 @@ export default function Marketing() {
         .eq("key", "marketing_credentials")
         .maybeSingle();
 
+      let hasCredentials = false;
       if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
         const val = dbSettings.value as any;
         setMetaAccessToken(val.meta_access_token || "");
@@ -145,6 +163,35 @@ export default function Marketing() {
         setGoogleClientSecret(val.google_client_secret || "");
         setGoogleRefreshToken(val.google_refresh_token || "");
         setGoogleCustomerId(val.google_customer_id || "");
+
+        if ((val.meta_access_token && val.meta_ad_account_id) || 
+            (val.google_developer_token && val.google_customer_id)) {
+          hasCredentials = true;
+        }
+      }
+
+      // Determine latest update time
+      let latestUpdate: Date | null = null;
+      if (dbCampaigns && dbCampaigns.length > 0) {
+        const times = dbCampaigns
+          .map((c: any) => c.updated_at ? new Date(c.updated_at).getTime() : 0)
+          .filter(t => t > 0);
+        if (times.length > 0) {
+          latestUpdate = new Date(Math.max(...times));
+        }
+      }
+      setLastSyncTime(latestUpdate);
+
+      // Check credentials for auto background sync (every 30 mins)
+      if (!autoSyncTriggered.current && hasCredentials) {
+        autoSyncTriggered.current = true;
+        const now = new Date().getTime();
+        const lastSync = latestUpdate ? latestUpdate.getTime() : 0;
+        const thirtyMinutes = 30 * 60 * 1000;
+        
+        if (now - lastSync > thirtyMinutes) {
+          triggerBackgroundSync();
+        }
       }
 
     } catch (err) {
@@ -260,16 +307,28 @@ export default function Marketing() {
             <span>ROI & Performance</span>
           </div>
           <h1 className="text-4xl font-bold tracking-tight text-white font-display">Campanhas Digitais</h1>
-          <p className="text-sm text-white/40 font-light">Métricas integradas do Google Ads e Meta Ads do Instituto Rafael Dias.</p>
+          <p className="text-sm text-white/40 font-light flex flex-col gap-1 mt-1">
+            <span>Métricas integradas do Google Ads e Meta Ads do Instituto Rafael Dias.</span>
+            {lastSyncTime && (
+              <span className="text-xs text-white/30">
+                Última atualização: {lastSyncTime.toLocaleString("pt-BR")}
+              </span>
+            )}
+            {backgroundSyncing && (
+              <span className="text-xs text-[#E5C38C] flex items-center gap-1.5 font-bold animate-pulse mt-0.5">
+                <Loader2 className="h-3 w-3 animate-spin text-gold" /> Atualizando dados com Meta/Google Ads em segundo plano...
+              </span>
+            )}
+          </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button 
             onClick={handleTriggerSync}
-            disabled={syncing}
+            disabled={syncing || backgroundSyncing}
             className="flex items-center gap-2 bg-gold/10 border border-gold/20 hover:bg-gold/20 px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-widest text-[#E5C38C] hover:shadow-gold disabled:opacity-50 transition-all duration-300 cursor-pointer"
           >
-            {syncing ? (
+            {syncing || backgroundSyncing ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
             ) : (
               <RefreshCw className="h-3.5 w-3.5" />

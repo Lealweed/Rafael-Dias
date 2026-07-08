@@ -175,7 +175,7 @@ export default function Reports() {
                 <h3 className="text-[13px] font-bold uppercase tracking-wider">Total de Leads</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-white font-display">{stats.totalLeads}</span>
+                <span className="text-4xl font-bold text-white font-body">{stats.totalLeads}</span>
                 <span className="text-xs font-semibold text-white/30">cadastrados</span>
               </div>
             </div>
@@ -186,7 +186,7 @@ export default function Reports() {
                 <h3 className="text-[13px] font-bold uppercase tracking-wider">Taxa de Conversão</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-white font-display">{stats.conversionRate}%</span>
+                <span className="text-4xl font-bold text-white font-body">{stats.conversionRate}%</span>
                 <span className="text-xs font-semibold text-green-400">agendados</span>
               </div>
             </div>
@@ -197,7 +197,7 @@ export default function Reports() {
                 <h3 className="text-[13px] font-bold uppercase tracking-wider">SLA de Resposta</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-white font-display">{stats.slaMed}</span>
+                <span className="text-4xl font-bold text-white font-body">{stats.slaMed}</span>
                 <span className="text-xs font-semibold text-white/30">média do n8n</span>
               </div>
             </div>
@@ -208,7 +208,7 @@ export default function Reports() {
                 <h3 className="text-[13px] font-bold uppercase tracking-wider">Follow-ups Realizados</h3>
               </div>
               <div className="mt-4 flex items-baseline gap-2">
-                <span className="text-4xl font-bold text-white font-display">{stats.followUpsDone}</span>
+                <span className="text-4xl font-bold text-white font-body">{stats.followUpsDone}</span>
                 <span className="text-xs font-semibold text-green-400">interações</span>
               </div>
             </div>

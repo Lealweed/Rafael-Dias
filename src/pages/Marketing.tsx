@@ -13,8 +13,10 @@ import {
   ExternalLink,
   ChevronRight,
   TrendingDown,
-  Percent
+  Percent,
+  X
 } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
 import { createClient } from "../lib/supabase/client";
 
 interface Campaign {
@@ -42,6 +44,8 @@ export default function Marketing() {
   const autoSyncTriggered = useRef(false);
   const [copiedText, setCopiedText] = useState("");
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [selectedCampaign, setSelectedCampaign] = useState<Campaign | null>(null);
+  const [allLeads, setAllLeads] = useState<any[]>([]);
   const [leadsStats, setLeadsStats] = useState({
     totalCampaignLeads: 0,
     googleLeads: 0,
@@ -109,6 +113,7 @@ export default function Marketing() {
       if (leadsErr) throw leadsErr;
 
       const utmLeads = dbLeads || [];
+      setAllLeads(utmLeads);
       const totalCampaignLeads = utmLeads.length;
       
       const googleLeads = utmLeads.filter(l => l.utm_source === "google" || l.utm_source === "google_ads").length;
@@ -371,43 +376,43 @@ export default function Marketing() {
                 <h3 className="text-[14px] font-bold uppercase tracking-wider">Investimento Total</h3>
               </div>
               <div className="mt-3">
-                <span className="text-2xl font-bold text-white font-display">R$ {metrics.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                <span className="text-2xl font-bold text-white font-body">R$ {metrics.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
                 <p className="text-[14px] text-white/30 mt-1">Orçamento Diário Ativo: R$ {metrics.totalBudget.toLocaleString('pt-BR')} /dia</p>
               </div>
             </div>
 
-            {/* Leads AtribuÃ­dos */}
+            {/* Leads Atribuídos */}
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <Users className="w-4 h-4 text-blue-400" />
                 <h3 className="text-[14px] font-bold uppercase tracking-wider">Leads Gerados</h3>
               </div>
               <div className="mt-3">
-                <span className="text-2xl font-bold text-white font-display">{leadsStats.totalCampaignLeads}</span>
+                <span className="text-2xl font-bold text-white font-body">{leadsStats.totalCampaignLeads}</span>
                 <p className="text-[14px] text-white/30 mt-1">Google: {leadsStats.googleLeads} | Meta: {leadsStats.metaLeads}</p>
               </div>
             </div>
 
-            {/* CPL MÃ©dio */}
+            {/* CPL Médio */}
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <Target className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-[14px] font-bold uppercase tracking-wider">CPL Médio</h3>
               </div>
               <div className="mt-3">
-                <span className="text-2xl font-bold text-white font-display">R$ {metrics.avgCpl.toFixed(2)}</span>
+                <span className="text-2xl font-bold text-white font-body">R$ {metrics.avgCpl.toFixed(2)}</span>
                 <p className="text-[14px] text-white/30 mt-1">Custo por lead qualificado</p>
               </div>
             </div>
 
-            {/* CTR MÃ©dio */}
+            {/* CTR Médio */}
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <Percent className="w-4 h-4 text-purple-400" />
                 <h3 className="text-[14px] font-bold uppercase tracking-wider">CTR Global</h3>
               </div>
               <div className="mt-3">
-                <span className="text-2xl font-bold text-white font-display">{metrics.ctr}%</span>
+                <span className="text-2xl font-bold text-white font-body">{metrics.ctr}%</span>
                 <p className="text-[14px] text-white/30 mt-1">Total de cliques / Impressões</p>
               </div>
             </div>
@@ -420,7 +425,7 @@ export default function Marketing() {
                 <h3 className="text-[14px] font-bold uppercase tracking-wider text-[#E5C38C]">Retorno ROI</h3>
               </div>
               <div className="mt-3">
-                <span className="text-2xl font-bold text-gold font-display">+{metrics.roi}%</span>
+                <span className="text-2xl font-bold text-gold font-body">+{metrics.roi}%</span>
                 <p className="text-[14px] text-[#E5C38C]/50 mt-1">Retorno sobre investimento</p>
               </div>
             </div>
@@ -448,15 +453,15 @@ export default function Marketing() {
               <div className="grid grid-cols-3 gap-4 py-2">
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                   <span className="text-[13px] uppercase tracking-wider text-white/40">Leads Gerados</span>
-                  <p className="text-xl font-bold text-white mt-1 font-display">{leadsStats.googleLeads}</p>
+                  <p className="text-xl font-bold text-white mt-1 font-body">{leadsStats.googleLeads}</p>
                 </div>
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                   <span className="text-[13px] uppercase tracking-wider text-white/40">CPL Médio</span>
-                  <p className="text-xl font-bold text-blue-400 mt-1 font-display">R$ {metrics.googleCpl}</p>
+                  <p className="text-xl font-bold text-blue-400 mt-1 font-body">R$ {metrics.googleCpl}</p>
                 </div>
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                   <span className="text-[13px] uppercase tracking-wider text-white/40">CTR Médio</span>
-                  <p className="text-xl font-bold text-white mt-1 font-display">
+                  <p className="text-xl font-bold text-white mt-1 font-body">
                     {campaigns.filter(c => c.platform === 'google_ads').length > 0
                       ? (campaigns.filter(c => c.platform === 'google_ads').reduce((acc, c) => acc + (c.clicks/c.impressions)*100, 0) / campaigns.filter(c => c.platform === 'google_ads').length).toFixed(1)
                       : "0"}%
@@ -483,15 +488,15 @@ export default function Marketing() {
               <div className="grid grid-cols-3 gap-4 py-2">
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                   <span className="text-[13px] uppercase tracking-wider text-white/40">Leads Gerados</span>
-                  <p className="text-xl font-bold text-white mt-1 font-display">{leadsStats.metaLeads}</p>
+                  <p className="text-xl font-bold text-white mt-1 font-body">{leadsStats.metaLeads}</p>
                 </div>
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                   <span className="text-[13px] uppercase tracking-wider text-white/40">CPL Médio</span>
-                  <p className="text-xl font-bold text-pink-400 mt-1 font-display">R$ {metrics.metaCpl}</p>
+                  <p className="text-xl font-bold text-pink-400 mt-1 font-body">R$ {metrics.metaCpl}</p>
                 </div>
                 <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
                   <span className="text-[13px] uppercase tracking-wider text-white/40">CTR Médio</span>
-                  <p className="text-xl font-bold text-white mt-1 font-display">
+                  <p className="text-xl font-bold text-white mt-1 font-body">
                     {campaigns.filter(c => c.platform === 'meta_ads').length > 0
                       ? (campaigns.filter(c => c.platform === 'meta_ads').reduce((acc, c) => acc + (c.clicks/c.impressions)*100, 0) / campaigns.filter(c => c.platform === 'meta_ads').length).toFixed(1)
                       : "0"}%
@@ -536,8 +541,15 @@ export default function Marketing() {
                     campaigns.map((c) => {
                       const ctrVal = c.impressions > 0 ? (c.clicks / c.impressions) * 100 : 0;
                       return (
-                        <tr key={c.id} className="hover:bg-white/[0.01] transition-colors">
-                          <td className="py-4 px-4 font-medium text-white font-display text-sm">{c.name}</td>
+                        <tr 
+                          key={c.id} 
+                          onClick={() => setSelectedCampaign(c)}
+                          className="group hover:bg-white/[0.03] hover:shadow-inner cursor-pointer transition-all duration-300"
+                        >
+                          <td className="py-4 px-4 font-medium text-white font-body text-sm flex items-center gap-2 group-hover:text-gold transition-colors">
+                            <ChevronRight className="h-3.5 w-3.5 text-gold opacity-0 group-hover:opacity-100 transition-all duration-300 shrink-0" />
+                            <span>{c.name}</span>
+                          </td>
                           <td className="py-4 px-4">
                             <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
                               c.platform === 'google_ads' 
@@ -774,6 +786,224 @@ export default function Marketing() {
 
         </div>
       )}
+
+      {selectedCampaign && (
+        <CampaignDetailsModal 
+          campaign={selectedCampaign} 
+          allLeads={allLeads}
+          onClose={() => setSelectedCampaign(null)} 
+        />
+      )}
+    </div>
+  );
+}
+
+interface CampaignDetailsModalProps {
+  campaign: Campaign;
+  allLeads: any[];
+  onClose: () => void;
+}
+
+function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsModalProps) {
+  // Filter leads that belong to this campaign
+  const campaignLeads = useMemo(() => {
+    return allLeads.filter(l => 
+      l.utm_campaign?.toLowerCase().trim() === campaign.name.toLowerCase().trim()
+    );
+  }, [campaign.name, allLeads]);
+
+  // Conversions are leads in agendado or encerrado status
+  const conversionsCount = useMemo(() => {
+    return campaignLeads.filter(l => 
+      l.conversation_status === "agendado" || l.conversation_status === "encerrado"
+    ).length;
+  }, [campaignLeads]);
+
+  // Calculate CTR, CPC, CPL
+  const ctrVal = campaign.impressions > 0 ? (campaign.clicks / campaign.impressions) * 100 : 0;
+  const cpcVal = campaign.clicks > 0 ? campaign.cost / campaign.clicks : 0;
+  const cplVal = campaignLeads.length > 0 ? campaign.cost / campaignLeads.length : 0;
+  const convRateVal = campaignLeads.length > 0 ? (conversionsCount / campaignLeads.length) * 100 : 0;
+
+  // Funnel calculations
+  const ctrPercent = ctrVal.toFixed(2);
+  const clickToLeadPercent = campaign.clicks > 0 ? ((campaignLeads.length / campaign.clicks) * 100).toFixed(1) : "0";
+  const leadToConvPercent = campaignLeads.length > 0 ? ((conversionsCount / campaignLeads.length) * 100).toFixed(1) : "0";
+
+  return (
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+        className="bg-[#0B0D12]/95 border border-white/10 rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto p-6 md:p-8 flex flex-col gap-6 relative shadow-gold/10 text-white scrollbar-hide"
+      >
+        {/* Close button */}
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white p-2 rounded-xl transition-all cursor-pointer z-10"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        {/* Header */}
+        <div className="border-b border-white/5 pb-4">
+          <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] uppercase font-bold tracking-widest ${
+            campaign.platform === 'google_ads' 
+              ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' 
+              : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'
+          }`}>
+            {campaign.platform === 'google_ads' ? 'Google Ads' : 'Meta Ads'}
+          </span>
+          <h2 className="text-xl font-bold tracking-tight text-white font-serif mt-2 pr-8">{campaign.name}</h2>
+          <div className="flex items-center gap-2 mt-2">
+            <span className={`h-2 w-2 rounded-full ${campaign.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-white/30'}`} />
+            <span className="text-xs text-white/50 capitalize">{campaign.status === 'active' ? 'Ativa' : 'Pausada'}</span>
+            <span className="text-xs text-white/20">•</span>
+            <span className="text-xs text-white/50">Orçamento: R$ {campaign.budget.toFixed(2)}/dia</span>
+          </div>
+        </div>
+
+        {/* KPI Grid */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+            <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Investimento</span>
+            <p className="text-lg font-bold text-white mt-1 font-body">R$ {Number(campaign.cost).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+            <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Cliques / CTR</span>
+            <p className="text-lg font-bold text-white mt-1 font-body">{campaign.clicks} <span className="text-xs text-white/40 font-light">({ctrPercent}%)</span></p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+            <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Leads / CPL</span>
+            <p className="text-lg font-bold text-gold mt-1 font-body">{campaignLeads.length} <span className="text-xs text-[#E5C38C]/60 font-light">(R$ {cplVal.toFixed(2)})</span></p>
+          </div>
+          <div className="bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+            <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Agendados (ROI)</span>
+            <p className="text-lg font-bold text-emerald-400 mt-1 font-body">{conversionsCount} <span className="text-xs text-emerald-400/60 font-light">({convRateVal.toFixed(1)}%)</span></p>
+          </div>
+        </div>
+
+        {/* Funnel Section */}
+        <div className="bg-white/[0.01] border border-white/5 p-6 rounded-3xl">
+          <h3 className="text-sm font-semibold text-white mb-4">Funil de Conversão da Campanha</h3>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+            
+            {/* Stage 1 */}
+            <div className="flex flex-col p-3 bg-white/[0.02] border border-white/5 rounded-2xl relative">
+              <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">1. Visualizações</span>
+              <span className="text-xl font-bold text-white mt-1 font-body">{campaign.impressions.toLocaleString()}</span>
+              <span className="text-[10px] text-white/30 mt-1">Impressões do anúncio</span>
+            </div>
+            
+            {/* Connector 1 */}
+            <div className="flex flex-row md:flex-col justify-center items-center gap-1 text-[#E5C38C] font-mono text-xs font-bold py-1 md:py-0">
+              <span className="bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-full text-[10px]">CTR: {ctrPercent}%</span>
+              <span className="hidden md:inline">➔</span>
+              <span className="inline md:hidden">↓</span>
+            </div>
+
+            {/* Stage 2 */}
+            <div className="flex flex-col p-3 bg-white/[0.02] border border-white/5 rounded-2xl relative">
+              <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">2. Cliques no Link</span>
+              <span className="text-xl font-bold text-white mt-1 font-body">{campaign.clicks.toLocaleString()}</span>
+              <span className="text-[10px] text-white/30 mt-1">CPC Médio: R$ {cpcVal.toFixed(2)}</span>
+            </div>
+
+            {/* Connector 2 */}
+            <div className="flex flex-row md:flex-col justify-center items-center gap-1 text-[#E5C38C] font-mono text-xs font-bold py-1 md:py-0">
+              <span className="bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-full text-[10px]">Leads: {clickToLeadPercent}%</span>
+              <span className="hidden md:inline">➔</span>
+              <span className="inline md:hidden">↓</span>
+            </div>
+
+            {/* Stage 3 */}
+            <div className="flex flex-col p-3 bg-white/[0.02] border border-white/5 rounded-2xl relative">
+              <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">3. Leads Criados</span>
+              <span className="text-xl font-bold text-white mt-1 font-body">{campaignLeads.length}</span>
+              <span className="text-[10px] text-white/30 mt-1">Contatos no CRM</span>
+            </div>
+
+            {/* Connector 3 */}
+            <div className="flex flex-row md:flex-col justify-center items-center gap-1 text-[#E5C38C] font-mono text-xs font-bold py-1 md:py-0">
+              <span className="bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-full text-[10px]">Conv.: {leadToConvPercent}%</span>
+              <span className="hidden md:inline">➔</span>
+              <span className="inline md:hidden">↓</span>
+            </div>
+
+            {/* Stage 4 */}
+            <div className="flex flex-col p-3 bg-gold/10 border border-gold/20 rounded-2xl relative">
+              <span className="text-[10px] uppercase tracking-wider text-[#E5C38C] font-bold">4. Agendados</span>
+              <span className="text-xl font-bold text-gold mt-1 font-body">{conversionsCount}</span>
+              <span className="text-[10px] text-[#E5C38C]/70 mt-1">Clientes convertidos</span>
+            </div>
+
+          </div>
+        </div>
+
+        {/* Leads Table Section */}
+        <div className="flex-1 flex flex-col min-h-[250px]">
+          <h3 className="text-sm font-semibold text-white mb-3">Leads Capturados nesta Campanha ({campaignLeads.length})</h3>
+          <div className="flex-1 border border-white/5 bg-white/[0.01] rounded-2xl overflow-hidden overflow-y-auto max-h-[300px]">
+            {campaignLeads.length === 0 ? (
+              <div className="h-full flex items-center justify-center py-12 text-white/30 italic text-xs">
+                Nenhum lead atribuído a esta campanha no momento.
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr className="border-b border-white/5 bg-white/[0.02] text-white/40 uppercase tracking-wider font-bold">
+                    <th className="py-2.5 px-4">Nome</th>
+                    <th className="py-2.5 px-4">Telefone</th>
+                    <th className="py-2.5 px-4">Origem</th>
+                    <th className="py-2.5 px-4">Temperatura</th>
+                    <th className="py-2.5 px-4">Status</th>
+                    <th className="py-2.5 px-4">Criado em</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 text-white/70">
+                  {campaignLeads.map((lead) => {
+                    const dateStr = lead.created_at ? new Date(lead.created_at).toLocaleDateString("pt-BR") : "--";
+                    
+                    // Temperature badge
+                    let tempColor = "bg-white/10 text-white/60";
+                    if (lead.temperature === "hot") tempColor = "bg-red-500/15 text-red-400 border border-red-500/20";
+                    else if (lead.temperature === "warm") tempColor = "bg-amber-500/15 text-amber-400 border border-amber-500/20";
+                    else if (lead.temperature === "cold") tempColor = "bg-blue-500/15 text-blue-400 border border-blue-500/20";
+                    
+                    // Status badge
+                    let statusColor = "bg-white/5 border border-white/10 text-white/60";
+                    if (lead.conversation_status === "agendado" || lead.conversation_status === "encerrado") {
+                      statusColor = "bg-emerald-500/15 border border-emerald-500/20 text-emerald-400";
+                    } else if (lead.conversation_status === "em_atendimento") {
+                      statusColor = "bg-amber-500/15 border border-amber-500/20 text-amber-400";
+                    }
+
+                    return (
+                      <tr key={lead.id} className="hover:bg-white/[0.01]">
+                        <td className="py-2.5 px-4 font-semibold text-white">{lead.full_name || "Sem Nome"}</td>
+                        <td className="py-2.5 px-4 font-mono">{lead.phone || "--"}</td>
+                        <td className="py-2.5 px-4 capitalize">{lead.origin || lead.utm_source || "Meta Ads"}</td>
+                        <td className="py-2.5 px-4">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${tempColor}`}>
+                            {lead.temperature || "warm"}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4">
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${statusColor}`}>
+                            {lead.conversation_status?.replace('_', ' ') || "novo"}
+                          </span>
+                        </td>
+                        <td className="py-2.5 px-4 font-mono text-white/40">{dateStr}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      </motion.div>
     </div>
   );
 }

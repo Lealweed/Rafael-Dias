@@ -493,11 +493,11 @@ export default function Patients() {
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
           <div>
-            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[13px] uppercase tracking-widest font-semibold text-[#E5C38C] mb-2">
+            <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[11px] uppercase tracking-wider font-semibold text-[#E5C38C] mb-2">
               <Sparkles className="h-3 w-3" />
               <span>Portal de Clientes</span>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight text-white font-serif">Pacientes do Portal</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-white font-body">Pacientes do Portal</h1>
             <p className="text-xs text-white/40 font-light mt-1">Gerenciamento de credenciais de acesso, prontuários e finanças dos clientes.</p>
           </div>
           
@@ -534,60 +534,60 @@ export default function Patients() {
           {/* Table */}
           <div className="flex-1 overflow-auto">
             <table className="w-full text-left border-collapse">
-              <thead className="bg-[#0E1118]/90 text-[14px] uppercase tracking-[0.3em] text-white/30 sticky top-0 border-b border-white/5 z-10 backdrop-blur-md">
+              <thead className="bg-[#0E1118]/95 text-[10px] uppercase tracking-wider text-white/30 sticky top-0 border-b border-white/5 z-10 backdrop-blur-md font-body">
                 <tr>
-                  <th className="px-8 py-5 font-bold">Paciente / Identidade</th>
-                  <th className="px-8 py-5 font-bold">Credencial</th>
-                  <th className="px-8 py-5 font-bold">Status Acesso</th>
-                  <th className="px-8 py-5 font-bold">Lembretes WhatsApp</th>
-                  <th className="px-8 py-5 font-bold">Categoria</th>
-                  <th className="px-8 py-5 font-bold text-right">Ações de Controle</th>
+                  <th className="px-4 py-3 font-semibold">Paciente / Identidade</th>
+                  <th className="px-4 py-3 font-semibold">Credencial</th>
+                  <th className="px-4 py-3 font-semibold">Status Acesso</th>
+                  <th className="px-4 py-3 font-semibold">Lembretes WhatsApp</th>
+                  <th className="px-4 py-3 font-semibold">Categoria</th>
+                  <th className="px-4 py-3 font-semibold text-right">Ações de Controle</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-white/5 text-[13px] text-white/60">
+              <tbody className="divide-y divide-white/5 text-xs text-white/60">
                 {loading ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs animate-pulse">Sincronizando Base de Pacientes...</td>
+                    <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-wider font-bold text-xs animate-pulse">Sincronizando Base de Pacientes...</td>
                   </tr>
                 ) : filteredPatients.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-[0.4em] font-bold text-xs">Nenhum paciente cadastrado</td>
+                    <td colSpan={6} className="text-center py-24 text-white/20 uppercase tracking-wider font-bold text-xs">Nenhum paciente cadastrado</td>
                   </tr>
                 ) : filteredPatients.map((patient) => (
-                  <tr key={patient.id} className="hover:bg-white/[0.02] transition-all group border-l-2 border-transparent hover:border-[#D4AF37]">
-                    <td className="px-8 py-5">
-                      <div className="font-serif font-bold text-white text-[15px] tracking-tight">{patient.full_name || patient.nome}</div>
-                      <div className="text-[13px] text-white/20 mt-1 font-mono tracking-widest uppercase">{patient.phone || patient.telefone}</div>
+                  <tr key={patient.id} className="hover:bg-white/[0.01] transition-all group border-l-2 border-transparent hover:border-[#D4AF37]">
+                    <td className="px-4 py-3">
+                      <div className="font-semibold text-white text-xs font-body">{patient.full_name || patient.nome}</div>
+                      <div className="text-[11px] text-white/30 mt-0.5 font-mono">{patient.phone || patient.telefone}</div>
                     </td>
-                    <td className="px-8 py-5">
-                      <span className="px-3 py-1 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#E5C38C] font-bold font-mono tracking-widest">{patient.portal_password || "Sem senha"}</span>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-0.5 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 text-[#E5C38C] font-semibold font-mono text-[11px]">{patient.portal_password || "Sem senha"}</span>
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-3">
                       {patient.portal_access_active ? (
-                        <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-3 py-1 text-[13px] font-bold text-teal-400 uppercase tracking-widest">Ativo</span>
+                        <span className="rounded-full border border-teal-500/20 bg-teal-500/10 px-2 py-0.5 text-[10px] font-bold text-teal-400 uppercase tracking-wider">Ativo</span>
                       ) : (
-                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-3 py-1 text-[13px] font-bold text-red-400 uppercase tracking-widest">Bloqueado</span>
+                        <span className="rounded-full border border-red-500/20 bg-red-500/10 px-2 py-0.5 text-[10px] font-bold text-red-400 uppercase tracking-wider">Bloqueado</span>
                       )}
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-3">
                       {patient.whatsapp_reminders ? (
-                        <span className="text-emerald-400 font-bold font-mono tracking-widest text-[13px]">ATIVO</span>
+                        <span className="text-emerald-400 font-bold font-mono text-[11px]">ATIVO</span>
                       ) : (
-                        <span className="text-white/20 font-bold font-mono tracking-widest text-[13px]">DESATIVADO</span>
+                        <span className="text-white/20 font-semibold font-mono text-[11px]">INATIVO</span>
                       )}
                     </td>
-                    <td className="px-8 py-5">
+                    <td className="px-4 py-3">
                       {patient.is_vip ? (
-                        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-3 py-1 text-[13px] font-bold text-[#E5C38C] uppercase tracking-widest shadow-gold">VIP</span>
+                        <span className="rounded-full border border-[#D4AF37]/30 bg-[#D4AF37]/10 px-2 py-0.5 text-[10px] font-bold text-[#E5C38C] uppercase tracking-wider shadow-gold">VIP</span>
                       ) : (
-                        <span className="text-white/30 uppercase tracking-widest text-[14px] font-bold">Padrão</span>
+                        <span className="text-white/30 uppercase text-[11px] font-bold">Padrão</span>
                       )}
                     </td>
-                    <td className="px-8 py-5 text-right">
+                    <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-3">
                          <button
                            onClick={() => setSelectedPatientForDetails(patient)}
-                           className="px-4 py-1.5 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[14px] font-bold text-[#E5C38C] uppercase tracking-widest hover:bg-[#D4AF37]/30 transition-all shadow-gold"
+                           className="px-3 py-1 rounded-xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[11px] font-bold text-[#E5C38C] uppercase tracking-wider hover:bg-[#D4AF37]/30 transition-all cursor-pointer shadow-gold"
                          >
                            Ficha Clínica & Finanças
                          </button>

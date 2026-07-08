@@ -279,34 +279,62 @@ async function handleSync(req: any, res: any) {
     if (hasMetaCreds) {
       try {
         const cleanAcctId = String(metaAdAccountId).replace('act_', '');
-        const metaUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/insights?fields=campaign_name,impressions,clicks,spend&level=campaign&time_range={"since":"2026-01-01","until":"2026-12-31"}&access_token=${metaAccessToken}`;
         
-        const response = await fetch(metaUrl);
-        const resData = await response.json() as any;
-        const insights = resData?.data || [];
+        // 1. Fetch all campaigns to get names, real status, and budgets
+        const campaignsUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/campaigns?fields=name,status,effective_status,daily_budget,lifetime_budget&limit=100&access_token=${metaAccessToken}`;
+        const campaignsRes = await fetch(campaignsUrl);
+        const campaignsResData = await campaignsRes.json() as any;
+        const allCampaigns = campaignsResData?.data || [];
 
+        // 2. Fetch insights for performance data
+        const insightsUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/insights?fields=campaign_name,impressions,clicks,spend&level=campaign&time_range={"since":"2026-01-01","until":"2026-12-31"}&limit=100&access_token=${metaAccessToken}`;
+        const insightsRes = await fetch(insightsUrl);
+        const insightsResData = await insightsRes.json() as any;
+        const insights = insightsResData?.data || [];
+
+        // Map insights by campaign name
+        const insightsMap = new Map<string, any>();
         for (const item of insights) {
-          const campName = item.campaign_name;
-          const cost = Number(item.spend || 0);
-          const clicks = Number(item.clicks || 0);
-          const impressions = Number(item.impressions || 0);
+          if (item.campaign_name) {
+            insightsMap.set(item.campaign_name.toLowerCase().trim(), item);
+          }
+        }
+
+        // Upsert all campaigns (even those with 0 activity)
+        let upsertedCount = 0;
+        for (const camp of allCampaigns) {
+          const campName = camp.name;
+          const statusVal = (camp.status === 'ACTIVE' || camp.effective_status === 'ACTIVE') ? 'active' : 'paused';
+          
+          // Get performance data if exists in insights
+          const matchedInsight = insightsMap.get(campName.toLowerCase().trim());
+          const cost = matchedInsight ? Number(matchedInsight.spend || 0) : 0;
+          const clicks = matchedInsight ? Number(matchedInsight.clicks || 0) : 0;
+          const impressions = matchedInsight ? Number(matchedInsight.impressions || 0) : 0;
+          
+          // Budget calculation (Meta returns in cents, divide by 100)
+          const budget = Number(camp.daily_budget || camp.lifetime_budget || 5000) / 100;
 
           const { error } = await supabase
             .from('marketing_campaigns')
             .upsert({
               name: campName,
               platform: 'meta_ads',
-              status: 'active',
-              budget: 50.00,
+              status: statusVal,
+              budget,
               impressions,
               clicks,
               cost,
               updated_at: new Date().toISOString()
             }, { onConflict: 'name' });
 
-          if (error) console.error(`Error upserting Meta campaign ${campName}:`, error);
+          if (error) {
+            console.error(`Error upserting Meta campaign ${campName}:`, error);
+          } else {
+            upsertedCount++;
+          }
         }
-        syncLog.push(`Successfully synced ${insights.length} Meta Ads campaigns via API.`);
+        syncLog.push(`Successfully synced ${upsertedCount} Meta Ads campaigns via API.`);
       } catch (err: any) {
         console.error('Meta Ads sync failed:', err);
         syncLog.push(`Meta Ads API Sync Error: ${err?.message || err}`);

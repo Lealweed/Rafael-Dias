@@ -280,8 +280,8 @@ async function handleSync(req: any, res: any) {
       try {
         const cleanAcctId = String(metaAdAccountId).replace('act_', '');
         
-        // 1. Fetch all campaigns to get names, real status, and budgets
-        const campaignsUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/campaigns?fields=name,status,effective_status,daily_budget,lifetime_budget&limit=100&access_token=${metaAccessToken}`;
+        // 1. Fetch all campaigns to get names, real status, budgets, start/end dates, and nested adset budgets
+        const campaignsUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/campaigns?fields=name,status,effective_status,daily_budget,lifetime_budget,start_time,stop_time,created_time,adsets{daily_budget,lifetime_budget}&limit=100&access_token=${metaAccessToken}`;
         const campaignsRes = await fetch(campaignsUrl);
         const campaignsResData = await campaignsRes.json() as any;
         const allCampaigns = campaignsResData?.data || [];
@@ -313,7 +313,29 @@ async function handleSync(req: any, res: any) {
           const impressions = matchedInsight ? Number(matchedInsight.impressions || 0) : 0;
           
           // Budget calculation (Meta returns in cents, divide by 100)
-          const budget = Number(camp.daily_budget || camp.lifetime_budget || 5000) / 100;
+          // Handle CBO (Campaign Level) and ABO (Ad Set Level)
+          let budget = 0;
+          if (camp.daily_budget) {
+            budget = Number(camp.daily_budget) / 100;
+          } else if (camp.lifetime_budget) {
+            budget = Number(camp.lifetime_budget) / 100;
+          } else if (camp.adsets && camp.adsets.data) {
+            let sum = 0;
+            for (const adset of camp.adsets.data) {
+              sum += Number(adset.daily_budget || adset.lifetime_budget || 0);
+            }
+            budget = sum / 100;
+          }
+          if (budget === 0) budget = 50.00; // reasonable fallback
+
+          // Start / Stop times (hours included)
+          let rawStart = camp.start_time;
+          // Fallback to created_time if start_time is Unix epoch/invalid (paused campaigns)
+          if (!rawStart || rawStart.startsWith("1969") || rawStart.startsWith("1970")) {
+            rawStart = camp.created_time;
+          }
+          const start_date = rawStart ? new Date(rawStart).toISOString() : new Date().toISOString();
+          const end_date = camp.stop_time ? new Date(camp.stop_time).toISOString() : null;
 
           const { error } = await supabase
             .from('marketing_campaigns')
@@ -325,6 +347,8 @@ async function handleSync(req: any, res: any) {
               impressions,
               clicks,
               cost,
+              start_date,
+              end_date,
               updated_at: new Date().toISOString()
             }, { onConflict: 'name' });
 

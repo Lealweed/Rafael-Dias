@@ -830,6 +830,23 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
   const clickToLeadPercent = campaign.clicks > 0 ? ((campaignLeads.length / campaign.clicks) * 100).toFixed(1) : "0";
   const leadToConvPercent = campaignLeads.length > 0 ? ((conversionsCount / campaignLeads.length) * 100).toFixed(1) : "0";
 
+  // Helper to format date & hours beautifully
+  const formatDateTime = (dateStr: string | null | undefined) => {
+    if (!dateStr) return null;
+    try {
+      const date = new Date(dateStr);
+      return new Intl.DateTimeFormat("pt-BR", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(date);
+    } catch (e) {
+      return dateStr;
+    }
+  };
+
   return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-50 p-4 md:p-8">
       <motion.div 
@@ -856,11 +873,23 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
             {campaign.platform === 'google_ads' ? 'Google Ads' : 'Meta Ads'}
           </span>
           <h2 className="text-xl font-bold tracking-tight text-white font-serif mt-2 pr-8">{campaign.name}</h2>
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-white/50">
             <span className={`h-2 w-2 rounded-full ${campaign.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-white/30'}`} />
-            <span className="text-xs text-white/50 capitalize">{campaign.status === 'active' ? 'Ativa' : 'Pausada'}</span>
-            <span className="text-xs text-white/20">•</span>
-            <span className="text-xs text-white/50">Orçamento: R$ {campaign.budget.toFixed(2)}/dia</span>
+            <span className="capitalize">{campaign.status === 'active' ? 'Ativa' : 'Pausada'}</span>
+            <span className="text-white/20">•</span>
+            <span>Orçamento: R$ {campaign.budget.toFixed(2)}/dia</span>
+            {campaign.start_date && (
+              <>
+                <span className="text-white/20">•</span>
+                <span>Iniciada em: {formatDateTime(campaign.start_date)}</span>
+              </>
+            )}
+            {campaign.end_date && (
+              <>
+                <span className="text-white/20">•</span>
+                <span>Término: {formatDateTime(campaign.end_date)}</span>
+              </>
+            )}
           </div>
         </div>
 

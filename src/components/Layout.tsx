@@ -90,13 +90,13 @@ export default function Layout() {
   };
 
   const navLinkClass = (path: string) =>
-    `flex items-center justify-between rounded-xl px-3 py-2.5 text-[14px] uppercase tracking-[0.2em] font-bold transition-all duration-500 relative group ${
+    `flex items-center justify-between rounded-xl px-3 py-1.5 text-[11px] uppercase tracking-[0.12em] font-bold transition-all duration-300 relative group ${
       location.pathname === path
-        ? "text-gold"
-        : "text-white/30 hover:text-white/80"
+        ? "text-gold bg-white/[0.03]"
+        : "text-white/40 hover:text-white/80 hover:bg-white/[0.01]"
     }`;
 
-  const navIconClass = (path: string) => `h-3.5 w-3.5 shrink-0 transition-all duration-500 ${location.pathname === path ? "text-gold scale-110" : "text-white/10 group-hover:text-gold/40"}`;
+  const navIconClass = (path: string) => `h-4 w-4 shrink-0 transition-all duration-300 ${location.pathname === path ? "text-gold scale-105" : "text-white/20 group-hover:text-gold/50"}`;
 
   return (
     <div className="flex h-screen w-full flex-col overflow-hidden bg-black-void text-[#E3D5C1] font-body relative">
@@ -185,7 +185,7 @@ export default function Layout() {
             </Link>
             
             <Link to="/leads" className={navLinkClass("/leads")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <Users className={navIconClass("/leads")} />
                 <span>Leads CRM</span>
               </div>
@@ -195,7 +195,7 @@ export default function Layout() {
             </Link>
 
             <Link to="/patients" className={navLinkClass("/patients")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <UserCheck className={navIconClass("/patients")} />
                 <span>Pacientes</span>
               </div>
@@ -205,7 +205,7 @@ export default function Layout() {
             </Link>
             
             <Link to="/conversations" className={navLinkClass("/conversations")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <MessageSquare className={navIconClass("/conversations")} />
                 <span>Conversas</span>
               </div>
@@ -214,7 +214,7 @@ export default function Layout() {
                   <motion.span 
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-full bg-gold/10 border border-gold/20 px-2.5 py-0.5 text-[14px] font-black text-gold shadow-gold"
+                    className="rounded-full bg-gold/10 border border-gold/20 px-1.5 py-0.5 text-[10px] font-black text-gold shadow-gold"
                   >
                     {counters.conversations}
                   </motion.span>
@@ -226,7 +226,7 @@ export default function Layout() {
             </Link>
             
             <Link to="/pipeline" className={navLinkClass("/pipeline")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <Sparkles className={navIconClass("/pipeline")} />
                 <span>Funil de Vendas</span>
               </div>
@@ -236,7 +236,7 @@ export default function Layout() {
             </Link>
             
             <Link to="/calendar" className={navLinkClass("/calendar")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <CalendarIcon className={navIconClass("/calendar")} />
                 <span>Agenda</span>
               </div>
@@ -246,7 +246,7 @@ export default function Layout() {
             </Link>
             
             <Link to="/follow-ups" className={navLinkClass("/follow-ups")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <AlertCircle className={navIconClass("/follow-ups")} />
                 <span>Follow-ups</span>
               </div>
@@ -255,7 +255,7 @@ export default function Layout() {
                   <motion.span 
                     initial={{ opacity: 0, scale: 0.8 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-full bg-red-500/10 border border-red-500/20 px-2.5 py-0.5 text-[14px] font-black text-red-400"
+                    className="rounded-full bg-red-500/10 border border-red-500/20 px-1.5 py-0.5 text-[10px] font-black text-red-400"
                   >
                     {counters.followUps}
                   </motion.span>
@@ -267,7 +267,7 @@ export default function Layout() {
             </Link>
             
             <Link to="/reports" className={navLinkClass("/reports")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <BarChart3 className={navIconClass("/reports")} />
                 <span>Relatórios</span>
               </div>
@@ -277,7 +277,7 @@ export default function Layout() {
             </Link>
 
             <Link to="/marketing" className={navLinkClass("/marketing")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <Target className={navIconClass("/marketing")} />
                 <span>Marketing & Ads</span>
               </div>
@@ -287,7 +287,7 @@ export default function Layout() {
             </Link>
 
             <Link to="/pos" className={navLinkClass("/pos")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <ShoppingBag className={navIconClass("/pos")} />
                 <span>PDV (Vendas)</span>
               </div>
@@ -297,7 +297,7 @@ export default function Layout() {
             </Link>
 
             <Link to="/cashier" className={navLinkClass("/cashier")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <Calculator className={navIconClass("/cashier")} />
                 <span>Caixa & Turnos</span>
               </div>
@@ -307,7 +307,7 @@ export default function Layout() {
             </Link>
 
             <Link to="/financial-reports" className={navLinkClass("/financial-reports")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <DollarSign className={navIconClass("/financial-reports")} />
                 <span>Financeiro</span>
               </div>
@@ -317,7 +317,7 @@ export default function Layout() {
             </Link>
 
             <Link to="/config" className={navLinkClass("/config")}>
-              <div className="flex items-center gap-5">
+              <div className="flex items-center gap-3">
                 <Settings className={navIconClass("/config")} />
                 <span>Configurações da Página</span>
               </div>
@@ -328,15 +328,15 @@ export default function Layout() {
           </nav>
 
           {/* Institutional Performance (Grindstone Style) */}
-          <div className="mt-auto space-y-4">
-            <div className="relative rounded-xl border border-white/5 bg-white/[0.01] p-4 space-y-3 overflow-hidden group hover:border-gold/20 transition-colors duration-700">
+          <div className="mt-auto space-y-3">
+            <div className="relative rounded-xl border border-white/5 bg-white/[0.01] p-3 space-y-2 overflow-hidden group hover:border-gold/20 transition-colors duration-700">
               <div className="absolute top-0 right-0 p-2 opacity-[0.03] group-hover:opacity-[0.06] transition-opacity">
-                <Sparkles className="h-10 w-10 text-gold" />
+                <Sparkles className="h-8 w-8 text-gold" />
               </div>
               <div className="flex justify-between items-end">
                 <div className="space-y-0.5">
-                  <h4 className="text-[13px] font-black text-white/20 uppercase tracking-[0.2em]">Monthly Goal</h4>
-                  <p className="text-base font-display text-white tracking-tighter italic">{goalStats.percent}% <span className="text-[14px] text-gold/40 non-italic ml-1">Achieved</span></p>
+                  <h4 className="text-[9px] font-black text-white/30 uppercase tracking-[0.1em]">Meta Mensal</h4>
+                  <p className="text-xs font-semibold text-white tracking-tight">{goalStats.percent}% <span className="text-[9px] text-gold/40 ml-1">Concluído</span></p>
                 </div>
               </div>
               <div className="h-1 w-full rounded-full bg-white/5 overflow-hidden">
@@ -347,17 +347,17 @@ export default function Layout() {
                   className="h-full rounded-full gold-gradient shadow-gold"
                 />
               </div>
-              <p className="text-[13px] text-white/20 font-bold uppercase tracking-[0.3em] text-center">
-                {goalStats.current} / {goalStats.target} Bookings
+              <p className="text-[9px] text-white/30 font-bold uppercase tracking-[0.15em] text-center">
+                {goalStats.current} / {goalStats.target} Agendamentos
               </p>
             </div>
             
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-[13px] font-black uppercase tracking-[0.3em] text-white/20 bg-white/[0.02] hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all hover:text-red-400 duration-500"
+              className="w-full flex items-center justify-center gap-2 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-[0.15em] text-white/30 bg-white/[0.02] hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all hover:text-red-400 duration-500 cursor-pointer"
             >
               <LogOut className="h-3 w-3 opacity-40" />
-              Sign Out
+              Sair da Conta
             </button>
           </div>
         </aside>

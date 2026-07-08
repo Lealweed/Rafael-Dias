@@ -835,6 +835,31 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
   const [historyLoading, setHistoryLoading] = useState(true);
   const [activeMetric, setActiveMetric] = useState<'spend' | 'clicks' | 'impressions'>('spend');
 
+  // States for Ad Creative Analysis
+  const [adsData, setAdsData] = useState<any[]>([]);
+  const [adsLoading, setAdsLoading] = useState(true);
+  const [selectedAdIndex, setSelectedAdIndex] = useState<number>(0);
+
+  useEffect(() => {
+    let active = true;
+    setAdsLoading(true);
+    fetch(`/api/marketing?type=analyze&campaignName=${encodeURIComponent(campaign.name)}`)
+      .then(res => res.json())
+      .then(res => {
+        if (active && res.success && res.data) {
+          setAdsData(res.data);
+          setSelectedAdIndex(0);
+        }
+      })
+      .catch(err => console.error("Failed to load ad creatives analysis:", err))
+      .finally(() => {
+        if (active) setAdsLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [campaign.name]);
+
   useEffect(() => {
     let active = true;
     setHistoryLoading(true);
@@ -1206,6 +1231,134 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
             </div>
 
           </div>
+        </div>
+
+        {/* Ad Copy Analyzer & Creative Section */}
+        <div className="bg-white/[0.01] border border-white/5 p-6 rounded-3xl flex flex-col gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-white">Análise Estratégica de Copy & Criativos</h3>
+            <p className="text-[11px] text-white/40 mt-0.5">Avaliação heurística do texto do anúncio, pontos de persuasão e conformidade regulatória.</p>
+          </div>
+
+          {adsLoading ? (
+            <div className="h-40 flex flex-col items-center justify-center gap-2">
+              <Loader2 className="h-6 w-6 text-gold animate-spin" />
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Analisando criativos...</span>
+            </div>
+          ) : adsData.length === 0 ? (
+            <div className="h-40 flex items-center justify-center text-white/30 italic text-xs">
+              Nenhum anúncio ou criativo encontrado para esta campanha no Meta Ads.
+            </div>
+          ) : (
+            <div className="flex flex-col gap-4">
+              {/* Ad Tabs Selector */}
+              <div className="flex flex-wrap gap-2 pb-2 border-b border-white/5">
+                {adsData.map((ad, idx) => (
+                  <button
+                    key={ad.id}
+                    onClick={() => setSelectedAdIndex(idx)}
+                    className={`px-3 py-1.5 rounded-xl text-[11px] font-bold transition-all cursor-pointer ${
+                      selectedAdIndex === idx
+                        ? 'bg-gold text-black shadow-gold font-extrabold'
+                        : 'bg-white/5 border border-white/10 text-white/60 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    {ad.name}
+                  </button>
+                ))}
+              </div>
+
+              {/* Analysis Details Grid */}
+              {(() => {
+                const selectedAd = adsData[selectedAdIndex] || adsData[0];
+                if (!selectedAd) return null;
+
+                const score = selectedAd.analysis.score;
+                const percentage = (score / 10) * 100;
+                const radius = 28;
+                const circumference = 2 * Math.PI * radius;
+                const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Copy text viewer and rating score */}
+                    <div className="md:col-span-2 flex flex-col gap-4">
+                      
+                      {/* Radial score box */}
+                      <div className="flex items-center gap-4 bg-white/[0.02] border border-white/5 p-4 rounded-2xl">
+                        <div className="relative h-16 w-16 shrink-0 flex items-center justify-center">
+                          <svg className="w-full h-full transform -rotate-90 absolute">
+                            <circle cx="32" cy="32" r={radius} stroke="rgba(255,255,255,0.05)" strokeWidth="4" fill="transparent" />
+                            <circle cx="32" cy="32" r={radius} stroke="#D4AF37" strokeWidth="4" fill="transparent"
+                              strokeDasharray={circumference}
+                              strokeDashoffset={strokeDashoffset}
+                              strokeLinecap="round"
+                              className="drop-shadow-[0_0_6px_rgba(212,175,55,0.4)]"
+                            />
+                          </svg>
+                          <div className="flex flex-col items-center justify-center">
+                            <span className="text-sm font-bold text-white font-body">{score.toFixed(1)}</span>
+                            <span className="text-[7px] text-white/40 font-bold uppercase">Nota</span>
+                          </div>
+                        </div>
+                        <div>
+                          <h4 className="text-xs font-bold text-white">Índice de Qualidade da Copy</h4>
+                          <p className="text-[10px] text-white/50 mt-0.5">Nota computada baseada nos ganchos de atenção, clareza da oferta e apelo de conversão.</p>
+                        </div>
+                      </div>
+
+                      {/* Actual Copy body */}
+                      <div className="bg-[#0B0D12]/60 border border-white/5 p-4 rounded-2xl flex flex-col gap-2">
+                        <span className="text-[9px] uppercase font-bold text-white/40 tracking-wider">Texto do Criativo</span>
+                        <p className="text-xs text-white/80 leading-relaxed italic whitespace-pre-wrap font-sans">
+                          "{selectedAd.body}"
+                        </p>
+                      </div>
+
+                    </div>
+
+                    {/* Strengths and improvements */}
+                    <div className="bg-white/[0.02] border border-white/5 p-5 rounded-2xl flex flex-col gap-4">
+                      {/* Strengths */}
+                      <div className="space-y-2">
+                        <span className="text-[10px] uppercase font-bold text-emerald-400 tracking-wider flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                          Pontos Fortes
+                        </span>
+                        <ul className="space-y-1.5">
+                          {selectedAd.analysis.strengths.map((s: string, idx: number) => (
+                            <li key={idx} className="text-[11px] text-white/70 flex items-start gap-1.5 leading-normal font-sans">
+                              <span className="text-emerald-400 shrink-0 font-bold">✓</span>
+                              <span>{s}</span>
+                            </li>
+                          ))}
+                          {selectedAd.analysis.strengths.length === 0 && (
+                            <li className="text-[11px] text-white/40 italic font-sans">Nenhum ponto forte identificado.</li>
+                          )}
+                        </ul>
+                      </div>
+
+                      {/* Suggestions */}
+                      <div className="space-y-2 border-t border-white/5 pt-4">
+                        <span className="text-[10px] uppercase font-bold text-amber-500 tracking-wider flex items-center gap-1">
+                          <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                          Oportunidades & Roteiro
+                        </span>
+                        <ul className="space-y-1.5">
+                          {selectedAd.analysis.suggestions.map((s: string, idx: number) => (
+                            <li key={idx} className="text-[11px] text-[#E5C38C] flex items-start gap-1.5 leading-normal font-sans">
+                              <span className="text-amber-500 shrink-0">➔</span>
+                              <span>{s}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+          )}
         </div>
 
         {/* Leads Table Section */}

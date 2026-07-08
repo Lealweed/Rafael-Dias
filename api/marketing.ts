@@ -553,6 +553,207 @@ function generateDummyInsights(campaignName: string) {
 }
 
 // ----------------------------------------------------
+// Ad Creative Analyzer Logic (Copywriting & Roteiro)
+// ----------------------------------------------------
+async function handleAdAnalysis(req: any, res: any) {
+  const campaignName = String(req.query?.campaignName || req.body?.campaignName || '').trim();
+  if (!campaignName) {
+    return res.status(400).json({ error: "Missing required parameter: campaignName" });
+  }
+
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase service role client not initialized' });
+  }
+
+  let metaAccessToken = process.env.META_ACCESS_TOKEN;
+  let metaAdAccountId = process.env.META_AD_ACCOUNT_ID;
+
+  try {
+    const { data: dbSettings } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'marketing_credentials')
+      .maybeSingle();
+
+    if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+      const val = dbSettings.value as any;
+      if (val.meta_access_token) metaAccessToken = val.meta_access_token;
+      if (val.meta_ad_account_id) metaAdAccountId = val.meta_ad_account_id;
+    }
+  } catch (err) {
+    console.error('Error fetching credentials from site_settings:', err);
+  }
+
+  const hasMetaCreds = Boolean(metaAccessToken && metaAdAccountId);
+
+  if (!hasMetaCreds) {
+    const dummyAds = generateDummyAds(campaignName);
+    return res.status(200).json({ success: true, source: 'simulation', data: dummyAds });
+  }
+
+  try {
+    const cleanAcctId = String(metaAdAccountId).replace('act_', '');
+    
+    // 1. Fetch campaigns from Meta to find the campaign_id by name
+    const campaignsUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/campaigns?fields=name&limit=100&access_token=${metaAccessToken}`;
+    const campaignsRes = await fetch(campaignsUrl);
+    const campaignsResData = await campaignsRes.json() as any;
+    const allCampaigns = campaignsResData?.data || [];
+
+    const targetCampaign = allCampaigns.find((c: any) => 
+      c.name?.toLowerCase().trim() === campaignName.toLowerCase().trim()
+    );
+
+    if (!targetCampaign) {
+      // Fallback if campaign not active on Meta (e.g. historical Google Ads or simulation)
+      const dummyAds = generateDummyAds(campaignName);
+      return res.status(200).json({ success: true, source: 'simulation_fallback', data: dummyAds });
+    }
+
+    const campaignId = targetCampaign.id;
+
+    // 2. Fetch ads inside this campaign
+    const adsUrl = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/ads?campaign_id=${campaignId}&fields=name,status,creative{name,body,title,object_story_spec}&limit=50&access_token=${metaAccessToken}`;
+    const adsRes = await fetch(adsUrl);
+    const adsResData = await adsRes.json() as any;
+    
+    if (adsResData.error) {
+      throw new Error(adsResData.error.message || "Meta API error");
+    }
+
+    const ads = adsResData?.data || [];
+
+    // Parse and analyze
+    const analyzedAds = ads.map((ad: any) => {
+      // Find copy in body or object_story_spec
+      let body = ad.creative?.body || '';
+      if (!body && ad.creative?.object_story_spec) {
+        const spec = ad.creative.object_story_spec;
+        body = spec.video_data?.message || spec.link_data?.message || spec.photo_data?.message || '';
+      }
+
+      const analysis = analyzeAdCopy(ad.name, body);
+
+      return {
+        id: ad.id,
+        name: ad.name,
+        status: String(ad.status).toLowerCase(),
+        body: body || 'Sem texto de anúncio cadastrado.',
+        analysis
+      };
+    });
+
+    if (analyzedAds.length === 0) {
+      const dummyAds = generateDummyAds(campaignName);
+      return res.status(200).json({ success: true, source: 'simulation_fallback', data: dummyAds });
+    }
+
+    return res.status(200).json({ success: true, source: 'meta_api', data: analyzedAds });
+  } catch (err: any) {
+    console.error('Error in ad analysis:', err);
+    const dummyAds = generateDummyAds(campaignName);
+    return res.status(200).json({ success: true, source: 'fallback_simulation', data: dummyAds, error: err.message });
+  }
+}
+
+function analyzeAdCopy(adName: string, adBody: string) {
+  const text = adBody || '';
+  let rawScore = 5.5;
+  
+  const strengths: string[] = [];
+  const weaknesses: string[] = [];
+  const suggestions: string[] = [];
+  
+  // 1. Hook analysis
+  const hasHookQuestion = text.includes('?') && text.indexOf('?') < 120;
+  const hasEmojis = /[\uD800-\uDFFF\u2600-\u27BF]/.test(text.substring(0, 100));
+  
+  if (hasHookQuestion || hasEmojis) {
+    rawScore += 1.0;
+    strengths.push("Gancho inicial com pergunta direta ou emojis para prender a atenção.");
+  } else {
+    rawScore -= 1.0;
+    weaknesses.push("Falta gancho direto ou provocação nas primeiras linhas do criativo.");
+    suggestions.push("Use uma pergunta direta sobre a dor (ex: 'Incomodado com a flacidez?').");
+  }
+
+  // 2. Offer & Benefits analysis
+  const mentionsPriceOrBoleto = /boleto|parcela|pagar|parcelado|preço|valor|investimento/i.test(text);
+  const mentionsBenefits = /autoestima|confiança|seguro|sofisticado|tecnologia|moderno/i.test(text);
+
+  if (mentionsPriceOrBoleto) {
+    rawScore += 0.8;
+    strengths.push("Excelente clareza sobre parcelas e boleto, quebrando barreiras financeiras.");
+  } else {
+    weaknesses.push("Ausência de detalhes sobre facilidade ou parcelamento de pagamentos.");
+    suggestions.push("Mencione que há opções leves de parcelas no boleto ou cartão.");
+  }
+
+  if (mentionsBenefits) {
+    rawScore += 0.7;
+    strengths.push("Foco forte em transformação, autoestima e melhora de autoconfiança.");
+  } else {
+    weaknesses.push("Abordagem muito técnica em vez de focar nos benefícios de bem-estar.");
+    suggestions.push("Destaque a segurança e o aumento imediato da autoconfiança facial.");
+  }
+
+  // 3. CTA & Urgency analysis
+  const hasCta = /clique|saiba mais|converse|fale conosco|whatsapp|link|agende/i.test(text);
+  if (hasCta) {
+    rawScore += 0.9;
+    strengths.push("Chamada para ação (CTA) muito clara, direcionando para o WhatsApp.");
+  } else {
+    rawScore -= 1.0;
+    weaknesses.push("Falta comando explícito para ação ao fim do criativo.");
+    suggestions.push("Inclua um convite de ação: 'Clique em Saiba Mais e tire dúvidas'.");
+  }
+
+  // 4. Regulatory compliance
+  const mentionsReg = /CRBM|CRM|Registro|Dr\./i.test(text);
+  if (mentionsReg) {
+    rawScore += 0.6;
+  } else {
+    suggestions.push("Insira o nome técnico e registro profissional no rodapé.");
+  }
+
+  // Compress scores toward the center: minimum 3.5, maximum 7.5
+  let score = Math.max(3.5, Math.min(7.5, rawScore));
+  score = Math.round(score * 10) / 10;
+
+  return {
+    score,
+    strengths: strengths.slice(0, 2),
+    weaknesses: weaknesses.slice(0, 2),
+    suggestions: suggestions.slice(0, 2)
+  };
+}
+
+function generateDummyAds(campaignName: string) {
+  const dummyCopyList = [
+    {
+      name: "01 - Avaliação Estética Facial",
+      body: "Você já parou para analisar sua expressão no espelho hoje? ✨\nUma avaliação facial detalhada ajuda a identificar o que seu rosto realmente precisa para realçar sua beleza natural de forma sutil, harmônica e muito elegante.\n\nDr. Rafael Dias\n📍 Registro Profissional 5217\n\nClique no botão abaixo para agendar via WhatsApp!"
+    },
+    {
+      name: "02 - Boleto da Beleza Estética",
+      body: "Quantas vezes você adiou cuidar de si por não conseguir pagar tudo de uma vez? 💳\nO Boleto da Beleza chegou como uma forma inteligente de pagamento pra você realizar seu procedimento agora, sem pesar no bolso e com parcelas leves.\n\nGaranta sua vaga hoje clicando em Saiba Mais!"
+    }
+  ];
+
+  return dummyCopyList.map((ad, i) => {
+    const analysis = analyzeAdCopy(ad.name, ad.body);
+    return {
+      id: `sim_ad_${i}`,
+      name: ad.name,
+      status: 'active',
+      body: ad.body,
+      analysis
+    };
+  });
+}
+
+// ----------------------------------------------------
 // Main Router Export
 // ----------------------------------------------------
 export default async function handler(req: any, res: any) {
@@ -565,6 +766,8 @@ export default async function handler(req: any, res: any) {
     return handleSync(req, res);
   } else if (url.includes('/historical')) {
     return handleHistoricalInsights(req, res);
+  } else if (url.includes('/analyze')) {
+    return handleAdAnalysis(req, res);
   }
   
   // Try checking req.path for express fallback
@@ -575,6 +778,8 @@ export default async function handler(req: any, res: any) {
     return handleSync(req, res);
   } else if (path.includes('/historical')) {
     return handleHistoricalInsights(req, res);
+  } else if (path.includes('/analyze')) {
+    return handleAdAnalysis(req, res);
   }
 
   // Fallback for query param (e.g. ?type=webhook)
@@ -585,6 +790,8 @@ export default async function handler(req: any, res: any) {
     return handleSync(req, res);
   } else if (type === 'historical') {
     return handleHistoricalInsights(req, res);
+  } else if (type === 'analyze') {
+    return handleAdAnalysis(req, res);
   }
 
   return res.status(404).json({ error: 'Marketing endpoint not found' });

@@ -613,11 +613,11 @@ export default function Patients() {
                   {selectedPatientForDetails.avatar_url ? (
                     <img src={selectedPatientForDetails.avatar_url} alt="Profile" className="h-full w-full object-cover" />
                   ) : (
-                    <span className="font-serif font-bold text-base">{String(selectedPatientForDetails.full_name || "P").charAt(0).toUpperCase()}</span>
+                    <span className="font-body font-bold text-base">{String(selectedPatientForDetails.full_name || "P").charAt(0).toUpperCase()}</span>
                   )}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-white font-serif">{selectedPatientForDetails.full_name}</h3>
+                  <h3 className="text-base font-bold text-white font-body">{selectedPatientForDetails.full_name}</h3>
                   <span className="text-[13px] text-white/40 font-mono">{selectedPatientForDetails.phone}</span>
                 </div>
               </div>
@@ -1186,7 +1186,7 @@ export default function Patients() {
         <div className="fixed inset-0 bg-black/75 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="w-full max-w-2xl max-h-[calc(100vh-2rem)] bg-[#0E1118] border border-white/10 rounded-3xl shadow-2xl relative animate-fade-in text-white flex flex-col overflow-hidden">
             <div className="flex justify-between items-center px-6 py-4 border-b border-white/5 shrink-0">
-              <h3 className="font-serif text-lg font-bold text-[#E5C38C]">Novo Paciente (Acesso ao Portal)</h3>
+              <h3 className="font-body text-base font-bold text-[#E5C38C]">Novo Paciente (Acesso ao Portal)</h3>
               <button 
                 onClick={() => setCreateModalOpen(false)}
                 className="p-1 rounded-full hover:bg-white/20 text-white hover:text-white transition-all cursor-pointer"

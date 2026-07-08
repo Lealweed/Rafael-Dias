@@ -307,11 +307,11 @@ export default function Marketing() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5 shrink-0">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.2em] font-bold text-[#E5C38C] mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[11px] uppercase tracking-wider font-bold text-[#E5C38C] mb-2">
             <Sparkles className="h-3 w-3" />
             <span>ROI & Performance</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white font-body">Campanhas Digitais</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white font-body">Campanhas Digitais</h1>
           <p className="text-sm text-white/40 font-light flex flex-col gap-1 mt-1">
             <span>Métricas integradas do Google Ads e Meta Ads do Instituto Rafael Dias.</span>
             {lastSyncTime && (
@@ -373,11 +373,11 @@ export default function Marketing() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <DollarSign className="w-4 h-4 text-amber-500" />
-                <h3 className="text-[14px] font-bold uppercase tracking-wider">Investimento Total</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider">Investimento Total</h3>
               </div>
               <div className="mt-3">
                 <span className="text-2xl font-bold text-white font-body">R$ {metrics.totalCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
-                <p className="text-[14px] text-white/30 mt-1">Orçamento Diário Ativo: R$ {metrics.totalBudget.toLocaleString('pt-BR')} /dia</p>
+                <p className="text-xs text-white/30 mt-1">Orçamento Diário Ativo: R$ {metrics.totalBudget.toLocaleString('pt-BR')} /dia</p>
               </div>
             </div>
 
@@ -385,11 +385,11 @@ export default function Marketing() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <Users className="w-4 h-4 text-blue-400" />
-                <h3 className="text-[14px] font-bold uppercase tracking-wider">Leads Gerados</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider">Leads Gerados</h3>
               </div>
               <div className="mt-3">
                 <span className="text-2xl font-bold text-white font-body">{leadsStats.totalCampaignLeads}</span>
-                <p className="text-[14px] text-white/30 mt-1">Google: {leadsStats.googleLeads} | Meta: {leadsStats.metaLeads}</p>
+                <p className="text-xs text-white/30 mt-1">Google: {leadsStats.googleLeads} | Meta: {leadsStats.metaLeads}</p>
               </div>
             </div>
 
@@ -397,11 +397,11 @@ export default function Marketing() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <Target className="w-4 h-4 text-emerald-400" />
-                <h3 className="text-[14px] font-bold uppercase tracking-wider">CPL Médio</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider">CPL Médio</h3>
               </div>
               <div className="mt-3">
                 <span className="text-2xl font-bold text-white font-body">R$ {metrics.avgCpl.toFixed(2)}</span>
-                <p className="text-[14px] text-white/30 mt-1">Custo por lead qualificado</p>
+                <p className="text-xs text-white/30 mt-1">Custo por lead qualificado</p>
               </div>
             </div>
 
@@ -409,11 +409,11 @@ export default function Marketing() {
             <div className="bg-[#0B0D12]/60 border border-white/5 p-5 rounded-3xl backdrop-blur-xl hover:border-gold/20 transition-all duration-300">
               <div className="flex items-center gap-2.5 text-white/40">
                 <Percent className="w-4 h-4 text-purple-400" />
-                <h3 className="text-[14px] font-bold uppercase tracking-wider">CTR Global</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider">CTR Global</h3>
               </div>
               <div className="mt-3">
                 <span className="text-2xl font-bold text-white font-body">{metrics.ctr}%</span>
-                <p className="text-[14px] text-white/30 mt-1">Total de cliques / Impressões</p>
+                <p className="text-xs text-white/30 mt-1">Total de cliques / Impressões</p>
               </div>
             </div>
 
@@ -422,11 +422,11 @@ export default function Marketing() {
               <div className="absolute top-0 right-0 w-24 h-24 bg-gold/5 rounded-full blur-xl pointer-events-none group-hover:bg-gold/10 transition-colors" />
               <div className="flex items-center gap-2.5 text-white/40">
                 <TrendingUp className="w-4 h-4 text-gold" />
-                <h3 className="text-[14px] font-bold uppercase tracking-wider text-[#E5C38C]">Retorno ROI</h3>
+                <h3 className="text-xs font-semibold uppercase tracking-wider text-[#E5C38C]">Retorno ROI</h3>
               </div>
               <div className="mt-3">
                 <span className="text-2xl font-bold text-gold font-body">+{metrics.roi}%</span>
-                <p className="text-[14px] text-[#E5C38C]/50 mt-1">Retorno sobre investimento</p>
+                <p className="text-xs text-[#E5C38C]/50 mt-1">Retorno sobre investimento</p>
               </div>
             </div>
 
@@ -511,7 +511,7 @@ export default function Marketing() {
           <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 backdrop-blur-xl">
             <div className="pb-4 border-b border-white/5 flex flex-col sm:flex-row justify-between sm:items-center gap-4">
               <div>
-                <h3 className="text-lg font-medium text-white font-serif">Desempenho por Campanha</h3>
+                <h3 className="text-base font-semibold text-white font-body">Desempenho por Campanha</h3>
                 <p className="text-xs text-white/40 mt-1">Estatísticas detalhadas de cada canal de anúncio no sistema.</p>
               </div>
             </div>
@@ -519,7 +519,7 @@ export default function Marketing() {
             <div className="overflow-x-auto mt-4">
               <table className="w-full text-left border-collapse">
                 <thead>
-                  <tr className="border-b border-white/5 text-[14px] uppercase tracking-wider text-white/30">
+                  <tr className="border-b border-white/5 text-[10px] uppercase tracking-wider text-white/30 font-body font-semibold">
                     <th className="py-3 px-4">Campanha</th>
                     <th className="py-3 px-4">Canal</th>
                     <th className="py-3 px-4">Status</th>
@@ -551,7 +551,7 @@ export default function Marketing() {
                             <span>{c.name}</span>
                           </td>
                           <td className="py-4 px-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${
                               c.platform === 'google_ads' 
                                 ? 'bg-blue-500/10 border border-blue-500/20 text-blue-400' 
                                 : 'bg-pink-500/10 border border-pink-500/20 text-pink-400'
@@ -559,8 +559,8 @@ export default function Marketing() {
                               {c.platform === 'google_ads' ? 'Google' : 'Meta'}
                             </span>
                           </td>
-                          <td className="py-4 px-4">
-                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[14px] font-bold ${
+                          <td className="py-3 px-4">
+                            <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold ${
                               c.status === 'active' 
                                 ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-400' 
                                 : 'bg-white/5 border border-white/10 text-white/40'
@@ -606,7 +606,7 @@ export default function Marketing() {
               </div>
 
               <div>
-                <h3 className="text-lg font-medium text-gold font-serif">Configuração de APIs (Meta & Google Ads)</h3>
+                <h3 className="text-base font-semibold text-gold font-body">Configuração de APIs (Meta & Google Ads)</h3>
                 <p className="text-xs text-white/40 mt-1">Insira as credenciais de desenvolvedor para que o CRM sincronize relatórios de cliques, impressões e custos automaticamente.</p>
               </div>
 
@@ -729,7 +729,7 @@ export default function Marketing() {
           {/* INTEGRATION SETTINGS */}
           <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 backdrop-blur-xl flex flex-col gap-6">
             <div>
-              <h3 className="text-lg font-medium text-white font-serif">Integração com Fontes de Tráfego</h3>
+              <h3 className="text-base font-semibold text-white font-body">Integração com Fontes de Tráfego</h3>
               <p className="text-xs text-white/40 mt-1">Conecte seus formulários de leads do Meta Ads e extensões do Google Ads para importar contatos automaticamente.</p>
             </div>
 
@@ -971,7 +971,7 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
           }`}>
             {campaign.platform === 'google_ads' ? 'Google Ads' : 'Meta Ads'}
           </span>
-          <h2 className="text-xl font-bold tracking-tight text-white font-serif mt-2 pr-8">{campaign.name}</h2>
+          <h2 className="text-lg font-bold tracking-tight text-white font-body mt-2 pr-8">{campaign.name}</h2>
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-2 text-xs text-white/50">
             <span className={`h-2 w-2 rounded-full ${campaign.status === 'active' ? 'bg-emerald-500 animate-pulse' : 'bg-white/30'}`} />
             <span className="capitalize">{campaign.status === 'active' ? 'Ativa' : 'Pausada'}</span>

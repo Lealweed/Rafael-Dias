@@ -121,11 +121,11 @@ export default function Reports() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-white/5 shrink-0">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.2em] font-bold text-[#E5C38C] mb-2">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[11px] uppercase tracking-wider font-bold text-[#E5C38C] mb-2">
             <Sparkles className="h-3 w-3" />
             <span>Métricas Avançadas</span>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight text-white font-body">Relatórios Comerciais</h1>
+          <h1 className="text-xl font-bold tracking-tight text-white font-body">Relatórios Comerciais</h1>
           <p className="text-sm text-white/40 font-light">Métricas de conversão, SLAs e origens de leads no período selecionado.</p>
         </div>
 
@@ -219,7 +219,7 @@ export default function Reports() {
             {/* Funil de Conversão */}
             <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-premium flex flex-col gap-6">
               <div>
-                <h3 className="text-lg font-medium text-white font-serif">Funil de Atendimento no Período</h3>
+                <h3 className="text-base font-semibold text-white font-body">Funil de Atendimento no Período</h3>
                 <p className="text-xs text-white/40 mt-1">Status atual de todos os leads cadastrados no período.</p>
               </div>
 
@@ -278,7 +278,7 @@ export default function Reports() {
             {/* Origens dos Leads */}
             <div className="bg-[#0B0D12]/60 border border-white/5 rounded-3xl p-6 md:p-8 backdrop-blur-xl shadow-premium flex flex-col gap-6">
               <div>
-                <h3 className="text-lg font-medium text-white font-serif">Canais e Origens</h3>
+                <h3 className="text-base font-semibold text-white font-body">Canais e Origens</h3>
                 <p className="text-xs text-white/40 mt-1">De onde vêm os leads cadastrados no período.</p>
               </div>
 

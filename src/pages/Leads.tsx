@@ -273,10 +273,10 @@ export default function Leads() {
       {/* --- Header --- */}
       <section className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/5">
         <div>
-          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.15em] font-bold text-[#E5C38C] mb-1">
+          <div className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[11px] uppercase tracking-wider font-bold text-[#E5C38C] mb-1">
             <span>CRM Premium</span>
           </div>
-          <h1 className="text-lg lg:text-xl font-bold tracking-tight text-white font-display">Base de Leads <span className="italic font-light text-gold/80">& Qualificação</span></h1>
+          <h1 className="text-lg lg:text-xl font-bold tracking-tight text-white font-body">Base de Leads <span className="italic font-light text-gold/80">& Qualificação</span></h1>
           <p className="text-xs font-light text-white/30 mt-0.5">{leads.length} registros capturados via landing pages e n8n.</p>
         </div>
         <PremiumButton onClick={() => setCreateModalOpen(true)} className="px-4 py-2 text-[14px]">
@@ -293,7 +293,7 @@ export default function Leads() {
                 key={tab}
                 onClick={() => setViewTab(tab)}
                 className={cn(
-                  "px-3 py-1.5 rounded-full text-[14px] font-black uppercase tracking-[0.15em] transition-all duration-300 border",
+                  "px-3 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-wider transition-all duration-300 border",
                   viewTab === tab ? "bg-gold/10 border-gold/40 text-gold" : "border-transparent text-white/30 hover:text-white/60"
                 )}
               >
@@ -325,17 +325,17 @@ export default function Leads() {
           {viewTab === "leads" && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse min-w-[640px]">
-                <thead className="bg-black-matte/80 text-[14px] uppercase tracking-[0.2em] text-white/20 font-black">
+                <thead className="bg-black-matte/80 text-[10px] uppercase tracking-wider text-white/20 font-semibold font-body">
                   <tr>
                     <th className="px-4 py-3">Paciente</th>
-                    <th className="px-5 py-4">Interesse</th>
-                    <th className="px-5 py-4">Status</th>
-                    <th className="px-5 py-4 hidden lg:table-cell">Engaj.</th>
-                    <th className="px-5 py-4 hidden lg:table-cell">Interação</th>
-                    <th className="px-5 py-4 text-right">Ação</th>
+                    <th className="px-4 py-3">Interesse</th>
+                    <th className="px-4 py-3">Status</th>
+                    <th className="px-4 py-3 hidden lg:table-cell">Engaj.</th>
+                    <th className="px-4 py-3 hidden lg:table-cell">Interação</th>
+                    <th className="px-4 py-3 text-right">Ação</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-[14px]">
+                <tbody className="divide-y divide-white/5 text-xs">
                   {loading ? (
                     <tr><td colSpan={6} className="text-center py-16 text-white/20 uppercase tracking-[0.5em] font-black animate-pulse">Sincronizando...</td></tr>
                   ) : filteredLeads.length === 0 ? (
@@ -346,16 +346,16 @@ export default function Leads() {
                       className="hover:bg-gold/[0.03] transition-all group border-l-2 border-transparent hover:border-gold/40 cursor-pointer"
                       onClick={() => setSelectedLeadForDetails(lead)}
                     >
-                      <td className="px-5 py-5">
-                        <div className="font-bold text-white text-sm tracking-tight group-hover:text-gold transition-colors">{lead.full_name || lead.nome || "Anônimo"}</div>
-                        <div className="text-[13px] text-white/25 mt-0.5 font-mono">{lead.phone || lead.telefone} • {lead.origin || lead.origem || 'WEB'}</div>
+                      <td className="px-4 py-3">
+                        <div className="font-semibold text-white text-xs font-body group-hover:text-gold transition-colors">{lead.full_name || lead.nome || "Anônimo"}</div>
+                        <div className="text-[11px] text-white/25 mt-0.5 font-mono">{lead.phone || lead.telefone} • {lead.origin || lead.origem || 'WEB'}</div>
                       </td>
-                      <td className="px-5 py-5">
-                        <span className="px-2 py-1 rounded-full bg-white/5 border border-white/5 text-white/40 text-[13px] font-bold uppercase">{lead.interest || lead.interesse || 'Avaliação'}</span>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-white/40 text-[11px] font-bold uppercase">{lead.interest || lead.interesse || 'Avaliação'}</span>
                       </td>
-                      <td className="px-5 py-5">{getStatusBadge(lead.conversation_status)}</td>
-                      <td className="px-5 py-5 hidden lg:table-cell">{getTempBadge(lead.temperature || lead.temperatura)}</td>
-                      <td className="px-5 py-5 hidden lg:table-cell text-white/30 font-mono text-[13px]">há {formatTimeAgo(lead.last_interaction_at || lead.ultima_interacao_em || lead.updated_at || lead.created_at)}</td>
+                      <td className="px-4 py-3">{getStatusBadge(lead.conversation_status)}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell">{getTempBadge(lead.temperature || lead.temperatura)}</td>
+                      <td className="px-4 py-3 hidden lg:table-cell text-white/30 font-mono text-[11px]">há {formatTimeAgo(lead.last_interaction_at || lead.ultima_interacao_em || lead.updated_at || lead.created_at)}</td>
                       <td className="px-5 py-5 text-right">
                         <div className="flex items-center justify-end gap-2 opacity-30 group-hover:opacity-100 transition-all">
                           <button onClick={(e) => { e.stopPropagation(); navigate(`/conversations?leadId=${lead.id}`); }} className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white transition-colors"><Send className="h-3.5 w-3.5" /></button>
@@ -372,38 +372,38 @@ export default function Leads() {
           {viewTab === "online_bookings" && (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-black-matte/80 text-[13px] uppercase tracking-[0.4em] text-white/20 font-black backdrop-blur-md">
+                <thead className="bg-black-matte/80 text-[10px] uppercase tracking-wider text-white/20 font-semibold font-body backdrop-blur-md">
                   <tr>
-                    <th className="px-10 py-6">Paciente / Cadastro</th>
-                    <th className="px-10 py-6">Procedimento</th>
-                    <th className="px-10 py-6">Data</th>
-                    <th className="px-10 py-6">Status Acerto</th>
-                    <th className="px-10 py-6 text-right">Ação Financeira</th>
+                    <th className="px-4 py-3">Paciente / Cadastro</th>
+                    <th className="px-4 py-3">Procedimento</th>
+                    <th className="px-4 py-3">Data</th>
+                    <th className="px-4 py-3">Status Acerto</th>
+                    <th className="px-4 py-3 text-right">Ação Financeira</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5 text-[14px]">
+                <tbody className="divide-y divide-white/5 text-xs">
                   {appointmentsLoading ? (
-                    <tr><td colSpan={5} className="text-center py-32 text-white/20 uppercase tracking-[0.5em] font-black animate-pulse">Buscando Agendamentos...</td></tr>
+                    <tr><td colSpan={5} className="text-center py-16 text-white/20 uppercase tracking-wider font-bold text-xs animate-pulse">Buscando Agendamentos...</td></tr>
                   ) : onlineAppointments.length === 0 ? (
-                    <tr><td colSpan={5} className="text-center py-32 text-white/20 uppercase tracking-[0.5em] font-black">Nenhum agendamento via Stripe</td></tr>
+                    <tr><td colSpan={5} className="text-center py-16 text-white/20 uppercase tracking-wider font-bold text-xs">Nenhum agendamento via Stripe</td></tr>
                   ) : onlineAppointments.map((appt) => {
                     const isPaidFull = appt.payment_status === "fully_paid";
                     return (
                       <tr key={appt.id} className="hover:bg-gold/[0.01] transition-all">
-                        <td className="px-10 py-8">
-                          <div className="font-display font-bold text-white text-lg leading-tight">{appt.lead?.full_name || "Visitante Web"}</div>
-                          <div className="text-[13px] text-white/20 mt-1 font-mono tracking-widest uppercase">Cel: {appt.lead?.phone || "-"}</div>
+                        <td className="px-4 py-3">
+                          <div className="font-semibold text-white text-xs font-body">{appt.lead?.full_name || "Visitante Web"}</div>
+                          <div className="text-[11px] text-white/20 mt-0.5 font-mono">Cel: {appt.lead?.phone || "-"}</div>
                         </td>
-                        <td className="px-10 py-8">
-                          <span className="px-3 py-1 rounded-full bg-white/5 border border-white/5 text-white/50 text-[13px] font-bold uppercase tracking-wider">{appt.title}</span>
+                        <td className="px-4 py-3">
+                          <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/5 text-white/50 text-[11px] font-bold uppercase tracking-wider">{appt.title}</span>
                         </td>
-                        <td className="px-10 py-8 font-mono text-[13px] text-gold/80">{new Date(appt.appointment_date).toLocaleString("pt-BR")}</td>
-                        <td className="px-10 py-8">
+                        <td className="px-4 py-3 font-mono text-[11px] text-gold/80">{new Date(appt.appointment_date).toLocaleString("pt-BR")}</td>
+                        <td className="px-4 py-3">
                           {isPaidFull ? getBadge("Quitada (R$ 300)", "border-emerald-500/20 bg-emerald-500/10 text-emerald-400") : getBadge("Pago Sinal (R$ 150)", "border-amber-500/20 bg-amber-500/10 text-amber-400")}
                         </td>
-                        <td className="px-10 py-8 text-right">
+                        <td className="px-4 py-3 text-right">
                           {!isPaidFull ? (
-                            <PremiumButton variant="outline" onClick={() => handleConfirmRemainingPayment(appt.id, appt.lead_id, appt.title)} className="py-2.5 px-6 text-[14px]">BAIXA PRESENCIAL</PremiumButton>
+                            <PremiumButton variant="outline" onClick={() => handleConfirmRemainingPayment(appt.id, appt.lead_id, appt.title)} className="py-1.5 px-4 text-[11px]">BAIXA PRESENCIAL</PremiumButton>
                           ) : (
                             <span className="text-[13px] text-white/20 font-black uppercase tracking-widest italic">Processado</span>
                           )}

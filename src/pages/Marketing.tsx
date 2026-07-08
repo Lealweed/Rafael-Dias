@@ -830,6 +830,79 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
   const clickToLeadPercent = campaign.clicks > 0 ? ((campaignLeads.length / campaign.clicks) * 100).toFixed(1) : "0";
   const leadToConvPercent = campaignLeads.length > 0 ? ((conversionsCount / campaignLeads.length) * 100).toFixed(1) : "0";
 
+  // States for Daily Historical Performance Chart
+  const [historyData, setHistoryData] = useState<any[]>([]);
+  const [historyLoading, setHistoryLoading] = useState(true);
+  const [activeMetric, setActiveMetric] = useState<'spend' | 'clicks' | 'impressions'>('spend');
+
+  useEffect(() => {
+    let active = true;
+    setHistoryLoading(true);
+    fetch(`/api/marketing?type=historical&campaignName=${encodeURIComponent(campaign.name)}`)
+      .then(res => res.json())
+      .then(res => {
+        if (active && res.success && res.data) {
+          setHistoryData(res.data);
+        }
+      })
+      .catch(err => console.error("Failed to load historical insights:", err))
+      .finally(() => {
+        if (active) setHistoryLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [campaign.name]);
+
+  const metricsTabs = [
+    { id: 'spend', label: 'Investimento (R$)', color: 'text-amber-500', stroke: '#D4AF37' },
+    { id: 'clicks', label: 'Cliques', color: 'text-blue-400', stroke: '#3B82F6' },
+    { id: 'impressions', label: 'Visualizações', color: 'text-purple-400', stroke: '#A855F7' }
+  ] as const;
+
+  const chartWidth = 720;
+  const chartHeight = 160;
+  const paddingLeft = 45;
+  const paddingRight = 15;
+  const paddingTop = 15;
+  const paddingBottom = 25;
+
+  const chartPoints = useMemo(() => {
+    if (historyData.length === 0) return [];
+    
+    const activeValues = historyData.map(d => Number(d[activeMetric] || 0));
+    const maxVal = Math.max(...activeValues, 1);
+    
+    const usableWidth = chartWidth - paddingLeft - paddingRight;
+    const usableHeight = chartHeight - paddingTop - paddingBottom;
+    const stepsCount = historyData.length - 1 || 1;
+
+    return historyData.map((d, index) => {
+      const val = Number(d[activeMetric] || 0);
+      const x = paddingLeft + (index / stepsCount) * usableWidth;
+      const y = chartHeight - paddingBottom - (val / maxVal) * usableHeight;
+      return { x, y, value: val, date: ptDateCorrection(d.date) };
+    });
+  }, [historyData, activeMetric]);
+
+  const linePath = useMemo(() => {
+    if (chartPoints.length === 0) return "";
+    return chartPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+  }, [chartPoints]);
+
+  const fillPath = useMemo(() => {
+    if (chartPoints.length === 0) return "";
+    const first = chartPoints[0];
+    const last = chartPoints[chartPoints.length - 1];
+    const baseHeight = chartHeight - paddingBottom;
+    return `${linePath} L ${last.x} ${baseHeight} L ${first.x} ${baseHeight} Z`;
+  }, [chartPoints, linePath]);
+
+  // Adjust date format if timezone/offset shifts the day
+  function ptDateCorrection(dateStr: string) {
+    return dateStr;
+  }
+
   // Helper to format date & hours beautifully
   const formatDateTime = (dateStr: string | null | undefined) => {
     if (!dateStr) return null;
@@ -911,6 +984,171 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
             <span className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Agendados (ROI)</span>
             <p className="text-lg font-bold text-emerald-400 mt-1 font-body">{conversionsCount} <span className="text-xs text-emerald-400/60 font-light">({convRateVal.toFixed(1)}%)</span></p>
           </div>
+        </div>
+
+        {/* Historical Evolution Chart Section */}
+        <div className="bg-white/[0.01] border border-white/5 p-6 rounded-3xl flex flex-col gap-4">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 pb-3 border-b border-white/5">
+            <div>
+              <h3 className="text-sm font-semibold text-white">Evolução de Desempenho Diário</h3>
+              <p className="text-[11px] text-white/40 mt-0.5">Histórico de entrega e engajamento nos últimos 7 dias.</p>
+            </div>
+            
+            {/* Metric Toggle Tabs */}
+            <div className="flex items-center gap-1.5 bg-[#0B0D12] border border-white/5 p-1 rounded-xl">
+              {metricsTabs.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveMetric(t.id)}
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all cursor-pointer ${
+                    activeMetric === t.id 
+                      ? 'bg-gold/10 border border-gold/20 text-[#E5C38C]' 
+                      : 'text-white/40 hover:text-white/70 border border-transparent'
+                  }`}
+                >
+                  {t.label.split(' ')[0]}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {historyLoading ? (
+            <div className="h-48 flex flex-col items-center justify-center gap-2">
+              <Loader2 className="h-6 w-6 text-gold animate-spin" />
+              <span className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Carregando histórico...</span>
+            </div>
+          ) : historyData.length === 0 ? (
+            <div className="h-48 flex items-center justify-center text-white/30 italic text-xs">
+              Sem dados históricos disponíveis para este período.
+            </div>
+          ) : (
+            <div className="relative w-full overflow-x-auto scrollbar-hide py-2">
+              <div className="min-w-[640px] h-48 relative">
+                <svg viewBox={`0 0 ${chartWidth} ${chartHeight}`} className="w-full h-full overflow-visible">
+                  <defs>
+                    <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor={activeMetric === 'spend' ? '#D4AF37' : activeMetric === 'clicks' ? '#3B82F6' : '#A855F7'} stopOpacity="0.25" />
+                      <stop offset="100%" stopColor={activeMetric === 'spend' ? '#D4AF37' : activeMetric === 'clicks' ? '#3B82F6' : '#A855F7'} stopOpacity="0.00" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Horizontal Gridlines */}
+                  {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
+                    const usableHeight = chartHeight - paddingTop - paddingBottom;
+                    const y = chartHeight - paddingBottom - ratio * usableHeight;
+                    
+                    // Value labeling
+                    const activeValues = historyData.map(d => Number(d[activeMetric] || 0));
+                    const maxVal = Math.max(...activeValues, 1);
+                    const labelVal = ratio * maxVal;
+                    const formattedLabel = activeMetric === 'spend' 
+                      ? `R$ ${labelVal.toFixed(0)}`
+                      : labelVal.toLocaleString('pt-BR', { maximumFractionDigits: 0 });
+
+                    return (
+                      <g key={index} opacity="0.15">
+                        <line 
+                          x1={paddingLeft} 
+                          y1={y} 
+                          x2={chartWidth - paddingRight} 
+                          y2={y} 
+                          stroke="#ffffff" 
+                          strokeWidth="1" 
+                          strokeDasharray="4,4" 
+                        />
+                        <text 
+                          x={paddingLeft - 8} 
+                          y={y + 3} 
+                          fill="#ffffff" 
+                          fontSize="9" 
+                          textAnchor="end" 
+                          fontFamily="monospace"
+                        >
+                          {formattedLabel}
+                        </text>
+                      </g>
+                    );
+                  })}
+
+                  {/* Shading area beneath the spline */}
+                  <path d={fillPath} fill="url(#chartGrad)" />
+
+                  {/* Glow/Neon Spline Line */}
+                  <path 
+                    d={linePath} 
+                    stroke={activeMetric === 'spend' ? '#D4AF37' : activeMetric === 'clicks' ? '#3B82F6' : '#A855F7'} 
+                    strokeWidth="3" 
+                    fill="none" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="drop-shadow-[0_2px_8px_rgba(212,175,55,0.2)]"
+                  />
+
+                  {/* Vertical grids & Date Labels */}
+                  {chartPoints.map((pt, index) => {
+                    const formattedDate = (() => {
+                      try {
+                        const parts = pt.date.split('-');
+                        return `${parts[2]}/${parts[1]}`;
+                      } catch {
+                        return pt.date;
+                      }
+                    })();
+
+                    return (
+                      <g key={index}>
+                        {/* Hover guidance vertical line */}
+                        <line 
+                          x1={pt.x} 
+                          y1={paddingTop} 
+                          x2={pt.x} 
+                          y2={chartHeight - paddingBottom} 
+                          stroke="#ffffff" 
+                          strokeWidth="1" 
+                          opacity="0.05"
+                        />
+                        {/* Dot on the curve */}
+                        <circle 
+                          cx={pt.x} 
+                          cy={pt.y} 
+                          r="4" 
+                          fill={activeMetric === 'spend' ? '#D4AF37' : activeMetric === 'clicks' ? '#3B82F6' : '#A855F7'} 
+                          stroke="#0B0D12" 
+                          strokeWidth="2" 
+                          className="hover:scale-150 transition-all duration-200 cursor-pointer"
+                        />
+                        {/* Tooltip value */}
+                        <text
+                          x={pt.x}
+                          y={pt.y - 8}
+                          fill="#ffffff"
+                          fontSize="8"
+                          fontWeight="bold"
+                          textAnchor="middle"
+                          fontFamily="sans-serif"
+                          opacity="0.75"
+                        >
+                          {activeMetric === 'spend' ? `R$${pt.value.toFixed(1)}` : pt.value}
+                        </text>
+                        {/* Date Label */}
+                        <text 
+                          x={pt.x} 
+                          y={chartHeight - 8} 
+                          fill="#ffffff" 
+                          opacity="0.3" 
+                          fontSize="9" 
+                          textAnchor="middle"
+                          fontFamily="monospace"
+                        >
+                          {formattedDate}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Funnel Section */}

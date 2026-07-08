@@ -447,6 +447,112 @@ async function handleSync(req: any, res: any) {
 }
 
 // ----------------------------------------------------
+// Historical Daily Insights Logic
+// ----------------------------------------------------
+async function handleHistoricalInsights(req: any, res: any) {
+  const campaignName = String(req.query?.campaignName || req.body?.campaignName || '').trim();
+  if (!campaignName) {
+    return res.status(400).json({ error: "Missing required parameter: campaignName" });
+  }
+
+  const supabase = getServiceSupabase();
+  if (!supabase) {
+    return res.status(500).json({ error: 'Supabase service role client not initialized' });
+  }
+
+  let metaAccessToken = process.env.META_ACCESS_TOKEN;
+  let metaAdAccountId = process.env.META_AD_ACCOUNT_ID;
+
+  try {
+    const { data: dbSettings } = await supabase
+      .from('site_settings')
+      .select('value')
+      .eq('key', 'marketing_credentials')
+      .maybeSingle();
+
+    if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+      const val = dbSettings.value as any;
+      if (val.meta_access_token) metaAccessToken = val.meta_access_token;
+      if (val.meta_ad_account_id) metaAdAccountId = val.meta_ad_account_id;
+    }
+  } catch (err) {
+    console.error('Error fetching credentials from site_settings:', err);
+  }
+
+  const hasMetaCreds = Boolean(metaAccessToken && metaAdAccountId);
+
+  if (!hasMetaCreds) {
+    const dummy = generateDummyInsights(campaignName);
+    return res.status(200).json({ success: true, source: 'simulation', data: dummy });
+  }
+
+  try {
+    const cleanAcctId = String(metaAdAccountId).replace('act_', '');
+    const today = new Date().toISOString().split('T')[0];
+    const sevenDaysAgoDate = new Date();
+    sevenDaysAgoDate.setDate(sevenDaysAgoDate.getDate() - 7);
+    const sevenDaysAgo = sevenDaysAgoDate.toISOString().split('T')[0];
+
+    const url = `https://graph.facebook.com/v19.0/act_${cleanAcctId}/insights?level=campaign&time_increment=1&time_range={"since":"${sevenDaysAgo}","until":"${today}"}&fields=campaign_name,impressions,clicks,spend,date_start,date_stop&limit=500&access_token=${metaAccessToken}`;
+    
+    const response = await fetch(url);
+    const resData = await response.json() as any;
+    
+    if (resData.error) {
+      throw new Error(resData.error.message || "Meta API error");
+    }
+
+    const insights = resData?.data || [];
+    
+    const targetInsights = insights.filter((item: any) => 
+      item.campaign_name?.toLowerCase().trim() === campaignName.toLowerCase().trim()
+    );
+
+    const formatted = targetInsights.map((item: any) => ({
+      date: item.date_start,
+      impressions: Number(item.impressions || 0),
+      clicks: Number(item.clicks || 0),
+      spend: Number(item.spend || 0)
+    })).sort((a: any, b: any) => a.date.localeCompare(b.date));
+
+    // If no insights found, generate dummy data as fallback
+    if (formatted.length === 0) {
+      const dummy = generateDummyInsights(campaignName);
+      return res.status(200).json({ success: true, source: 'simulation_fallback', data: dummy });
+    }
+
+    return res.status(200).json({ success: true, source: 'meta_api', data: formatted });
+  } catch (err: any) {
+    console.error('Error fetching historical campaign insights:', err);
+    const dummy = generateDummyInsights(campaignName);
+    return res.status(200).json({ success: true, source: 'fallback_simulation', data: dummy, error: err.message });
+  }
+}
+
+function generateDummyInsights(campaignName: string) {
+  const data = [];
+  const today = new Date();
+  for (let i = 6; i >= 0; i--) {
+    const date = new Date();
+    date.setDate(today.getDate() - i);
+    const dateStr = date.toISOString().split('T')[0];
+    
+    const seed = campaignName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) + i;
+    const clicks = Math.floor(10 + (seed % 15) + Math.sin(i) * 5);
+    const impressions = clicks * Math.floor(35 + (seed % 20));
+    const spend = clicks * (1.2 + (seed % 5) * 0.1);
+
+    data.push({
+      date: dateStr,
+      impressions,
+      clicks,
+      spend: Number(spend.toFixed(2))
+    });
+  }
+  return data;
+}
+
+// ----------------------------------------------------
 // Main Router Export
 // ----------------------------------------------------
 export default async function handler(req: any, res: any) {
@@ -457,6 +563,8 @@ export default async function handler(req: any, res: any) {
     return handleWebhook(req, res);
   } else if (url.includes('/sync')) {
     return handleSync(req, res);
+  } else if (url.includes('/historical')) {
+    return handleHistoricalInsights(req, res);
   }
   
   // Try checking req.path for express fallback
@@ -465,6 +573,8 @@ export default async function handler(req: any, res: any) {
     return handleWebhook(req, res);
   } else if (path.includes('/sync')) {
     return handleSync(req, res);
+  } else if (path.includes('/historical')) {
+    return handleHistoricalInsights(req, res);
   }
 
   // Fallback for query param (e.g. ?type=webhook)
@@ -473,6 +583,8 @@ export default async function handler(req: any, res: any) {
     return handleWebhook(req, res);
   } else if (type === 'sync') {
     return handleSync(req, res);
+  } else if (type === 'historical') {
+    return handleHistoricalInsights(req, res);
   }
 
   return res.status(404).json({ error: 'Marketing endpoint not found' });

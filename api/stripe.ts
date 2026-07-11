@@ -117,10 +117,29 @@ async function handleCheckout(req: any, res: any, rawBody: Buffer) {
 
       try {
         const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
-        const client_id = process.env.GOOGLE_CLIENT_ID;
-        const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-        const refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
+        let client_id = process.env.GOOGLE_CLIENT_ID;
+        let client_secret = process.env.GOOGLE_CLIENT_SECRET;
+        let refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
         const timezone = process.env.TZ || "America/Fortaleza";
+
+        // Fallback: fetch credentials from site_settings table
+        if (!client_id || !client_secret || !refresh_token) {
+          const sb = getServiceSupabase();
+          if (sb) {
+            const { data: dbSettings } = await sb
+              .from('site_settings')
+              .select('value')
+              .eq('key', 'marketing_credentials')
+              .maybeSingle();
+
+            if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+              const val = dbSettings.value as any;
+              if (val.google_client_id) client_id = val.google_client_id;
+              if (val.google_client_secret) client_secret = val.google_client_secret;
+              if (val.google_refresh_token) refresh_token = val.google_refresh_token;
+            }
+          }
+        }
 
         if (client_id && client_secret && refresh_token) {
           const tokenRes = await fetch("https://oauth2.googleapis.com/token", {
@@ -337,10 +356,29 @@ async function handleWebhook(req: any, res: any, rawBody: Buffer) {
 
         try {
           const calendarId = process.env.GOOGLE_CALENDAR_ID || "primary";
-          const client_id = process.env.GOOGLE_CLIENT_ID;
-          const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-          const refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
+          let client_id = process.env.GOOGLE_CLIENT_ID;
+          let client_secret = process.env.GOOGLE_CLIENT_SECRET;
+          let refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
           const timezone = process.env.TZ || "America/Fortaleza";
+
+          // Fallback: fetch credentials from site_settings table
+          if (!client_id || !client_secret || !refresh_token) {
+            const sb = getServiceSupabase();
+            if (sb) {
+              const { data: dbSettings } = await sb
+                .from('site_settings')
+                .select('value')
+                .eq('key', 'marketing_credentials')
+                .maybeSingle();
+
+              if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+                const val = dbSettings.value as any;
+                if (val.google_client_id) client_id = val.google_client_id;
+                if (val.google_client_secret) client_secret = val.google_client_secret;
+                if (val.google_refresh_token) refresh_token = val.google_refresh_token;
+              }
+            }
+          }
 
           if (client_id && client_secret && refresh_token) {
             const tokenRes = await fetch("https://oauth2.googleapis.com/token", {

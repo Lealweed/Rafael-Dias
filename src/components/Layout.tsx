@@ -84,6 +84,26 @@ export default function Layout() {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    document.title = "CRM Dr. Rafael Dias - Painel";
+    
+    let robots = document.querySelector('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.setAttribute("name", "robots");
+      document.head.appendChild(robots);
+    }
+    const previousRobots = robots.getAttribute("content") || "index, follow";
+    robots.setAttribute("content", "noindex, nofollow");
+
+    return () => {
+      const currentRobots = document.querySelector('meta[name="robots"]');
+      if (currentRobots) {
+        currentRobots.setAttribute("content", previousRobots);
+      }
+    };
+  }, [location.pathname]);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.href = "/login";

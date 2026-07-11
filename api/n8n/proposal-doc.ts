@@ -1,3 +1,4 @@
+import { createClient } from '@supabase/supabase-js';
 import { appendSystemMessage } from '../_lib/crm.js';
 
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
@@ -8,12 +9,37 @@ function json(res: any, status: number, payload: any) {
 }
 
 async function getGoogleAccessToken() {
-  const client_id = process.env.GOOGLE_CLIENT_ID;
-  const client_secret = process.env.GOOGLE_CLIENT_SECRET;
-  const refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
+  let client_id = process.env.GOOGLE_CLIENT_ID;
+  let client_secret = process.env.GOOGLE_CLIENT_SECRET;
+  let refresh_token = process.env.GOOGLE_REFRESH_TOKEN;
+
+  // Fallback: fetch credentials from site_settings table in database
+  if (!client_id || !client_secret || !refresh_token) {
+    const supabaseUrl = process.env.VITE_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (supabaseUrl && serviceKey) {
+      try {
+        const sb = createClient(supabaseUrl, serviceKey);
+        const { data: dbSettings } = await sb
+          .from('site_settings')
+          .select('value')
+          .eq('key', 'marketing_credentials')
+          .maybeSingle();
+
+        if (dbSettings && dbSettings.value && typeof dbSettings.value === 'object') {
+          const val = dbSettings.value as any;
+          if (val.google_client_id) client_id = val.google_client_id;
+          if (val.google_client_secret) client_secret = val.google_client_secret;
+          if (val.google_refresh_token) refresh_token = val.google_refresh_token;
+        }
+      } catch (err) {
+        console.error('Error fetching google credentials from site_settings:', err);
+      }
+    }
+  }
 
   if (!client_id || !client_secret || !refresh_token) {
-    throw new Error('Missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN');
+    throw new Error('Missing GOOGLE_CLIENT_ID / GOOGLE_CLIENT_SECRET / GOOGLE_REFRESH_TOKEN (not found in env or database)');
   }
 
   const tokenRes = await fetch(GOOGLE_TOKEN_URL, {

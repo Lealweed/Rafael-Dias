@@ -68,6 +68,12 @@ export default function LaserHairRemoval() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    document.title = "Depilação a Laser Premium em Parauapebas | Dr. Rafael Dias";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", "Sessões de depilação a laser seguras, eficazes e confortáveis com tecnologia de última geração. Resultados visíveis desde a primeira sessão. Agende agora.");
+    }
+
     fetchSiteSettings().then((result) => {
       if (result.ok && result.settings) {
         setSiteSettings(mergeMediaSettings(result.settings));

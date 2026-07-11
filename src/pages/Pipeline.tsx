@@ -326,35 +326,60 @@ export default function Pipeline() {
     <div className="flex-1 overflow-hidden p-4 lg:p-6 h-full w-full space-y-6 flex flex-col top-spotlight pb-16">
       
       {/* --- Header: Editorial Style (Compact) --- */}
-      <section className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4 pb-4 border-b border-white/5">
-        <div className="max-w-xl space-y-2.5">
+      <section className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-3 pb-4 border-b border-white/5">
+        <div className="max-w-xl space-y-2">
           <motion.h1 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-xl md:text-2xl font-display leading-[1.1] text-white tracking-tighter"
+            className="text-lg font-body font-bold text-white tracking-tight"
           >
-            Funil Comercial <br />
-            <span className="italic font-extralight text-gold/80">& Performance</span>
+            Funil Comercial <span className="italic font-light text-gold/80">&amp; Performance</span>
           </motion.h1>
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5 bg-gold/5 px-3 py-1 rounded-full border border-gold/20">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-gold/5 px-2.5 py-0.5 rounded-full border border-gold/20">
               <Sparkles className="h-2.5 w-2.5 text-gold" />
-              <span className="text-[13px] uppercase tracking-[0.2em] font-black text-gold">Pipeline de Alta Fidelidade</span>
+              <span className="text-[11px] uppercase tracking-wider font-semibold text-gold font-body">Pipeline de Alta Fidelidade</span>
             </div>
-            <p className="text-[13px] font-light text-white/30 max-w-xs">Distribuição inteligente de leads por estágio de conversão.</p>
+            {/* Mini stats */}
+            {!loading && (() => {
+              const totalLeads = stages.reduce((a, s) => a + s.items.length, 0);
+              const hotLeads = stages.reduce((a, s) => a + s.items.filter(it => it.temperature === 'hot').length, 0);
+              const scheduled = stages.find(s => s.id === 'agendado')?.items.length ?? 0;
+              return (
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-white/20 font-body">Total</span>
+                    <span className="text-[11px] font-bold text-white font-mono">{totalLeads}</span>
+                  </div>
+                  <div className="w-px h-3 bg-white/10" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px]">🔥</span>
+                    <span className="text-[11px] font-bold text-orange-400 font-mono">{hotLeads}</span>
+                  </div>
+                  <div className="w-px h-3 bg-white/10" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-[11px] text-white/20 font-body">Agend.</span>
+                    <span className="text-[11px] font-bold text-emerald-400 font-mono">{scheduled}</span>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         </div>
         <div className="flex gap-2">
-          <PremiumButton variant="outline" className="px-4 py-1.5 text-[13px] tracking-widest">CONFIGURAR</PremiumButton>
-          <PremiumButton onClick={() => handleOpenCreateModal()} className="px-5 py-1.5 text-[13px] tracking-widest">+ NOVO LEAD</PremiumButton>
+          <PremiumButton variant="outline" className="px-3 py-1.5 text-[11px] tracking-wider">CONFIGURAR</PremiumButton>
+          <PremiumButton onClick={() => handleOpenCreateModal()} className="px-4 py-1.5 text-[11px] tracking-wider">+ NOVO LEAD</PremiumButton>
         </div>
       </section>
 
       {/* --- Kanban Stage Grid (Compact) --- */}
       <div className="flex-1 flex gap-4 overflow-x-auto pb-4 snap-x min-h-[400px] h-full scrollbar-hide">
         {loading ? (
-          <div className="w-full flex items-center justify-center text-[14px] font-black uppercase tracking-[0.3em] text-white/20 animate-pulse">Sincronizando Funil...</div>
-        ) : stages.map((stage, i) => (
+          <div className="w-full flex items-center justify-center text-[11px] font-semibold uppercase tracking-wider text-white/20 animate-pulse font-body">Sincronizando Funil...</div>
+        ) : stages.map((stage, i) => {
+          const totalLeads = stages.reduce((a, s) => a + s.items.length, 0);
+          const pct = totalLeads > 0 ? Math.round((stage.items.length / totalLeads) * 100) : 0;
+          return (
           <div 
             key={stage.id} 
             onDragOver={handleDragOver}
@@ -364,10 +389,13 @@ export default function Pipeline() {
             {/* Stage Header (Compact) */}
             <div className="p-3 border-b border-white/5 flex items-center justify-between bg-black-void/40 backdrop-blur-md">
               <div className="flex items-center gap-2">
-                <div className={cn("w-1.5 h-1.5 rounded-full", stage.color)} />
-                <h3 className="font-display font-black text-white text-xs tracking-tight uppercase">{stage.title}</h3>
+                <div className={cn("w-1.5 h-1.5 rounded-full shrink-0", stage.color)} />
+                <h3 className="font-body font-semibold text-white text-[11px] tracking-wider uppercase">{stage.title}</h3>
               </div>
-              <span className="text-[13px] font-mono text-gold/40 font-black">{stage.items.length}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-mono text-white/20">{pct}%</span>
+                <span className="text-[11px] font-mono text-gold/50 font-bold">{stage.items.length}</span>
+              </div>
             </div>
 
             {/* Draggable List (Compact) */}
@@ -379,29 +407,46 @@ export default function Pipeline() {
                   draggable={true}
                   onDragStart={(e) => handleDragStart(e, item.id)}
                   onClick={() => handleOpenEditModal(item)}
-                  className="bg-white/[0.02] border border-white/5 p-3 rounded-xl shadow-xl hover:border-gold/20 transition-all cursor-pointer group"
+                  className="bg-white/[0.02] border border-white/5 p-3 rounded-xl shadow-xl hover:border-gold/20 transition-all cursor-pointer group overflow-hidden"
                 >
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-display font-bold text-white text-xs group-hover:text-gold transition-colors leading-tight line-clamp-2">{item.name}</h4>
-                    <GripVertical className="w-2.5 h-2.5 text-white/10 group-hover:text-gold/40 transition-colors" />
+                  {/* Color accent by temperature */}
+                  <div className={cn(
+                    "absolute top-0 left-0 right-0 h-0.5 opacity-60",
+                    item.temperature === 'hot' ? 'bg-orange-400' :
+                    item.temperature === 'warm' ? 'bg-amber-400' :
+                    'bg-blue-400/30'
+                  )} />
+                  
+                  <div className="flex items-start gap-2 mb-2.5">
+                    {/* Avatar */}
+                    <div className="h-7 w-7 rounded-lg bg-gold/10 border border-gold/20 text-gold flex items-center justify-center text-[11px] font-bold shrink-0 font-body">
+                      {String(item.name || 'P').replace(/[^a-zA-ZÀ-ÿ]/g, '').charAt(0).toUpperCase() || 'P'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-body font-semibold text-white text-xs group-hover:text-gold transition-colors leading-tight line-clamp-2">{item.name}</h4>
+                      <p className="text-[10px] text-white/30 font-mono mt-0.5 truncate">{item.phone || '—'}</p>
+                    </div>
+                    <GripVertical className="w-2.5 h-2.5 text-white/10 group-hover:text-gold/40 transition-colors shrink-0 mt-0.5" />
                   </div>
                   
                   <div className="space-y-2">
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-black text-gold/80 uppercase tracking-widest bg-gold/10 border border-gold/20 px-2 py-0.5 rounded-full">{item.interest}</span>
-                      {item.temperature === "hot" && <span className="text-[13px] font-black text-orange-400 bg-orange-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Quente</span>}
-                      {item.temperature === "warm" && <span className="text-[13px] font-black text-white/50 bg-white/5 px-2 py-0.5 rounded-full uppercase tracking-wider">Morno</span>}
-                      {item.temperature === "cold" && <span className="text-[13px] font-black text-blue-400 bg-blue-400/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Frio</span>}
+                      <span className="text-[10px] font-semibold text-gold/70 uppercase tracking-wider bg-gold/10 border border-gold/15 px-1.5 py-0.5 rounded-full font-body truncate max-w-[120px]">{item.interest}</span>
+                      <span className="shrink-0">
+                        {item.temperature === 'hot' && <span title="Quente">🔥</span>}
+                        {item.temperature === 'warm' && <span title="Morno">🌡️</span>}
+                        {item.temperature === 'cold' && <span title="Frio">❄️</span>}
+                      </span>
                     </div>
                     
-                    <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                      <div className="flex flex-col">
-                        <span className="text-[13px] uppercase tracking-[0.2em] font-black text-white/20">Responsável</span>
-                        <span className="text-[13px] text-white/40 font-bold">{item.owner}</span>
+                    <div className="flex items-center justify-between pt-1.5 border-t border-white/5">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-white/15 font-body block">Resp.</span>
+                        <span className="text-[11px] text-white/40 font-semibold font-body">{item.owner?.split(' ')[0] || 'Dr. Rafael'}</span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[13px] uppercase tracking-[0.2em] font-black text-white/20">Última Int.</span>
-                        <span className="text-[13px] text-gold/60 font-mono font-bold block">{item.time}</span>
+                        <span className="text-[10px] uppercase tracking-wider font-semibold text-white/15 font-body block">Int.</span>
+                        <span className="text-[11px] text-gold/50 font-mono font-bold">{item.time}</span>
                       </div>
                     </div>
                   </div>
@@ -409,24 +454,25 @@ export default function Pipeline() {
               ))}
               
               {stage.items.length === 0 && (
-                <div className="h-28 border border-dashed border-white/5 rounded-xl flex flex-col items-center justify-center bg-white/[0.01] opacity-20 space-y-1.5">
-                  <Sparkles className="h-4 w-4" />
-                  <span className="text-[13px] uppercase tracking-[0.3em] font-black">Estágio Vazio</span>
+                <div className="h-24 border border-dashed border-white/5 rounded-xl flex flex-col items-center justify-center bg-white/[0.01] opacity-20 space-y-1.5">
+                  <span className="text-lg">✦</span>
+                  <span className="text-[10px] uppercase tracking-wider font-semibold text-white/60 font-body">Estágio Vazio</span>
                 </div>
               )}
             </div>
             
-            {/* Stage Footer Action (Compact) */}
-            <div className="p-2.5 bg-black-void/20 border-t border-white/5">
+            {/* Stage Footer Action */}
+            <div className="p-2 bg-black-void/20 border-t border-white/5">
               <button 
                 onClick={() => handleOpenCreateModal(stage.id)}
-                className="w-full py-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-[13px] font-black uppercase tracking-[0.3em] text-white/20 hover:text-white transition-all cursor-pointer"
+                className="w-full py-1.5 rounded-lg border border-white/5 hover:bg-white/5 text-[10px] font-semibold uppercase tracking-wider text-white/20 hover:text-white transition-all cursor-pointer font-body"
               >
-                + ADD TO {stage.id.toUpperCase()}
+                + Adicionar a {stage.title}
               </button>
             </div>
           </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* --- CRUD Modals --- */}

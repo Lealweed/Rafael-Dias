@@ -346,18 +346,18 @@ export default function Conversations() {
         <div className="w-64 shrink-0 flex flex-col border-r border-white/5 bg-black-matte/40">
           <div className="p-3 border-b border-white/5 space-y-2">
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-white/10 group-focus-within:text-gold transition-colors" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-white/10 group-focus-within:text-gold transition-colors" />
               <input
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Localizar diálogo..."
-                className="w-full bg-white/[0.02] border border-white/5 rounded-lg py-2 pl-9 pr-3 text-[13px] text-white focus:outline-none focus:border-gold/30 transition-all"
+                className="w-full bg-white/[0.02] border border-white/5 rounded-lg py-2 pl-8 pr-3 text-xs text-white focus:outline-none focus:border-gold/30 transition-all"
               />
             </div>
             <div className="flex justify-between items-center px-1">
-              <span className="text-[13px] uppercase tracking-[0.2em] font-black text-white/20">DIÁLOGOS ATIVOS</span>
-              <span className="text-[13px] font-mono text-gold/60">{filteredChats.length}</span>
+              <span className="text-[10px] uppercase tracking-wider font-semibold text-white/20 font-body">Diálogos Ativos</span>
+              <span className="text-[11px] font-mono text-gold/60">{filteredChats.length}</span>
             </div>
           </div>
           
@@ -398,7 +398,7 @@ export default function Conversations() {
                     <div className="flex-1 min-w-0">
                       <div className="flex justify-between items-center gap-2">
                         <h4 className={cn(
-                          "text-xs font-bold truncate transition-colors",
+                          "text-xs font-semibold truncate transition-colors font-body",
                           isSelected ? "text-gold" : "text-white/80 group-hover:text-white"
                         )}>
                           {displayName}
@@ -410,7 +410,7 @@ export default function Conversations() {
                             : "bg-blue-400"
                         )} />
                       </div>
-                      <p className="text-[14px] text-white/30 font-mono truncate mt-0.5">
+                      <p className="text-[11px] text-white/25 font-mono truncate mt-0.5">
                         {phone ? `...${phone.slice(-8)}` : (chat.origin || "DIRECT")}
                       </p>
                     </div>
@@ -438,14 +438,14 @@ export default function Conversations() {
                     </h2>
                     <div className="flex flex-wrap items-center gap-1.5 mt-0.5">
                       <div className={cn(
-                        "px-2 py-0.5 rounded-full text-[14px] font-black uppercase tracking-widest border shrink-0",
+                        "px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border shrink-0 font-body",
                         isHumanMode
                           ? "border-amber-500/20 text-amber-400 bg-amber-500/5"
                           : "border-blue-500/20 text-blue-400 bg-blue-500/5 animate-pulse"
                       )}>
-                        {isHumanMode ? "MODO HUMANO" : "IA ASSISTENTE"}
+                        {isHumanMode ? "Modo Humano" : "IA Assistente"}
                       </div>
-                      <span className="text-[14px] text-white/20 font-mono truncate">
+                      <span className="text-[11px] text-white/20 font-mono truncate">
                         {selectedChat.phone || selectedChat.telefone || "—"}
                       </span>
                     </div>
@@ -456,13 +456,13 @@ export default function Conversations() {
                   <PremiumButton
                     variant="outline"
                     onClick={() => navigate(`/calendar?leadId=${selectedChat.id}`)}
-                    className="py-1.5 px-3 text-[14px]"
+                    className="py-1.5 px-3 text-[11px]"
                   >
                     AGENDAR
                   </PremiumButton>
                   <PremiumButton
                     onClick={handleAutomationToggle}
-                    className="py-1.5 px-3 text-[14px]"
+                    className="py-1.5 px-3 text-[11px]"
                     disabled={isUpdatingAutomation}
                   >
                     {isUpdatingAutomation ? "..." : isHumanMode ? "LIGAR IA" : "PAUSAR IA"}
@@ -480,50 +480,66 @@ export default function Conversations() {
                     <Loader2 className="h-8 w-8 text-gold/40 animate-spin" />
                   </div>
                 ) : messages.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-3 opacity-30">
-                    <User className="h-10 w-10 text-white" />
+                  <div className="flex flex-col items-center justify-center h-full py-10 text-center space-y-4 opacity-30">
+                    <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
+                      <MessageSquare className="h-8 w-8 text-white" />
+                    </div>
                     <div>
-                      <p className="text-[13px] font-black uppercase tracking-[0.3em] text-white">Sem mensagens</p>
-                      <p className="text-[14px] text-white/50 mt-1">As mensagens aparecerão aqui quando sincronizadas pelo n8n</p>
+                      <p className="text-xs font-semibold uppercase tracking-wider text-white font-body">Sem mensagens ainda</p>
+                      <p className="text-[11px] text-white/50 mt-1 font-light">As mensagens aparecerão aqui quando<br/>sincronizadas pelo n8n</p>
                     </div>
                   </div>
                 ) : messages.map((msg, i) => {
                   const isOut = msg.type === "outbound";
                   const isSys = msg.type === "system";
+                  // Date separator logic
+                  const prevMsg = i > 0 ? messages[i - 1] : null;
+                  const showDateSep = !prevMsg || msg.rawDate.toDateString() !== prevMsg.rawDate.toDateString();
                   if (isSys) return (
                     <div key={msg.id} className="flex justify-center">
-                      <span className="text-[14px] font-black uppercase tracking-[0.4em] text-white/10 bg-white/[0.02] px-5 py-1.5 rounded-full border border-white/5">
+                      <span className="text-[10px] font-semibold uppercase tracking-wider text-white/10 bg-white/[0.02] px-4 py-1 rounded-full border border-white/5 font-body">
                         {msg.text}
                       </span>
                     </div>
                   );
                   return (
-                    <motion.div
-                      key={msg.id}
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: Math.min(i * 0.02, 0.3) }}
-                      className={cn("flex flex-col gap-1", isOut ? "items-end" : "items-start")}
-                    >
-                      <div className={cn(
-                        "text-[14px] font-bold uppercase tracking-widest px-2 flex items-center gap-1",
-                        isOut ? "text-gold/50" : "text-white/20"
-                      )}>
-                        {isOut && <Zap className="h-2.5 w-2.5" />}
-                        {msg.senderLabel}
-                      </div>
-                      <div className={cn(
-                        "max-w-[75%] px-4 py-2.5 rounded-xl text-xs leading-relaxed shadow-lg border",
-                        isOut
-                          ? "bg-gold/8 border-gold/15 text-white rounded-tr-sm"
-                          : "bg-white/[0.04] border-white/5 text-white/80 rounded-tl-sm"
-                      )}>
-                        <p className="font-light whitespace-pre-wrap break-words">{msg.text}</p>
-                        <div className="mt-2 flex justify-end">
-                          <span className="text-[14px] font-mono text-white/15">{msg.time}</span>
+                    <>
+                      {showDateSep && (
+                        <div key={`sep-${msg.id}`} className="flex items-center gap-3 py-1">
+                          <div className="flex-1 h-px bg-white/5" />
+                          <span className="text-[10px] font-semibold uppercase tracking-wider text-white/20 font-body shrink-0">
+                            {msg.rawDate.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' })}
+                          </span>
+                          <div className="flex-1 h-px bg-white/5" />
                         </div>
-                      </div>
-                    </motion.div>
+                      )}
+                      <motion.div
+                        key={msg.id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                        className={cn("flex flex-col gap-1", isOut ? "items-end" : "items-start")}
+                      >
+                        <div className={cn(
+                          "text-[10px] font-semibold uppercase tracking-wider px-2 flex items-center gap-1 font-body",
+                          isOut ? "text-gold/50" : "text-white/20"
+                        )}>
+                          {isOut && <Zap className="h-2 w-2" />}
+                          {msg.senderLabel}
+                        </div>
+                        <div className={cn(
+                          "max-w-[75%] px-3.5 py-2.5 rounded-xl text-xs leading-relaxed shadow-lg border",
+                          isOut
+                            ? "bg-gold/8 border-gold/15 text-white rounded-tr-sm"
+                            : "bg-white/[0.04] border-white/5 text-white/80 rounded-tl-sm"
+                        )}>
+                          <p className="font-light whitespace-pre-wrap break-words">{msg.text}</p>
+                          <div className="mt-1.5 flex justify-end">
+                            <span className="text-[10px] font-mono text-white/15">{msg.time}</span>
+                          </div>
+                        </div>
+                      </motion.div>
+                    </>
                   );
                 })}
               </div>
@@ -565,10 +581,15 @@ export default function Conversations() {
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center space-y-3 opacity-20">
-              <MessageSquare className="h-10 w-10 text-white" />
-              <p className="text-[14px] font-black uppercase tracking-[0.3em] text-white">Selecione um diálogo</p>
+            <div className="flex-1 flex flex-col items-center justify-center space-y-4 opacity-20">
+            <div className="h-16 w-16 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center">
+              <MessageSquare className="h-8 w-8 text-white" />
             </div>
+            <div className="text-center">
+              <p className="text-xs font-semibold uppercase tracking-wider text-white font-body">Selecione um diálogo</p>
+              <p className="text-[11px] text-white/40 mt-1">Escolha uma conversa na lista à esquerda</p>
+            </div>
+          </div>
           )}
         </div>
       </section>

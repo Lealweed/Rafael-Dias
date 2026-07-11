@@ -24,6 +24,7 @@ import TermsOfService from "./pages/TermsOfService";
 import Home from "./pages/Home";
 import ClientPortal from "./pages/ClientPortal";
 import LaserHairRemoval from "./pages/LaserHairRemoval";
+import Mentorship from "./pages/Mentorship";
 import Cashier from "./pages/Cashier";
 import POS from "./pages/POS";
 import FinancialReports from "./pages/FinancialReports";
@@ -66,6 +67,7 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/depilacao-a-laser" element={<LaserHairRemoval />} />
+          <Route path="/mentoria" element={<Mentorship />} />
           <Route path="/portal" element={<ClientPortal />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/terms-of-service" element={<TermsOfService />} />

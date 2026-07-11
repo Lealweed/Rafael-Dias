@@ -71,6 +71,66 @@ export default function Home() {
     };
   }, [mobileMenuOpen]);
 
+  useEffect(() => {
+    document.title = "Dr. Rafael Dias | Harmonização Facial & Estética Avançada em Parauapebas";
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) {
+      metaDesc.setAttribute("content", "Resgate sua autoestima com procedimentos estéticos faciais naturais e seguros. Botox, Bioestimuladores de colágeno e Preenchimentos com Dr. Rafael Dias.");
+    }
+
+    const schemaData = {
+      "@context": "https://schema.org",
+      "@type": "MedicalClinic",
+      "name": "Dr. Rafael Dias | Harmonização Facial & Estética Avançada",
+      "image": window.location.origin + "/assets/bg-premium.png",
+      "@id": window.location.origin + "/#clinic",
+      "url": window.location.origin + "/",
+      "telephone": "(94) 99999-9999",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Rua das Esmeraldas, 123",
+        "addressLocality": "Parauapebas",
+        "addressRegion": "PA",
+        "postalCode": "68515-000",
+        "addressCountry": "BR"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": -6.0667,
+        "longitude": -49.9
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday"
+        ],
+        "opens": "08:00",
+        "closes": "18:00"
+      },
+      "sameAs": [
+        "https://www.instagram.com/dr.rafaeldias",
+        "https://www.facebook.com/dr.rafaeldias"
+      ]
+    };
+
+    const script = document.createElement("script");
+    script.type = "application/ld+json";
+    script.id = "json-ld-schema-clinic";
+    script.text = JSON.stringify(schemaData);
+    document.head.appendChild(script);
+
+    return () => {
+      const existingScript = document.getElementById("json-ld-schema-clinic");
+      if (existingScript) {
+        existingScript.remove();
+      }
+    };
+  }, []);
+
   // Form & Tracking States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [step, setStep] = useState(1); // 1: Info, 2: Date/Time, 3: Stripe Details
@@ -403,6 +463,16 @@ export default function Home() {
               Depilação Laser
               <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-hover:w-full" />
             </motion.a>
+            <motion.a
+              href="/mentoria"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+              className="hover:text-gold transition-colors relative group"
+            >
+              Mentoria
+              <span className="absolute -bottom-1 left-0 w-0 h-[1px] bg-gold transition-all duration-500 group-hover:w-full" />
+            </motion.a>
           </div>
 
           <motion.div
@@ -449,6 +519,7 @@ export default function Home() {
                 { label: "Método", href: "#metodo" },
                 { label: "Depoimentos", href: "#depoimentos" },
                 { label: "Depilação Laser", href: "/depilacao-a-laser" },
+                { label: "Mentoria", href: "/mentoria" },
                 { label: "Portal do Paciente", href: "/portal" },
                 { label: "Equipe", href: "/login" }
               ].map((item, index) => (
@@ -725,6 +796,7 @@ export default function Home() {
                   <li key={item}><a href="#" className="hover:text-gold transition-colors">{item}</a></li>
                 ))}
                 <li><a href="/depilacao-a-laser" className="hover:text-gold transition-colors">Depilação a Laser</a></li>
+                <li><a href="/mentoria" className="hover:text-gold transition-colors">Mentoria</a></li>
               </ul>
             </div>
 

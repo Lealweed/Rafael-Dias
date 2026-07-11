@@ -124,9 +124,12 @@ async function handleWebhook(req: any, res: any) {
 
         const metaAccessToken = process.env.META_ACCESS_TOKEN;
         if (metaAccessToken && leadgenId) {
-          const metaUrl = `https://graph.facebook.com/v19.0/${leadgenId}?access_token=${metaAccessToken}`;
+          const metaUrl = `https://graph.facebook.com/v19.0/${leadgenId}?fields=field_data,campaign_name,campaign_id,ad_name&access_token=${metaAccessToken}`;
           const response = await fetch(metaUrl);
           const resData = await response.json() as any;
+          if (resData?.campaign_name) {
+            utmCampaign = resData.campaign_name;
+          }
           const fieldData = resData?.field_data || [];
           
           fieldData.forEach((field: any) => {
@@ -633,7 +636,7 @@ async function handleAdAnalysis(req: any, res: any) {
         body = spec.video_data?.message || spec.link_data?.message || spec.photo_data?.message || '';
       }
 
-      const analysis = analyzeAdCopy(ad.name, body);
+      const analysis = analyzeAdCopy(ad.name, body, campaignName);
 
       return {
         id: ad.id,
@@ -657,7 +660,7 @@ async function handleAdAnalysis(req: any, res: any) {
   }
 }
 
-function analyzeAdCopy(adName: string, adBody: string) {
+function analyzeAdCopy(adName: string, adBody: string, campaignName: string = '') {
   const text = adBody || '';
   let rawScore = 5.5;
   
@@ -730,20 +733,61 @@ function analyzeAdCopy(adName: string, adBody: string) {
 
   const lowerName = adName.toLowerCase();
   const lowerBody = text.toLowerCase();
+  const lowerCampaign = campaignName.toLowerCase();
 
-  if (lowerName.includes("boleto") || lowerBody.includes("boleto") || lowerBody.includes("pagamento") || lowerBody.includes("parcela")) {
+  const checkKeywords = (keys: string[]) => {
+    return keys.some(k => lowerName.includes(k) || lowerBody.includes(k) || lowerCampaign.includes(k));
+  };
+
+  if (checkKeywords(["boleto", "pagamento", "parcela", "parcelado", "financia"])) {
     theme = "Acessibilidade & Financiamento (Boleto da Beleza)";
     hook = "Quer realizar seu procedimento estético mas o cartão de crédito está sem limite? Nós temos a solução ideal.";
     pain = "Muitas pessoas adiam o autocuidado e o rejuvenescimento porque acham que o pagamento precisa ser à vista ou comprometer o limite do cartão de crédito.";
     solution = "Criamos o Boleto da Beleza: uma modalidade de parcelamento próprio facilitado pela clínica, sem burocracia e com parcelas leves que cabem no seu orçamento.";
     cta = "Clique em 'Saiba Mais' agora para fazer uma simulação rápida de parcelas pelo WhatsApp!";
-  } else if (lowerName.includes("orelha") || lowerName.includes("abano") || lowerBody.includes("orelha") || lowerBody.includes("abano")) {
+  } else if (checkKeywords(["orelha", "abano", "otoplastia"])) {
     theme = "Tratamento de Orelha de Abano (Autoconfiança)";
     hook = "Suas orelhas te causam algum tipo de desconforto na hora de prender o cabelo ou tirar fotos?";
     pain = "O incômodo com o formato ou a projeção das orelhas é muito comum e abala a autoconfiança de muitas pessoas desde a idade escolar.";
     solution = "Dispomos de técnicas modernas, rápidas e seguras para remodelar e corrigir o posicionamento das orelhas de forma harmoniosa e definitiva.";
     cta = "Toque no botão 'Fale Conosco' e agende uma conversa privada para planejar a sua mudança.";
-  } else if (lowerName.includes("emagrec") || lowerName.includes("colagen") || lowerName.includes("botox") || lowerBody.includes("colágen") || lowerBody.includes("botox") || lowerBody.includes("flacidez") || lowerBody.includes("preenchi")) {
+  } else if (checkKeywords(["rino", "nariz"])) {
+    theme = "Rinomodelação Sem Cirurgia (Rapidez & Autoestima)";
+    hook = "Você sabia que é possível modelar o formato do seu nariz sem precisar passar por uma cirurgia plástica?";
+    pain = "O nariz é o centro do rosto e qualquer detalhe que nos incomode nele afeta muito a nossa autoconfiança no dia a dia.";
+    solution = "Com a rinomodelação com ácido hialurônico, conseguimos empinar a ponta e disfarçar a giba nasal em poucos minutos, no próprio consultório e com recuperação imediata.";
+    cta = "Quer ver resultados reais? Envie uma mensagem no WhatsApp e saiba mais sobre o procedimento.";
+  } else if (checkKeywords(["mãe", "maes", "materno"])) {
+    theme = "Dia das Mães (Revalorização & Cuidado Especial)";
+    hook = "Que tal presentear quem sempre cuidou de você com um momento único de beleza e bem-estar?";
+    pain = "As mães dedicam a vida toda à família e, muitas vezes, acabam deixando o próprio autocuidado em segundo plano.";
+    solution = "Preparamos um protocolo especial de rejuvenescimento e hidratação facial para devolver o viço, o brilho e a jovialidade que ela merece.";
+    cta = "Garanta o presente perfeito para ela. Fale conosco no WhatsApp e agende o pacote exclusivo de Dia das Mães.";
+  } else if (checkKeywords(["feedback", "depoimento", "renovado", "resultado", "antes e depois"])) {
+    theme = "Resultados Reais & Prova Social (Segurança & Confiança)";
+    hook = "Veja o que dizem as pessoas que decidiram transformar suas expressões e resgatar a autoestima com a gente.";
+    pain = "O maior receio de fazer um procedimento estético é o medo de não gostar do resultado ou de ficar com aspecto artificial.";
+    solution = "Aqui mostramos a realidade: tratamentos personalizados com foco na naturalidade e na satisfação total dos nossos pacientes.";
+    cta = "Venha fazer parte dessa transformação. Clique no WhatsApp e agende sua consulta avaliativa.";
+  } else if (checkKeywords(["aluguel", "sala", "consultorio", "subloca"])) {
+    theme = "Aluguel de Consultórios Premium (Infraestrutura para Profissionais)";
+    hook = "Procurando um espaço sofisticado e totalmente equipado para atender seus pacientes com o máximo de conforto?";
+    pain = "Montar e manter uma clínica própria envolve custos altos, burocracia e preocupações com manutenção diária.";
+    solution = "Oferecemos consultórios premium para sublocação/aluguel por turnos, com recepção, café, Wi-Fi e localização privilegiada para você focar apenas no seu paciente.";
+    cta = "Fale conosco pelo WhatsApp e agende uma visita guiada para conhecer nossas salas disponíveis.";
+  } else if (checkKeywords(["bairro", "cidade", "parauapebas", "canaã", "repartimento", "local", "peba"])) {
+    theme = "Atendimento de Referência na Região (Proximidade & Comodidade)";
+    hook = "Você sabia que a melhor tecnologia em estética avançada e rejuvenescimento facial está bem pertinho de você?";
+    pain = "Muitas vezes achamos que para ter acesso a procedimentos sofisticados precisamos viajar para grandes capitais.";
+    solution = "Nossa clínica traz o que há de mais moderno em harmonização, fios de sustentação e botox, bem aqui na nossa cidade, com equipe especializada.";
+    cta = "Agende sua avaliação sem precisar viajar. Clique em Saiba Mais e fale conosco!";
+  } else if (checkKeywords(["visita", "perfil", "insta", "seguidor"])) {
+    theme = "Conexão com o Perfil da Clínica (Conteúdo & Educação)";
+    hook = "Quer aprender como cuidar da saúde da sua pele e entender os bastidores dos procedimentos mais modernos?";
+    pain = "Existe muita informação confusa e mitos na internet sobre botox, preenchimentos e cuidados faciais diários.";
+    solution = "No nosso perfil compartilhamos dicas diárias, casos de antes e depois reais e orientações honestas de quem entende do assunto.";
+    cta = "Siga o nosso perfil no Instagram e envie um direct com suas dúvidas para conversarmos!";
+  } else if (checkKeywords(["emagrec", "colagen", "colágen", "botox", "flacidez", "preenchi", "fios", "pdo", "ácido", "hialur"])) {
     theme = "Estética Avançada (Rejuvenescimento & Sustentação)";
     hook = "Sentiu que seu rosto perdeu a sustentação e ficou com aspecto cansado após perder peso?";
     pain = "O emagrecimento ou a passagem dos anos reduz a gordura estrutural e o colágeno facial, causando flacidez e aquele aspecto de 'rosto derretido'.";
@@ -779,7 +823,7 @@ function generateDummyAds(campaignName: string) {
   ];
 
   return dummyCopyList.map((ad, i) => {
-    const analysis = analyzeAdCopy(ad.name, ad.body);
+    const analysis = analyzeAdCopy(ad.name, ad.body, campaignName);
     return {
       id: `sim_ad_${i}`,
       name: ad.name,

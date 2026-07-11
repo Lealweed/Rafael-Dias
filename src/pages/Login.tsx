@@ -14,11 +14,29 @@ export default function Login() {
   const supabase = createClient();
 
   useEffect(() => {
+    document.title = "Login | CRM Dr. Rafael Dias";
+    
+    let robots = document.querySelector('meta[name="robots"]');
+    if (!robots) {
+      robots = document.createElement("meta");
+      robots.setAttribute("name", "robots");
+      document.head.appendChild(robots);
+    }
+    const previousRobots = robots.getAttribute("content") || "index, follow";
+    robots.setAttribute("content", "noindex, nofollow");
+
     fetchSiteSettings().then((result) => {
       if (result.ok && result.settings) {
         setSiteSettings(mergeMediaSettings(result.settings));
       }
     });
+
+    return () => {
+      const currentRobots = document.querySelector('meta[name="robots"]');
+      if (currentRobots) {
+        currentRobots.setAttribute("content", previousRobots);
+      }
+    };
   }, []);
 
   const handleLogin = async (e: React.FormEvent) => {

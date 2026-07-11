@@ -321,17 +321,17 @@ export default function CalendarPage() {
     <div className="flex-1 overflow-y-auto p-5 lg:p-6 h-full w-full space-y-5 pb-8">
       
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-white/5 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pb-4 border-b border-white/5 shrink-0">
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[13px] uppercase tracking-[0.2em] font-bold text-gold mb-2">
-            <Sparkles className="h-3 w-3" />
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[11px] uppercase tracking-wider font-bold text-gold mb-1">
+            <Sparkles className="h-2.5 w-2.5" />
             <span>Google Calendar</span>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-bold tracking-tight text-white font-display">Agenda Integrada</h1>
-          <p className="text-xs text-white/40 font-light">Navegação em grade de calendário mensal e controle de horários.</p>
+          <h1 className="text-lg font-bold tracking-tight text-white font-body">Agenda Integrada</h1>
+          <p className="text-xs text-white/40 font-light">Calendário mensal integrado com Google Calendar.</p>
         </div>
-        <PremiumButton onClick={openCreate} className="h-10 px-5 text-[13px]">
-          <Plus className="w-4 h-4" />
+        <PremiumButton onClick={openCreate} className="h-9 px-4 text-[11px]">
+          <Plus className="w-3.5 h-3.5" />
           Novo Agendamento
         </PremiumButton>
       </div>
@@ -381,29 +381,29 @@ export default function CalendarPage() {
         <div className="lg:col-span-2 bg-black-matte/40 border border-white/5 rounded-2xl p-5 shadow-premium flex flex-col backdrop-blur-xl">
           <div className="flex-1">
             {/* Calendar Controls */}
-            <div className="flex items-center justify-between pb-4 border-b border-white/5 mb-5">
-              <h3 className="text-xl font-display font-bold text-white capitalize tracking-wide">
+            <div className="flex items-center justify-between pb-3 border-b border-white/5 mb-4">
+              <h3 className="text-base font-body font-bold text-white capitalize">
                 {currentDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" })}
               </h3>
-              <div className="flex gap-2">
-                <button onClick={() => changeMonth(-1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
-                  <ChevronLeft className="h-4 w-4" />
+              <div className="flex gap-1.5">
+                <button onClick={() => changeMonth(-1)} className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
+                  <ChevronLeft className="h-3.5 w-3.5" />
                 </button>
                 <PremiumButton 
                   variant="outline" 
                   onClick={() => { const today = new Date(); setSelectedDate(today); setCurrentDate(today); }}
-                  className="h-9 px-4 text-[14px]"
+                  className="h-7 px-3 text-[11px]"
                 >
                   Hoje
                 </PremiumButton>
-                <button onClick={() => changeMonth(1)} className="p-2 rounded-xl border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
-                  <ChevronRight className="h-4 w-4" />
+                <button onClick={() => changeMonth(1)} className="p-1.5 rounded-lg border border-white/10 hover:bg-white/5 text-white/60 hover:text-white transition-all duration-300">
+                  <ChevronRight className="h-3.5 w-3.5" />
                 </button>
               </div>
             </div>
 
             {/* Calendar Grid Headers */}
-            <div className="grid grid-cols-7 text-center text-[14px] font-bold uppercase tracking-[0.22em] text-white/30 mb-3">
+            <div className="grid grid-cols-7 text-center text-[10px] font-semibold uppercase tracking-wider text-white/25 mb-2 font-body">
               <span>Dom</span>
               <span>Seg</span>
               <span>Ter</span>
@@ -414,20 +414,25 @@ export default function CalendarPage() {
             </div>
 
             {/* Days Grid */}
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-1.5">
               {calendarDays.map((day, idx) => {
                 if (!day) return <div key={`empty-${idx}`} className="aspect-square" />;
                 const isSelected = day.toDateString() === selectedDate.toDateString();
                 const isToday = day.toDateString() === new Date().toDateString();
-                const hasEvents = dayHasEvents(day);
+                const dayEvents = events.filter(e => {
+                  const start = e.start?.dateTime || e.start?.date;
+                  if (!start) return false;
+                  return new Date(start).toDateString() === day.toDateString();
+                });
+                const evtCount = dayEvents.length;
 
                 return (
                   <motion.button
                     key={`day-${day.getDate()}`}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.04 }}
+                    whileTap={{ scale: 0.96 }}
                     onClick={() => setSelectedDate(day)}
-                    className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all duration-300 border ${
+                    className={`aspect-square rounded-xl flex flex-col items-center justify-center relative transition-all duration-300 border gap-0.5 ${
                       isSelected 
                         ? "gold-gradient text-black border-transparent font-bold shadow-gold"
                         : isToday
@@ -435,69 +440,89 @@ export default function CalendarPage() {
                           : "border-white/5 bg-white/[0.01] hover:bg-white/5 text-white/80"
                     }`}
                   >
-                    <span className="text-xs font-body font-medium">{day.getDate()}</span>
-                    {hasEvents && (
-                      <span className={`absolute bottom-2 h-1 w-1 rounded-full ${
-                        isSelected ? "bg-black" : "bg-gold"
-                      }`} />
+                    <span className="text-xs font-body font-semibold leading-none">{day.getDate()}</span>
+                    {evtCount > 0 && (
+                      <div className="flex items-center gap-0.5">
+                        {evtCount <= 3 ? (
+                          Array.from({ length: evtCount }).map((_, di) => (
+                            <span key={di} className={`h-1 w-1 rounded-full ${isSelected ? 'bg-black/60' : 'bg-gold'}`} />
+                          ))
+                        ) : (
+                          <>
+                            <span className={`h-1 w-1 rounded-full ${isSelected ? 'bg-black/60' : 'bg-gold'}`} />
+                            <span className={`text-[8px] font-black leading-none ${isSelected ? 'text-black/70' : 'text-gold/70'}`}>+{evtCount - 1}</span>
+                          </>
+                        )}
+                      </div>
                     )}
                   </motion.button>
                 );
               })}
             </div>
           </div>
-          <div className="text-[14px] text-white/20 pt-5 border-t border-white/5 mt-5 font-light tracking-widest uppercase text-center">
-            * Selecione um dia para gerenciar agendamentos
+          <div className="text-[10px] text-white/15 pt-3 border-t border-white/5 mt-3 font-body tracking-wider uppercase text-center">
+            Clique em um dia para ver a agenda
           </div>
         </div>
 
         {/* DAILY AGENDA panel (Right 1/3) */}
         <div className="flex flex-col gap-5">
           {/* Daily events list */}
-          <div className="bg-black-matte/40 border border-white/5 rounded-2xl p-5 flex flex-col flex-1 shadow-premium backdrop-blur-xl overflow-hidden">
-            <div className="pb-4 border-b border-white/5 mb-4 flex justify-between items-center shrink-0">
+          <div className="bg-black-matte/40 border border-white/5 rounded-2xl p-4 flex flex-col flex-1 shadow-premium backdrop-blur-xl overflow-hidden">
+            <div className="pb-3 border-b border-white/5 mb-3 flex justify-between items-center shrink-0">
               <div>
-                <h4 className="text-xs font-bold text-white uppercase tracking-[0.2em]">Agenda do Dia</h4>
-                <p className="text-[13px] text-gold font-bold uppercase tracking-widest mt-1.5">
-                  {selectedDate.toLocaleDateString("pt-BR", { weekday: "short", day: "2-digit", month: "short" })}
+                <h4 className="text-[10px] font-semibold text-white/40 uppercase tracking-wider font-body">Agenda do Dia</h4>
+                <p className="text-sm font-bold text-white font-body mt-0.5 capitalize">
+                  {selectedDate.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "long" })}
                 </p>
+                {selectedDayEvents.length > 0 && (
+                  <p className="text-[11px] text-gold/70 font-bold mt-0.5">{selectedDayEvents.length} compromisso{selectedDayEvents.length !== 1 ? 's' : ''}</p>
+                )}
               </div>
               <button 
                 onClick={openCreate}
-                className="p-2 rounded-xl bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all duration-300"
+                className="p-2 rounded-lg bg-gold/10 border border-gold/20 text-gold hover:bg-gold/20 transition-all duration-300"
                 title="Novo Agendamento"
               >
-                <Plus className="h-4 w-4" />
+                <Plus className="h-3.5 w-3.5" />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto space-y-3 scrollbar-hide">
+            <div className="flex-1 overflow-y-auto space-y-2 scrollbar-hide">
               {loading ? (
-                <div className="h-full flex items-center justify-center text-[13px] text-white/20 uppercase font-bold tracking-widest animate-pulse">Sincronizando...</div>
+                <div className="h-full flex items-center justify-center text-[11px] text-white/20 uppercase font-semibold tracking-wider animate-pulse">Sincronizando...</div>
               ) : selectedDayEvents.length === 0 ? (
-                <div className="h-full flex flex-col items-center justify-center py-8 text-white/10 text-center opacity-40">
-                  <CalendarIcon className="h-8 w-8 mb-3" />
-                  <p className="text-[13px] uppercase font-bold tracking-[0.3em]">Nenhum compromisso</p>
+                <div className="h-full flex flex-col items-center justify-center py-6 text-center gap-3">
+                  <div className="h-12 w-12 rounded-2xl bg-white/[0.02] border border-white/5 flex items-center justify-center">
+                    <CalendarIcon className="h-5 w-5 text-white/10" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase font-semibold tracking-wider text-white/15">Nenhum compromisso</p>
+                    <p className="text-[10px] text-white/10 mt-0.5">Clique + para agendar</p>
+                  </div>
                 </div>
               ) : (
                 selectedDayEvents.map((evt) => (
                   <motion.button
                     key={evt.id}
-                    initial={{ opacity: 0, x: 20 }}
+                    initial={{ opacity: 0, x: 12 }}
                     animate={{ opacity: 1, x: 0 }}
                     onClick={() => openDetail(evt)}
-                    className={`w-full text-left p-4 rounded-xl border transition-all duration-300 flex flex-col gap-2 group ${
+                    className={`w-full text-left p-3 rounded-xl border transition-all duration-300 flex gap-3 group ${
                       selectedEvent?.id === evt.id
                         ? "bg-gold/10 border-gold/30"
                         : "bg-white/[0.02] border-white/5 hover:border-gold/20 hover:bg-white/[0.04]"
                     }`}
                   >
-                    <h5 className={`font-bold text-xs leading-tight transition-colors ${selectedEvent?.id === evt.id ? 'text-gold' : 'text-white/90 group-hover:text-gold'}`}>
-                      {evt.summary || "Sem título"}
-                    </h5>
-                    <div className="flex items-center gap-2 text-[14px] text-white/40 font-medium uppercase tracking-widest">
-                      <Clock className="h-3 w-3 text-gold/50" />
-                      {formatEventTime(evt)}
+                    <div className={`w-0.5 rounded-full shrink-0 self-stretch ${selectedEvent?.id === evt.id ? 'bg-gold' : 'bg-white/10 group-hover:bg-gold/40'} transition-colors`} />
+                    <div className="flex-1 min-w-0">
+                      <h5 className={`font-semibold text-xs leading-tight transition-colors truncate font-body ${selectedEvent?.id === evt.id ? 'text-gold' : 'text-white/90 group-hover:text-gold'}`}>
+                        {evt.summary || "Sem título"}
+                      </h5>
+                      <div className="flex items-center gap-1.5 mt-1.5">
+                        <Clock className="h-2.5 w-2.5 text-gold/40 shrink-0" />
+                        <span className="text-[11px] text-white/35 font-mono">{formatEventTime(evt)}</span>
+                      </div>
                     </div>
                   </motion.button>
                 ))
@@ -528,7 +553,7 @@ export default function CalendarPage() {
               <div className="absolute top-0 left-0 right-0 h-1 gold-gradient opacity-50" />
               
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-gold/10 border border-gold/20 text-[14px] uppercase tracking-[0.2em] font-bold text-gold">
+                <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-gold/10 border border-gold/20 text-[11px] uppercase tracking-wider font-bold text-gold">
                   Detalhes do Compromisso
                 </div>
                 <button onClick={() => setDetailOpen(false)} className="p-2 rounded-full hover:bg-white/5 text-white/40 hover:text-white transition-colors">
@@ -620,56 +645,56 @@ export default function CalendarPage() {
                 </div>
               )}
 
-              <div className="space-y-5">
+              <div className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="text-[13px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Título do Procedimento</label>
+                  <label className="text-[11px] uppercase font-semibold tracking-wider text-white/30 ml-3 font-body">Título do Procedimento</label>
                   <input 
                     value={form.summary} 
                     onChange={(e) => setForm((s) => ({ ...s, summary: e.target.value }))} 
                     placeholder="Ex: Aplicação de Toxina Botulínica" 
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder-white/20 focus:border-gold outline-none transition-all" 
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/20 focus:border-gold outline-none transition-all" 
                   />
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <label className="text-[13px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Início</label>
+                    <label className="text-[11px] uppercase font-semibold tracking-wider text-white/30 ml-3 font-body">Início</label>
                     <input 
                       type="datetime-local" 
                       value={form.start} 
                       onChange={(e) => setForm((s) => ({ ...s, start: e.target.value }))} 
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white focus:border-gold outline-none filter invert contrast-125" 
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white focus:border-gold outline-none [color-scheme:dark]" 
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <label className="text-[13px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Término</label>
+                    <label className="text-[11px] uppercase font-semibold tracking-wider text-white/30 ml-3 font-body">Término</label>
                     <input 
                       type="datetime-local" 
                       value={form.end} 
                       onChange={(e) => setForm((s) => ({ ...s, end: e.target.value }))} 
-                      className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white focus:border-gold outline-none filter invert contrast-125" 
+                      className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white focus:border-gold outline-none [color-scheme:dark]" 
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[13px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Localização</label>
+                  <label className="text-[11px] uppercase font-semibold tracking-wider text-white/30 ml-3 font-body">Localização</label>
                   <input 
                     value={form.location} 
                     onChange={(e) => setForm((s) => ({ ...s, location: e.target.value }))} 
                     placeholder="Ex: Clínica Sede / Online" 
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder-white/20 focus:border-gold outline-none transition-all" 
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/20 focus:border-gold outline-none transition-all" 
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-[13px] uppercase font-bold tracking-[0.2em] text-white/30 ml-4">Observações Internas</label>
+                  <label className="text-[11px] uppercase font-semibold tracking-wider text-white/30 ml-3 font-body">Observações Internas</label>
                   <textarea 
                     value={form.description} 
                     onChange={(e) => setForm((s) => ({ ...s, description: e.target.value }))} 
                     placeholder="Histórico clínico, alergias ou notas do procedimento..." 
-                    rows={4} 
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.03] px-6 py-4 text-sm text-white placeholder-white/20 focus:border-gold outline-none resize-none transition-all" 
+                    rows={3} 
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/20 focus:border-gold outline-none resize-none transition-all" 
                   />
                 </div>
               </div>

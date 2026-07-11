@@ -35,6 +35,14 @@ interface Campaign {
   conversions?: number;
 }
 
+const isCampLeadsMatch = (utmCamp: string | null | undefined, campName: string) => {
+  if (!utmCamp) return false;
+  const clean = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "");
+  const cUtm = clean(utmCamp);
+  const cCamp = clean(campName);
+  return cUtm === cCamp || cUtm.includes(cCamp) || cCamp.includes(cUtm);
+};
+
 export default function Marketing() {
   const supabase = useMemo(() => createClient(), []);
   
@@ -127,7 +135,7 @@ export default function Marketing() {
       // 3. Process Campaigns Stats
       const processedCampaigns = (dbCampaigns || []).map((camp: any) => {
         const campLeads = utmLeads.filter(l => 
-          l.utm_campaign?.toLowerCase().trim() === camp.name.toLowerCase().trim()
+          isCampLeadsMatch(l.utm_campaign, camp.name)
         );
         const lCount = campLeads.length;
         const cpl = lCount > 0 ? Number((camp.cost / lCount).toFixed(2)) : 0;
@@ -808,7 +816,7 @@ function CampaignDetailsModal({ campaign, allLeads, onClose }: CampaignDetailsMo
   // Filter leads that belong to this campaign
   const campaignLeads = useMemo(() => {
     return allLeads.filter(l => 
-      l.utm_campaign?.toLowerCase().trim() === campaign.name.toLowerCase().trim()
+      isCampLeadsMatch(l.utm_campaign, campaign.name)
     );
   }, [campaign.name, allLeads]);
 

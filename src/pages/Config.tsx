@@ -19,7 +19,8 @@ import {
   ExternalLink,
   FileText,
   MessageSquare,
-  Sparkles
+  Sparkles,
+  GraduationCap
 } from "lucide-react";
 import { createClient } from "../lib/supabase/client";
 import {
@@ -94,6 +95,18 @@ const MEDIA_LABELS: Record<string, string> = {
   depilacao_service_name_3: "Serviço 4: Nome",
   depilacao_service_price_3: "Serviço 4: Preço",
   depilacao_service_desc_3: "Serviço 4: Descrição",
+
+  // Mentoria
+  mentoria_hero_video: "Mentoria: Vídeo do Dr. Rafael",
+  mentoria_image_0: "Mentoria: Imagem 1",
+  mentoria_image_1: "Mentoria: Imagem 2",
+  mentoria_image_2: "Mentoria: Imagem 3",
+  mentoria_mentor_image: "Mentoria: Foto do Mentor",
+  mentoria_deposit_text: "Mentoria: Texto do Investimento",
+  mentoria_info_text: "Mentoria: Texto Informativo",
+  mentoria_date: "Mentoria: Data do Evento",
+  mentoria_time: "Mentoria: Horário",
+  mentoria_location: "Mentoria: Local",
 };
 
 const CATEGORIES = {
@@ -185,6 +198,22 @@ const CATEGORIES = {
       "case_avatar_2",
     ],
   },
+  mentoria: {
+    label: "Mentoria",
+    icon: GraduationCap,
+    keys: [
+      "mentoria_hero_video",
+      "mentoria_image_0",
+      "mentoria_image_1",
+      "mentoria_image_2",
+      "mentoria_mentor_image",
+      "mentoria_deposit_text",
+      "mentoria_info_text",
+      "mentoria_date",
+      "mentoria_time",
+      "mentoria_location",
+    ],
+  },
 };
 
 const MEDIA_KEYS = [
@@ -211,6 +240,11 @@ const MEDIA_KEYS = [
   "depilacao_image_1",
   "depilacao_image_2",
   "depilacao_video",
+  "mentoria_hero_video",
+  "mentoria_image_0",
+  "mentoria_image_1",
+  "mentoria_image_2",
+  "mentoria_mentor_image",
 ];
 
 const isTextAreaKey = (key: string) => {

@@ -43,6 +43,18 @@ export const DEFAULT_MEDIA_SETTINGS: SiteMediaSettings = {
   depilacao_service_price_3: "R$ 399,90",
   depilacao_service_desc_3: "Combo completo com axilas, virilha e pernas. O melhor custo-benefício.",
 
+  // Mentoria - Mídias e Textos
+  mentoria_hero_video: "",
+  mentoria_image_0: "/assets/spa_portrait.png",
+  mentoria_image_1: "/assets/facial_massage.png",
+  mentoria_image_2: "/assets/skincare_treatment.png",
+  mentoria_mentor_image: "/assets/spa_portrait.png",
+  mentoria_deposit_text: "Investimento: R$ 500,00",
+  mentoria_info_text: "O valor do sinal garante sua vaga na mentoria presencial. Vagas limitadas.",
+  mentoria_date: "15 de Agosto de 2026",
+  mentoria_time: "09:00 às 18:00",
+  mentoria_location: "Parauapebas - PA",
+
   // Textos da página principal
   home_hero_title_first: "Dr. Rafael",
   home_hero_title_last: "Dias",

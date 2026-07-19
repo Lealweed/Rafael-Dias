@@ -29,8 +29,17 @@ export function BentoServices({ services }: { services: ServiceItem[] }) {
             s.size === "medium" ? "md:col-span-2 md:row-span-1" : 
             "md:col-span-1 md:row-span-1"
           }`}
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-50px" }}
           whileHover={{ y: -5 }}
-          transition={{ type: "spring", stiffness: 300, damping: 20 }}
+          whileTap={{ scale: 0.98, y: 0 }}
+          transition={{ 
+            type: "spring", 
+            stiffness: 300, 
+            damping: 20,
+            opacity: { duration: 0.5, ease: "easeOut" }
+          }}
         >
           {/* Background Image with Overlay */}
           <div className="absolute inset-0 z-0">

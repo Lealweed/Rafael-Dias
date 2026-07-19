@@ -59,6 +59,7 @@ export default function Home() {
   const [siteSettings, setSiteSettings] = useState(DEFAULT_MEDIA_SETTINGS);
   const videoRef = useRef<HTMLVideoElement>(null);
   const supabase = useMemo(() => createClient(), []);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     if (mobileMenuOpen) {
@@ -123,13 +124,25 @@ export default function Home() {
     script.text = JSON.stringify(schemaData);
     document.head.appendChild(script);
 
+    // Fetch active session and subscribe to changes
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
     return () => {
       const existingScript = document.getElementById("json-ld-schema-clinic");
       if (existingScript) {
         existingScript.remove();
       }
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [supabase]);
 
   // Form & Tracking States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -483,9 +496,15 @@ export default function Home() {
             <PremiumButton variant="ghost" href="/portal" className="hidden sm:flex opacity-50 hover:opacity-100 text-gold font-bold">
               Portal do Paciente
             </PremiumButton>
-            <PremiumButton variant="ghost" href="/login" className="hidden sm:flex opacity-50 hover:opacity-100">
-              Equipe
-            </PremiumButton>
+            {session ? (
+              <PremiumButton variant="ghost" href="/dashboard" className="hidden sm:flex opacity-90 hover:opacity-100 text-gold font-bold gold-border-glow">
+                Painel
+              </PremiumButton>
+            ) : (
+              <PremiumButton variant="ghost" href="/login" className="hidden sm:flex opacity-50 hover:opacity-100">
+                Equipe
+              </PremiumButton>
+            )}
             <PremiumButton onClick={() => openBookingModal("Navbar")}>
               Agendar
             </PremiumButton>
@@ -521,7 +540,9 @@ export default function Home() {
                 { label: "Depilação Laser", href: "/depilacao-a-laser" },
                 { label: "Mentoria", href: "/mentoria" },
                 { label: "Portal do Paciente", href: "/portal" },
-                { label: "Equipe", href: "/login" }
+                session 
+                  ? { label: "Painel Administrativo", href: "/dashboard" }
+                  : { label: "Equipe", href: "/login" }
               ].map((item, index) => (
                 <motion.a
                   key={item.label}
@@ -565,13 +586,14 @@ export default function Home() {
             loop 
             muted 
             playsInline
-            className="w-full h-full object-cover opacity-20 grayscale"
+            className="w-full h-full object-cover opacity-35 grayscale-[5%]"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black-void via-transparent to-black-void opacity-90" />
         </div>
 
         <div className="absolute inset-0 top-spotlight pointer-events-none z-[1]" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gold/5 blur-[150px] rounded-full pointer-events-none z-[1]" />
+        {/* Warmer backdrop glow */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[850px] h-[850px] bg-gold/10 blur-[180px] rounded-full pointer-events-none z-[1]" />
         
         <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-2 gap-16 items-center relative z-10">
           <motion.div 
@@ -581,7 +603,7 @@ export default function Home() {
             transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
             className="space-y-10"
           >
-            <h2 className="text-6xl md:text-8xl lg:text-9xl font-display font-light leading-[0.85] text-white">
+            <h2 className="text-5xl sm:text-7xl md:text-8xl lg:text-9xl font-display font-light leading-[0.95] text-white">
               {siteSettings.home_hero_title_first || "Dr. Rafael"} <br />
               <span className="italic text-gold text-glow-gold relative">
                 {siteSettings.home_hero_title_last || "Dias"}
@@ -594,13 +616,23 @@ export default function Home() {
               </span>
             </h2>
             
-            <p className="text-white/40 text-sm md:text-base font-light max-w-md leading-relaxed tracking-wide">
+            <p className="text-white/60 text-sm md:text-base font-light max-w-md leading-relaxed tracking-wide">
               {siteSettings.home_hero_desc || "Descubra a arte da transformação sutil. Sob a liderança do Dr. Rafael Dias, esculpimos sua melhor versão com precisão clínica e um toque de luxo incomparável."}
             </p>
 
-            <div className="flex flex-wrap gap-10 pt-6">
-              <PremiumButton onClick={() => openBookingModal("Hero")} className="px-14 py-6 text-[13px]">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4 max-w-md">
+              <PremiumButton onClick={() => openBookingModal("Hero")} className="w-full sm:w-auto px-10 py-5 text-[12px] shadow-gold">
                 Agendar Consulta VIP
+              </PremiumButton>
+              <PremiumButton 
+                variant="outline" 
+                onClick={() => {
+                  const element = document.getElementById("servicos");
+                  if (element) element.scrollIntoView({ behavior: "smooth" });
+                }} 
+                className="w-full sm:w-auto px-10 py-5 text-[12px]"
+              >
+                Ver Especialidades
               </PremiumButton>
             </div>
           </motion.div>
@@ -612,11 +644,11 @@ export default function Home() {
             className="relative"
             style={{ y: portraitY }}
           >
-            <div className="relative rounded-[48px] overflow-hidden border border-white/5 aspect-[4/5] shadow-2xl group">
+            <div className="relative rounded-[48px] overflow-hidden border border-gold/20 aspect-[4/5] shadow-2xl group shadow-gold/10">
               <motion.img 
                 src={siteSettings.home_hero_portrait_image} 
                 alt="Dr. Rafael Dias" 
-                className="w-full h-full object-cover grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000"
+                className="w-full h-full object-cover grayscale-[10%] md:grayscale-[20%] group-hover:grayscale-0 transition-all duration-1000"
                 whileHover={{ scale: 1.03 }}
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black-void via-black-void/10 to-transparent opacity-40" />

@@ -102,7 +102,7 @@ export function BeforeAfterSlider({ beforeImage, afterImage, markers = [] }: Bef
             className="absolute z-20 -translate-x-1/2 -translate-y-1/2"
             style={{ left: marker.x, top: marker.y }}
             initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ 
+            animate={{
               opacity: isRevealed ? 1 : 0,
               scale: isRevealed ? 1 : 0.8
             }}
@@ -111,7 +111,7 @@ export function BeforeAfterSlider({ beforeImage, afterImage, markers = [] }: Bef
             <div className="relative group/marker">
               <div className="absolute -inset-2 bg-gold/20 rounded-full animate-pulse" />
               <div className="relative h-2 w-2 rounded-full bg-gold shadow-[0_0_10px_#D4AF37]" />
-              
+
               <div className="absolute left-4 top-1/2 -translate-y-1/2 glass px-3 py-1.5 rounded border-gold/30 opacity-0 group-hover/marker:opacity-100 transition-opacity duration-300 pointer-events-none whitespace-nowrap">
                 <p className="text-[13px] font-bold text-gold uppercase tracking-wider">{marker.label}</p>
                 <p className="text-[13px] text-white/50 mt-0.5">{marker.desc}</p>
